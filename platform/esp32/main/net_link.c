@@ -34,6 +34,7 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "esp_websocket_client.h"
+#include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
@@ -329,6 +330,29 @@ static void on_ws_data(const esp_websocket_event_data_t *d)
     }
 }
 
+/* Why the link dropped, with what was around it (the Wi-Fi signal, the heap),
+ * so a log names the cause: an error (with the socket's errno), the printer
+ * closing the connection, or the client's task ending. */
+static void log_link_drop(int32_t id, const esp_websocket_event_data_t *d)
+{
+    wifi_ap_record_t ap;
+    int rssi = esp_wifi_sta_get_ap_info(&ap) == ESP_OK ? ap.rssi : 0;
+    unsigned heap = (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    unsigned block = (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+
+    if(id == WEBSOCKET_EVENT_DISCONNECTED && d) {
+        ESP_LOGW(TAG, "connection lost: error type %d, socket errno %d, tls 0x%x, http %d "
+                      "(wifi rssi %d dBm, heap free %u, largest block %u)",
+                 (int)d->error_handle.error_type, d->error_handle.esp_transport_sock_errno,
+                 (unsigned)d->error_handle.esp_tls_last_esp_err, d->error_handle.esp_ws_handshake_status_code,
+                 rssi, heap, block);
+    }
+    else {
+        ESP_LOGW(TAG, "connection %s (wifi rssi %d dBm, heap free %u, largest block %u)",
+                 id == WEBSOCKET_EVENT_CLOSED ? "closed" : "client stopped", rssi, heap, block);
+    }
+}
+
 static void on_ws_event(void *arg, esp_event_base_t base, int32_t id, void *event_data)
 {
     esp_websocket_event_data_t *d = (esp_websocket_event_data_t *)event_data;
@@ -337,6 +361,18 @@ static void on_ws_event(void *arg, esp_event_base_t base, int32_t id, void *even
     (void)arg;
     (void)base;
     if(!s_lock) return;
+
+    if(id == WEBSOCKET_EVENT_DISCONNECTED || id == WEBSOCKET_EVENT_CLOSED ||
+       id == WEBSOCKET_EVENT_FINISH) {
+        log_link_drop(id, d);
+    }
+    else if(id == WEBSOCKET_EVENT_DATA && d && d->op_code == 0x8) {
+        /* The server's close frame: its status code says why (1001: going
+         * away, a restart; 1011 and up: a server error). */
+        int code = (d->data_len >= 2 && d->data_ptr)
+                       ? (((unsigned char)d->data_ptr[0] << 8) | (unsigned char)d->data_ptr[1]) : 0;
+        ESP_LOGW(TAG, "the printer closed the connection (close code %d)", code);
+    }
 
     xSemaphoreTake(s_lock, portMAX_DELAY);
     switch(id) {
