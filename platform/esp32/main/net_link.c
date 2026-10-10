@@ -88,6 +88,14 @@ static mmu_action_kind_t sent_kind_of(int id)
     return MMU_ACTION_OTHER;
 }
 
+/* The client reconnects by itself after an error (DISCONNECTED), but not
+ * after the server closed the connection cleanly (CLOSED; Moonraker does that
+ * when it restarts) or after its task ended (FINISH): then net_task starts it
+ * again. s_down_since is when the link last went down, for the safety net. */
+#define LINK_STUCK_MS 60000
+static volatile bool s_ws_stopped;
+static uint32_t s_down_since;
+
 /* Outgoing messages (heap copies, freed by whoever takes them off). A JSON-RPC
  * request is a few hundred bytes and the client sends a handful at a time. */
 #define TXQ_DEPTH 8
@@ -333,10 +341,15 @@ static void on_ws_event(void *arg, esp_event_base_t base, int32_t id, void *even
     xSemaphoreTake(s_lock, portMAX_DELAY);
     switch(id) {
     case WEBSOCKET_EVENT_CONNECTED:
+        s_ws_stopped = false;
         mc_on_connected(now);
         break;
-    case WEBSOCKET_EVENT_DISCONNECTED:
     case WEBSOCKET_EVENT_CLOSED:
+    case WEBSOCKET_EVENT_FINISH:
+        s_ws_stopped = true;   /* no reconnect of its own: net_task restarts it */
+        /* fall through */
+    case WEBSOCKET_EVENT_DISCONNECTED:
+        if(mc_link() != MC_LINK_DOWN) s_down_since = now;
         mc_on_disconnected(now);
         txq_drop_all();
         break;
@@ -360,10 +373,27 @@ static void net_task(void *arg)
         uint32_t now = now_ms();
 
         char *msg;
+        bool due, down;
 
         xSemaphoreTake(s_lock, portMAX_DELAY);
         mc_poll(now);
+        due = mc_reconnect_due(now);
+        down = mc_link() == MC_LINK_DOWN;
         xSemaphoreGive(s_lock);
+
+        /* Outside s_lock: stop/start take the client's own lock (see the lock
+         * order in the file header), and never from its event handler. A
+         * stopped client waits for the reconnect backoff; a link down for
+         * LINK_STUCK_MS with no connection is restarted as a safety net. */
+        if(down && ((s_ws_stopped && due) ||
+                    ((now - s_down_since) >= LINK_STUCK_MS && !esp_websocket_client_is_connected(s_client)))) {
+            ESP_LOGW(TAG, "restarting the Moonraker link (%s)",
+                     s_ws_stopped ? "the connection was closed" : "down for a minute");
+            esp_websocket_client_stop(s_client);
+            s_ws_stopped = false;
+            s_down_since = now;
+            esp_websocket_client_start(s_client);
+        }
 
         /* Outside s_lock (see the lock order in the file header). */
         while(xQueueReceive(s_txq, &msg, 0) == pdTRUE) {
