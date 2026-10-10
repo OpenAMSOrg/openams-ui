@@ -243,7 +243,7 @@
   {"id": "HS_CHANGE_GROUP", "text": "Gruppe ändern…"},
   {"id": "HS_ASSIGN", "text": "Spoolman-Eintrag zuordnen"},
   {"id": "ALERTS_EARLIER", "text": "Früher"},
-  {"id": "ALERTS_CLEAR", "text": "Gelöste entfernen"},
+  {"id": "ALERTS_CLEAR", "text": "Gelöste Meldungen entfernen"},
   {"id": "DEBUG_SCENARIOS", "text": "Szenarien"},
   {"id": "UI_COMING_SOON", "text": "Demnächst"},
   {"id": "COLOR_WHITE", "text": "weiß"},

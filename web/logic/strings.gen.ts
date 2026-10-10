@@ -647,7 +647,7 @@ export const STR_de: Partial<Record<StrId, string>> = {
   HS_CHANGE_GROUP: "Gruppe ändern…",
   HS_ASSIGN: "Spoolman-Eintrag zuordnen",
   ALERTS_EARLIER: "Früher",
-  ALERTS_CLEAR: "Gelöste entfernen",
+  ALERTS_CLEAR: "Gelöste Meldungen entfernen",
   DEBUG_SCENARIOS: "Szenarien",
   UI_COMING_SOON: "Demnächst",
   COLOR_WHITE: "weiß",
