@@ -1054,7 +1054,7 @@ static bool same_tile_shape(const view_tile_t *t, int i)
  * the screen empty; the link marks the model dirty on every change, so this
  * is redrawn as it moves. */
 /* The sentence for where the link is ("Waiting for Moonraker (disconnected)",
- * "Klipper is not ready (...)"), or false while it is ready. */
+ * "Waiting for Klipper (startup)"), or false while it is ready. */
 static bool link_status_text(char *note, size_t n)
 {
     char detail[128];
