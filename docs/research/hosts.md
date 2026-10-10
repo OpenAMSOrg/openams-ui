@@ -1,6 +1,6 @@
 # Hosting `<openams-panel>` in Mainsail and Fluidd
 
-Checked on 2026-09-29 against the upstream source: Mainsail 2.19.0 and Fluidd 1.37.6. Paths are relative to each repository. A Gemini deep-research report was the starting point; only the claims below were verified, and the report itself is not kept.
+Checked on 2026-09-29 against the upstream source: Mainsail 2.19.0 and Fluidd 1.37.6. Paths are relative to each repository. Only the claims below were verified.
 
 ## Bottom line
 

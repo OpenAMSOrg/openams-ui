@@ -1,6 +1,6 @@
 # How other multi-material systems show filament
 
-Condensed on 2026-09-29 from a Gemini deep-research survey of the UI conventions of Bambu AMS, Prusa MMU3, Happy Hare, AFC/Box Turtle, Snapmaker U1, Anycubic ACE, Creality CFS and Qidi Box. Ten of its claims were spot-checked: eight held and two are unverified (marked below). Everything else is the survey's word, and the report itself is not kept.
+Condensed on 2026-09-29 from a survey of the UI conventions of Bambu AMS, Prusa MMU3, Happy Hare, AFC/Box Turtle, Snapmaker U1, Anycubic ACE, Creality CFS and Qidi Box. Ten of its claims were spot-checked: eight held and two are unverified (marked below). Everything else is the survey's word, and the report itself is not kept.
 
 ## What most of them share
 - **Tool numbers in Klipper systems.** Prusa, Happy Hare, AFC and Qidi all name the virtual extruder `T0…Tn`. Bambu labels units and slots instead (`A1`, `B2`), the same way on the printer, in the slicer and in the app ([Bambu wiki](https://wiki.bambulab.com/en/ams/manual/ams-function-introduction)). Our tool-first labels follow the Klipper convention, and we have no unit letters because OpenAMS configs have no unit-to-letter mapping.
