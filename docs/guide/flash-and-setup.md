@@ -15,8 +15,15 @@ serial console. Later updates can go over the air.
 
 ## Requirements
 
+- **The current OpenAMS on the printer:
+  [OpenAMSOrg/openams](https://github.com/OpenAMSOrg/openams).** The display
+  reads the `openams_ui <unit>` objects only it publishes; with
+  `klipper_openams` the display connects but never shows a unit. Moving over:
+  [Moving from klipper_openams](https://github.com/OpenAMSOrg/openams/blob/main/docs/guide/install.md#moving-from-klipper_openams).
 - ESP-IDF v6.0.1 (CI builds with the `espressif/idf:v6.0.1` image; other
-  versions are untested).
+  versions are untested). Use it as installed: do not add components to
+  ESP-IDF's own `components` folder (an `lvgl` copied there for another
+  project breaks this build). This project brings its own LVGL.
 - A checkout with the LVGL submodule: `git submodule update --init --recursive`.
 - `lib/lvgl` must exist. The ESP32 project reads LVGL from there.
 - A serial terminal at 115200 baud (the ESP-IDF default console speed; the
@@ -34,6 +41,13 @@ idf.py flash monitor
 
 `dependencies.lock` pins the target to `esp32`, and `sdkconfig.defaults`
 carries the board settings (4 MB flash, no PSRAM, 240 MHz).
+
+After a `git pull`, or after a build that failed, start clean:
+
+```sh
+idf.py fullclean
+idf.py build
+```
 
 ### Language builds
 
@@ -101,6 +115,10 @@ Notes:
 - `unit` takes the name Moonraker reports for the unit (the part after
   `openams_ui`). Without it, the display binds to the first unit listed. You
   can also bind from the screen: Menu, then "This unit".
+- The Moonraker URL is Moonraker's own port and path,
+  `ws://<printer-address>:7125/websocket`, not the address you open Mainsail
+  at. `ws://192.168.1.20` (port 80) reaches the Mainsail web page and never
+  connects: the log then repeats `Sec-WebSocket-Accept not found`.
 - Moonraker must let the display connect. Add its address to
   `trusted_clients` in Moonraker's `[authorization]` section, or use a network
   Moonraker already trusts. The display stores no API key.
@@ -130,6 +148,10 @@ unit's bays. If it does not, see [troubleshooting.md](troubleshooting.md).
 | `error: bad url (need http:// or https://host/...)` | malformed OTA URL | fix the URL |
 | `error: download failed (...)` | host unreachable or certificate rejected | check the URL; a private-CA `https://` host fails, use `http://` on the LAN |
 | `no Wi-Fi credentials stored — demo mode` | no `wifi` command yet | run `wifi`, then `reboot` |
+| Build: `lib/lv_conf.h:1:1: error: expected identifier or '(' before '.' token` | a checkout from before the fix for Windows (git wrote a link as a text file) | `git pull`, then `idf.py fullclean` and build |
+| Build: `Missing required kconfig option after retry` while configuring `bootloader`; the log names `esp-idf/components/lvgl/idf_component.yml` | an extra `lvgl` component inside ESP-IDF's own `components` folder | move that folder out of ESP-IDF, then `idf.py fullclean` and build |
+| Build (macOS): `'malloc.h' file not found` in `test_moonraker_client.c` | a checkout from before the macOS fix | `git pull` |
+| Build: `Component directory .../components/mqtt does not contain a CMakeLists.txt file` | ESP-IDF v6 moved MQTT out; a harmless notice | nothing |
 
 ## Update and uninstall
 

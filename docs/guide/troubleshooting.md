@@ -52,12 +52,31 @@ The link state is `down`, `connecting`, `klippy-wait` or `ready`.
 | `net` shows `ssid: (none)` or the log says `no Wi-Fi credentials stored — demo mode` | no Wi-Fi stored | `wifi <ssid> [password]`, then `reboot` |
 | `net` shows `wifi: down`; log shows `disconnected (reason N)` and `reconnecting in Ns` | wrong password, out of range, or 5 GHz only | recheck `wifi`; the display needs 2.4 GHz and retries with backoff |
 | `wifi: up` but `link: state=connecting` or `down`; log shows `Moonraker link down` | wrong host or port, or Moonraker refuses this client | check the URL; add the display to Moonraker's `trusted_clients` |
-| `link: state=klippy-wait` | Moonraker is up, Klipper is not | start or restart Klipper |
+| Log repeats `Sec-WebSocket-Accept not found` with `esp_ws_handshake_status_code=200` | the URL reaches the Mainsail web page (port 80), not Moonraker | `moonraker ws://<printer-address>:7125/websocket`, then `reboot` |
+| Log says `klippy-wait: Klipper is not ready (...)` | Moonraker is up, Klipper is not (the state is in brackets) | start Klipper, or fix the error Mainsail shows |
+| Log says `klippy-wait: the printer has no openams_ui object` | the printer runs `klipper_openams` or an OpenAMS from before the display objects | install the current OpenAMS: [Moving from klipper_openams](https://github.com/OpenAMSOrg/openams/blob/main/docs/guide/install.md#moving-from-klipper_openams) |
+| Log says `klippy-wait: no "openams_ui <name>" object` | `unit` names a unit the printer does not have | `unit <real name>`, or `unit` alone for the first unit, then `reboot` |
 | Link `ready` but the screen is empty and `shadow units=0` | `unit` names a unit that does not exist | `net` shows the stored name; run `unit <name>` with the real one, or `unit` alone |
 | Log shows `send failed; the request will time out and retry` | the socket dropped mid-request | it retries; if it repeats, check Wi-Fi signal |
 | Log shows `dropping a WebSocket message over N bytes` | a status message larger than the receive limit | report it with the log line |
 | Display shows demo data | Wi-Fi or URL missing, see `live=0` in `ui` | store both, `reboot` |
 | `no memory for the link — staying in demo mode` or `no memory for the core — staying in demo mode` | the heap was too small at startup | see "Blank screen" |
+
+### What the screen says while it waits
+
+Until the printer's data arrives, the home screen shows "Waiting for the
+printer" and one line saying why:
+
+| Screen line | Meaning | Fix |
+|-------------|---------|-----|
+| Joining the Wi-Fi network ... | not on Wi-Fi yet | wait; if it stays, see `wifi: down` above |
+| Connecting to the printer at ... | Moonraker does not answer, or answers wrong | check the URL (`:7125/websocket`) and `trusted_clients` |
+| Klipper is not ready (...) | Klipper is starting, stopped or in error | start Klipper or fix its error |
+| The printer shows no OpenAMS unit... | no `openams_ui` objects: `klipper_openams` or an old OpenAMS | install the current OpenAMS |
+| The printer has no OpenAMS unit named ... | the `unit` setting names a unit that does not exist | `unit <real name>` or `unit` |
+
+A screen with the backlight on and nothing at all, not even this line, is the
+case below.
 
 ### Blank screen with the backlight on
 
@@ -115,6 +134,20 @@ The comments in `platform/esp32/main/panel_config.h` carry the list. In short:
 The boot log prints what the panel is using:
 `panel config: inversion=... bgr=... madctl=0x.. spi_hz=...`. The ID line reads
 `panel id: RDID4(0xD3)=0x... (expect 0x007796) match=...`.
+
+### Asking for help
+
+Send these, and the problem can usually be named from them alone:
+
+1. **The whole boot log, from the first line.** With the display on USB, run
+   `idf.py -p <port> monitor` (the port is `COM5` or similar on Windows,
+   `/dev/ttyUSB0` on Linux). Opening the monitor resets the display, so the
+   log starts at boot. Let it run about 20 seconds, then copy all of it
+   (Ctrl+] leaves the monitor).
+2. The output of `net` and `ui`, typed into the same monitor.
+3. For a build problem, the whole build log: the file the error message
+   names, `build/log/idf_py_stdout_output_<number>`, not a screenshot of the
+   last lines.
 
 ## Update and uninstall
 

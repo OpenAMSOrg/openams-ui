@@ -37,6 +37,7 @@ state of its own, so unplugging it costs you nothing but the view.
 | [web-panel.md](web-panel.md) | install and use the Mainsail and Fluidd panel |
 | [troubleshooting.md](troubleshooting.md) | fix a dead screen, a lost connection or a crooked touch |
 | [development.md](development.md) | run the simulator and the tests |
+| [translating.md](translating.md) | translate the display and the panel, or fix a translation |
 
 ## Quick path
 
