@@ -184,3 +184,7 @@ Every push and pull request runs two GitHub Actions jobs defined in
 
 Superseded runs on the same branch are canceled automatically via the
 `concurrency` key.
+
+## Translations
+
+Russian: [Slick](https://github.com/SlickTorpedo).

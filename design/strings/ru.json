@@ -1,5 +1,5 @@
 {
- "$comment": "Русский. Словарь взят из design/strings/glossary.json. Кнопки - в неопределённой форме, сообщения - в безличной или в форме «вы».",
+ "$comment": "Русский. Словарь взят из design/strings/glossary.json. Кнопки - в неопределённой форме, сообщения - в безличной или в форме «вы». Перевод: Slick (https://github.com/SlickTorpedo).",
  "code": "ru",
  "name": "Русский",
  "strings": [
