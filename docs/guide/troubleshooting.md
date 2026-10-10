@@ -70,7 +70,7 @@ printer" and one line saying why:
 | Screen line | Meaning | Fix |
 |-------------|---------|-----|
 | Joining the Wi-Fi network ... | not on Wi-Fi yet | wait; if it stays, see `wifi: down` above |
-| Connecting to the printer at ... | Moonraker does not answer, or answers wrong | check the URL (`:7125/websocket`) and `trusted_clients` |
+| Waiting for Moonraker (disconnected) | Moonraker does not answer, or answers wrong | check that Moonraker runs, the URL (`:7125/websocket`) and `trusted_clients` |
 | Klipper is not ready (...) | Klipper is starting, stopped or in error | start Klipper or fix its error |
 | The printer shows no OpenAMS unit... | no `openams_ui` objects: `klipper_openams` or an old OpenAMS | install the current OpenAMS |
 | The printer has no OpenAMS unit named ... | the `unit` setting names a unit that does not exist | `unit <real name>` or `unit` |

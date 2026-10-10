@@ -377,7 +377,7 @@
   {"id": "PANEL_NO_UNITS", "text": "Нет подключённых модулей"},
   {"id": "PANEL_NOT_READY", "text": "Ожидание принтера"},
   {"id": "HOME_LINK_WIFI", "text": "Подключение к сети Wi-Fi {network}..."},
-  {"id": "HOME_LINK_PRINTER", "text": "Подключение к принтеру по адресу {url}..."},
+  {"id": "HOME_LINK_PRINTER", "text": "Ожидание Moonraker (нет связи)"},
   {"id": "HOME_LINK_KLIPPER", "text": "Klipper не готов ({state})."},
   {"id": "HOME_LINK_NO_OPENAMS", "text": "Принтер не показывает модулей OpenAMS. OpenAMS установлен и обновлён?"},
   {"id": "HOME_LINK_NO_UNIT", "text": "На принтере нет модуля OpenAMS с именем {unit}."},
