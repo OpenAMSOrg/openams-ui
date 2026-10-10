@@ -1053,13 +1053,13 @@ static bool same_tile_shape(const view_tile_t *t, int i)
  * where the link is (Wi-Fi, Moonraker, Klipper, OpenAMS) instead of leaving
  * the screen empty; the link marks the model dirty on every change, so this
  * is redrawn as it moves. */
-static void build_link_status(lv_obj_t *scr)
+/* The sentence for where the link is ("Connecting to the printer at ...",
+ * "Klipper is not ready (...)"), or false while it is ready. */
+static bool link_status_text(char *note, size_t n)
 {
     char detail[128];
-    char note[192];
     vs_arg_t arg;
     view_str_id_t id = VS_PANEL_NOT_READY;
-    lv_obj_t *col;
 
     note[0] = '\0';
     switch(platform_link_status(detail, sizeof detail)) {
@@ -1084,10 +1084,29 @@ static void build_link_status(lv_obj_t *scr)
         arg = (vs_arg_t)VS_ARG_T("unit", detail);   /* lit-ok: placeholder name */
         break;
     case PLATFORM_LINK_READY:
-        break;
+        return false;
     }
-    if(id != VS_PANEL_NOT_READY) vs_format(id, note, sizeof note, &arg, 1);
+    vs_format(id, note, n, &arg, 1);
+    return true;
+}
 
+/* While the link is not ready, the message row says where it is, over the
+ * last known (offline) units: the same sentence as the empty screen's. */
+static void link_note(view_toolhead_t *th)
+{
+    char note[VIEW_MESSAGE_TEXT_LEN];
+
+    if(!link_status_text(note, sizeof note)) return;
+    snprintf(th->message.text, sizeof th->message.text, "%s", note);
+    th->message.tone = VIEW_TONE_INFO;
+}
+
+static void build_link_status(lv_obj_t *scr)
+{
+    char note[192];
+    lv_obj_t *col;
+
+    if(!link_status_text(note, sizeof note)) note[0] = '\0';
     col = ui_kit_column(scr, 96, 180);
     (void)ui_kit_text_row(col, view_str(VS_PANEL_NOT_READY), note[0] ? note : NULL,
                           UI_ICON_REFRESH, UI_TOK_TEXT_FAINT, NULL, NULL);
@@ -1116,6 +1135,7 @@ static lv_obj_t *build(void)
     memset(&th, 0, sizeof th);
     memset(&s_live, 0, sizeof s_live);
     have_th = view_toolhead(&g_mmu, home_toolhead(), &th);
+    if(have_th) link_note(&th);
     if(view_unit(&g_mmu, home_unit(), &u)) {
         base = (int)lv_obj_get_child_count(scr);
         ui_unit_header(scr, &u, on_environment, NULL, on_alerts, NULL, on_menu, NULL);
@@ -1201,6 +1221,7 @@ static bool update(void)
 
     if(!s_live.bound || !s_live.scr) return false;
     if(!view_toolhead(&g_mmu, home_toolhead(), &th)) return false;
+    link_note(&th);
     if(!view_unit(&g_mmu, home_unit(), &u)) return false;
 
     /* --- what would have to be built again, decided before anything is written */

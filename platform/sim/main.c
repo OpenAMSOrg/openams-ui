@@ -1013,7 +1013,7 @@ static void moonraker_link_cb(void *ctx, mc_link_t state)
     (void)ctx;
     printf("MOONRAKER link=%s\n", link_name(state));
     fflush(stdout);
-    if(state == MC_LINK_DOWN) {
+    if(state == MC_LINK_DOWN || state == MC_LINK_KLIPPY_WAIT) {
         for(i = 0; i < (int)g_mmu.unit_count; i++) g_mmu.units[i].connected = false;
     }
     else if(state == MC_LINK_READY) {

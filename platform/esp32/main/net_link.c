@@ -234,7 +234,9 @@ static void on_link_cb(void *ctx, mc_link_t state)
      * where the link is, so it has to be redrawn. */
     s_dirty = true;
 
-    if(state == MC_LINK_DOWN) {
+    /* Down, or Klipper gone under a running Moonraker: the units' last state
+     * stays on screen, shown offline, until fresh data arrives. */
+    if(state == MC_LINK_DOWN || state == MC_LINK_KLIPPY_WAIT) {
         for(i = 0; i < (int)s_shadow->unit_count; i++) s_shadow->units[i].connected = false;
         s_dirty = true;
     }

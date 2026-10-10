@@ -613,7 +613,22 @@ static bool mc_handle_notification(const cJSON *root, const char *method, uint32
 {
     const cJSON *params = cJSON_GetObjectItemCaseSensitive(root, "params");
 
-    (void)now_ms;
+    /* Klipper restarting under a running Moonraker: Moonraker drops this
+     * client's subscriptions, so the link waits for Klipper (and says why) and
+     * subscribes again. The KLIPPY_WAIT retry finds Klipper ready by itself;
+     * notify_klippy_ready only makes that sooner. */
+    if(strcmp(method, "notify_klippy_disconnected") == 0 ||
+       strcmp(method, "notify_klippy_shutdown") == 0) {
+        if(g_mc.link != MC_LINK_DOWN)
+            mc_enter_klippy_wait(now_ms, MC_WAIT_KLIPPY,
+                                 strcmp(method, "notify_klippy_shutdown") == 0 ? "shutdown" : "disconnected");
+        return true;
+    }
+    if(strcmp(method, "notify_klippy_ready") == 0) {
+        if(g_mc.link == MC_LINK_KLIPPY_WAIT) mc_start_handshake(now_ms);
+        return true;
+    }
+
     if(strcmp(method, "notify_status_update") == 0) {
         const cJSON *diff = cJSON_IsArray(params) ? cJSON_GetArrayItem(params, 0) : NULL;
         const cJSON *entry;
@@ -945,7 +960,10 @@ static void mc_scan_top(const char *text, size_t len, mc_top_t *t)
 static bool mc_method_is_read(const mc_top_t *t)
 {
     static const char *const read[] = { "notify_status_update",
-                                        "notify_openams_spoolman_status" };
+                                        "notify_openams_spoolman_status",
+                                        "notify_klippy_disconnected",
+                                        "notify_klippy_shutdown",
+                                        "notify_klippy_ready" };
     size_t i;
 
     for(i = 0; i < sizeof read / sizeof read[0]; i++) {

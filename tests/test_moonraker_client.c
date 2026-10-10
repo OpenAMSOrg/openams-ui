@@ -850,6 +850,38 @@ static void test_klippy_wait(void)
     mc_deinit();
 }
 
+static bool text_in(const char *text, uint32_t now_ms);
+
+/* Klipper restarting under a running Moonraker: the link waits for Klipper,
+ * says why, and subscribes again once Klipper is ready. */
+static void test_klippy_restart(void)
+{
+    cJSON *ui = fixture_payload("openams_ui");
+    char detail[48];
+
+    printf("klippy_restart\n");
+    reset();
+    handshake_to_ready("oams1", "openams_ui oams1", ui, 0);
+    assert(mc_link() == MC_LINK_READY);
+
+    assert(text_in("{\"jsonrpc\":\"2.0\",\"method\":\"notify_klippy_disconnected\"}", 100));
+    assert(mc_link() == MC_LINK_KLIPPY_WAIT);
+    assert(mc_wait_reason(detail, sizeof detail) == MC_WAIT_KLIPPY);
+    assert(strcmp(detail, "disconnected") == 0);
+
+    assert(text_in("{\"jsonrpc\":\"2.0\",\"method\":\"notify_klippy_ready\"}", 200));
+    assert(mc_link() == MC_LINK_CONNECTING);
+    assert_frame_method(h.sent - 1, "server.info", 5);
+
+    assert(text_in("{\"jsonrpc\":\"2.0\",\"method\":\"notify_klippy_shutdown\"}", 300));
+    assert(mc_link() == MC_LINK_KLIPPY_WAIT);
+    assert(mc_wait_reason(detail, sizeof detail) == MC_WAIT_KLIPPY);
+    assert(strcmp(detail, "shutdown") == 0);
+
+    mc_deinit();
+    cJSON_Delete(ui);
+}
+
 static void feed_raw(const char *text)
 {
     assert(mc_on_text(text, strlen(text), 0));
@@ -1159,7 +1191,6 @@ static void test_dropped_broadcasts(void)
         "{\"jsonrpc\": \"2.0\", \"method\": \"notify_proc_stat_update\", \"params\": [{\"moonraker_stats\": {\"time\": 1.5, \"cpu_usage\": 3.2}, \"cpu_temp\": 48.0}]}",
         "{\"jsonrpc\":\"2.0\",\"method\":\"notify_gcode_response\",\"params\":[\"ok\"]}",
         "{\"jsonrpc\":\"2.0\",\"method\":\"notify_filelist_changed\",\"params\":[{}]}",
-        "{\"jsonrpc\":\"2.0\",\"method\":\"notify_klippy_ready\"}",
     };
     size_t i;
     int before;
@@ -1220,6 +1251,7 @@ int main(void)
     test_internal_timeout_restarts();
     test_disconnect_backoff();
     test_klippy_wait();
+    test_klippy_restart();
     test_malformed();
     test_oversized();
     test_list_scan();
