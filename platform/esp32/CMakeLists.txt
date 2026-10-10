@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 # lib/ holds the LVGL component (a symlink to the shared, never-modified
-# submodule checkout) plus lib/lv_conf.h, a sibling symlink to the one
-# lv_conf.h shared with the SDL simulator. lib/lvgl/env_support/cmake/esp.cmake
+# submodule checkout) plus lib/lv_conf.h, which includes the one lv_conf.h
+# shared with the SDL simulator. lib/lvgl/env_support/cmake/esp.cmake
 # registers the "lvgl" component with INCLUDE_DIRS that include its own
 # parent directory (lib/), which is how lv_conf.h reaches it under
 # LV_CONF_INCLUDE_SIMPLE without editing anything under lib/lvgl/.
