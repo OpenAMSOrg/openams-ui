@@ -14,13 +14,25 @@
 #undef NDEBUG
 
 #include <assert.h>
-#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "backend/moonraker_client.h"
 #include "lib/cjson/cJSON.h"
+
+/* The size the allocator really gave a block, for the heap accounting below:
+ * each C library names it differently. */
+#if defined(__APPLE__)
+#include <malloc/malloc.h>
+#define usable_size(p) malloc_size(p)
+#elif defined(_WIN32)
+#include <malloc.h>
+#define usable_size(p) _msize(p)
+#else
+#include <malloc.h>
+#define usable_size(p) malloc_usable_size(p)
+#endif
 
 #ifndef MOONRAKER_FIXTURE_DIR
 #error "compile this test with -DMOONRAKER_FIXTURE_DIR=<abs path to tests/fixtures>"
@@ -927,7 +939,7 @@ static void *budget_malloc(size_t n)
         return NULL;
     }
     p = malloc(n);
-    if(p) g_alloc_live += malloc_usable_size(p);
+    if(p) g_alloc_live += usable_size(p);
     return p;
 }
 
@@ -936,7 +948,7 @@ static void budget_free(void *p)
     /* The client frees printed requests with plain free(), so this must be
      * the plain allocator underneath: only the accounting is ours. */
     if(p) {
-        size_t n = malloc_usable_size(p);
+        size_t n = usable_size(p);
 
         g_alloc_live = g_alloc_live > n ? g_alloc_live - n : 0;
     }
