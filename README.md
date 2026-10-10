@@ -10,6 +10,11 @@ screens on an ESP32 display, a desktop simulator and a Vue 2 web panel.
 
 ![The OpenAMS panel in Mainsail: the toolhead's pressure, an AMS HT and an AMS 2 Pro with their spools, humidity and temperature](docs/images/openams-panel-mainsail.png)
 
+> [!IMPORTANT]
+> **This needs the current OpenAMS on the printer: [OpenAMSOrg/openams](https://github.com/OpenAMSOrg/openams). It does not work with `klipper_openams`.**
+> The display and the Mainsail panel read the `openams_ui <unit>` objects that only the current OpenAMS publishes. With `klipper_openams` the display connects but shows nothing about your units ("The printer shows no OpenAMS unit"), and the panel stays empty.
+> Moving over is one installer run, keeps your `oams.cfg`, and every G-code command keeps working: [Moving from klipper_openams](https://github.com/OpenAMSOrg/openams/blob/main/docs/guide/install.md#moving-from-klipper_openams).
+
 Target hardware is LCDWiki's 4.0 inch ESP32-32E display (E32R40T:
 ESP32-WROOM-32E, 520 KB SRAM, no PSRAM, 4 MB flash): a 480x320 ST7796S panel
 over SPI with an XPT2046 resistive touch controller. Pins and
