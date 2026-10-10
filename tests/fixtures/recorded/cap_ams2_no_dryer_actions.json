@@ -1,0 +1,169 @@
+{
+  "scenario": "cap_ams2_no_dryer_actions",
+  "seed": 710004,
+  "schema_version": 2,
+  "family_map": {
+    "dry1": "ams2"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true
+          }
+        }
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "openams_ui",
+      "unit": "dry1",
+      "payload": {
+        "v": 1,
+        "unit": "dry1",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-AMS2-0001",
+        "online": true,
+        "ready": true,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": {
+              "id": 201,
+              "src": "m"
+            }
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": {
+              "id": 202,
+              "src": "t"
+            }
+          },
+          {
+            "id": 2,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "dry1-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T1",
+            "b": [
+              "dry1-1"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 24,
+          "rh": 31
+        },
+        "dryer": {
+          "state": "off",
+          "target": 0,
+          "min": 0,
+          "heat": 0.0,
+          "fan": 0.0,
+          "fault": "none",
+          "adapter": null
+        },
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault",
+          "rfid_scan"
+        ]
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "component_status",
+      "unit": null,
+      "payload": {
+        "spoolman_online": true,
+        "edit": false,
+        "stop": false,
+        "bays": {
+          "dry1-0": {
+            "spool": {
+              "material": "ABS",
+              "vendor": "Synthetic",
+              "color_hex": "6A3FA0",
+              "remaining_g": 500,
+              "remaining_pct": 50,
+              "initial_g": 1000
+            },
+            "pending_confirmation": false
+          },
+          "dry1-1": {
+            "spool": {
+              "material": "TPU",
+              "vendor": "Synthetic",
+              "color_hex": "8A9099",
+              "remaining_g": 700,
+              "remaining_pct": 70,
+              "initial_g": 1000
+            },
+            "pending_confirmation": false
+          }
+        }
+      }
+    }
+  ]
+}

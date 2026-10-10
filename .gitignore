@@ -1,0 +1,13 @@
+build/
+build-win/
+build-web/
+dist/
+out/
+hw/*.bin
+third_party/
+/assets/fonts/cjk/*.otf
+platform/esp32/build/
+platform/esp32/sdkconfig
+platform/esp32/sdkconfig.old
+platform/esp32/managed_components/
+/review/

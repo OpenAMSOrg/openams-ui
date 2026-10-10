@@ -1,0 +1,6421 @@
+{
+	"toolheads":	[{
+			"id":	"fps1",
+			"title":	"Extruder",
+			"subtitle":	"fps1",
+			"tool":	null,
+			"pressure":	{
+				"value":	0.019999999552965164,
+				"set_point":	0.5,
+				"band":	null,
+				"label":	"Pressure",
+				"text":	"0.020",
+				"scale":	["0.00", "0.50", "1.00"]
+			},
+			"activity":	{
+				"kind":	"idle",
+				"steps":	[],
+				"index":	-1,
+				"failed":	-1,
+				"rest":	{
+					"label":	"Ready: T0 · T2",
+					"color":	null,
+					"loaded":	false,
+					"outline":	false
+				}
+			},
+			"message":	{
+				"text":	"No filament loaded",
+				"tone":	"neutral"
+			},
+			"alert":	null,
+			"alert_clear":	true,
+			"actions":	[{
+					"id":	"unload",
+					"label":	"Unload",
+					"line":	"unload fps1",
+					"enabled":	false,
+					"reason":	"No filament is loaded",
+					"style":	"normal",
+					"target":	"tile",
+					"confirm":	null,
+					"form":	null
+				}, {
+					"id":	"stop",
+					"label":	"Stop",
+					"line":	"stop fps1",
+					"enabled":	false,
+					"reason":	"Nothing is loading or unloading",
+					"style":	"normal",
+					"target":	"tile",
+					"confirm":	{
+						"title":	"Stop now?",
+						"text":	"What is running stops after the current move.",
+						"ok_label":	"Stop"
+					},
+					"form":	null
+				}],
+			"units":	[{
+					"id":	"bench_ams2_left",
+					"title":	"AMS 2 Pro",
+					"subtitle":	"bench_ams2_left",
+					"online":	true,
+					"status_text":	"",
+					"env":	{
+						"text":	"35% RH | 31°C"
+					},
+					"dryer":	null,
+					"alert":	null,
+					"alert_clear":	true,
+					"info":	{
+						"serial":	"",
+						"firmware":	"",
+						"family":	"AMS 2 Pro"
+					},
+					"actions":	[],
+					"groups":	[{
+							"actions":	[{
+									"id":	"delete_group",
+									"label":	"Delete group",
+									"line":	"delete group T0",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"danger",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}],
+							"name":	"T0",
+							"editable":	true,
+							"reason":	"",
+							"members":	[{
+									"slot_id":	"bench_ams2_left1",
+									"bay":	0,
+									"mine":	true,
+									"dim":	false,
+									"spare":	false,
+									"label":	"Spool 1",
+									"color":	null,
+									"material":	"",
+									"brand":	"",
+									"state":	"Ready",
+									"state_tone":	"neutral"
+								}]
+						}],
+					"ungrouped_bays":	[{
+							"slot_id":	"bench_ams2_left2",
+							"bay":	1,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 2",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}, {
+							"slot_id":	"bench_ams2_left3",
+							"bay":	2,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 3",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}, {
+							"slot_id":	"bench_ams2_left4",
+							"bay":	3,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 4",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}],
+					"bays":	[{
+							"slot_id":	"bench_ams2_left1",
+							"bay":	0,
+							"tool":	"T0",
+							"label":	"T0",
+							"sublabel":	"Spool 1",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams2_left1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams2_left1",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams2_left1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams2_left1",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams2_left1",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"T0"
+													}, {
+														"value":	2,
+														"label":	"T2"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams2_left1",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams2_left2",
+							"bay":	1,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 2",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams2_left2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams2_left2",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams2_left2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams2_left2",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams2_left2",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"T0"
+													}, {
+														"value":	2,
+														"label":	"T2"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams2_left2",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams2_left3",
+							"bay":	2,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 3",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams2_left3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams2_left3",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams2_left3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams2_left3",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams2_left3",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"T0"
+													}, {
+														"value":	2,
+														"label":	"T2"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams2_left3",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams2_left4",
+							"bay":	3,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 4",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams2_left4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams2_left4",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams2_left4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams2_left4",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams2_left4",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"T0"
+													}, {
+														"value":	2,
+														"label":	"T2"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams2_left4",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}]
+				}, {
+					"id":	"bench_ams1_rear",
+					"title":	"AMS",
+					"subtitle":	"bench_ams1_rear",
+					"online":	true,
+					"status_text":	"",
+					"env":	{
+						"text":	"35% RH | 31°C"
+					},
+					"dryer":	null,
+					"alert":	null,
+					"alert_clear":	true,
+					"info":	{
+						"serial":	"",
+						"firmware":	"",
+						"family":	"AMS"
+					},
+					"actions":	[],
+					"groups":	[{
+							"actions":	[{
+									"id":	"delete_group",
+									"label":	"Delete group",
+									"line":	"delete group T2",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"danger",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}],
+							"name":	"T2",
+							"editable":	true,
+							"reason":	"",
+							"members":	[{
+									"slot_id":	"bench_ams1_rear1",
+									"bay":	0,
+									"mine":	true,
+									"dim":	false,
+									"spare":	false,
+									"label":	"Spool 1",
+									"color":	null,
+									"material":	"",
+									"brand":	"",
+									"state":	"Ready",
+									"state_tone":	"neutral"
+								}]
+						}],
+					"ungrouped_bays":	[{
+							"slot_id":	"bench_ams1_rear2",
+							"bay":	1,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 2",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}, {
+							"slot_id":	"bench_ams1_rear3",
+							"bay":	2,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 3",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}, {
+							"slot_id":	"bench_ams1_rear4",
+							"bay":	3,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 4",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}],
+					"bays":	[{
+							"slot_id":	"bench_ams1_rear1",
+							"bay":	0,
+							"tool":	"T2",
+							"label":	"T2",
+							"sublabel":	"Spool 1",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams1_rear1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams1_rear1",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams1_rear1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams1_rear1",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams1_rear1",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	2,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"T0"
+													}, {
+														"value":	2,
+														"label":	"T2"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams1_rear1",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams1_rear2",
+							"bay":	1,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 2",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams1_rear2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams1_rear2",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams1_rear2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams1_rear2",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams1_rear2",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"T0"
+													}, {
+														"value":	2,
+														"label":	"T2"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams1_rear2",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams1_rear3",
+							"bay":	2,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 3",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams1_rear3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams1_rear3",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams1_rear3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams1_rear3",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams1_rear3",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"T0"
+													}, {
+														"value":	2,
+														"label":	"T2"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams1_rear3",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams1_rear4",
+							"bay":	3,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 4",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams1_rear4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams1_rear4",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams1_rear4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams1_rear4",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams1_rear4",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"T0"
+													}, {
+														"value":	2,
+														"label":	"T2"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams1_rear4",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}]
+				}]
+		}, {
+			"id":	"fps2",
+			"title":	"Extruder",
+			"subtitle":	"fps2",
+			"tool":	null,
+			"pressure":	{
+				"value":	0.019999999552965164,
+				"set_point":	0.5,
+				"band":	null,
+				"label":	"Pressure",
+				"text":	"0.020",
+				"scale":	["0.00", "0.50", "1.00"]
+			},
+			"activity":	{
+				"kind":	"idle",
+				"steps":	[],
+				"index":	-1,
+				"failed":	-1,
+				"rest":	{
+					"label":	"Ready: T1 · T3",
+					"color":	null,
+					"loaded":	false,
+					"outline":	false
+				}
+			},
+			"message":	{
+				"text":	"No filament loaded",
+				"tone":	"neutral"
+			},
+			"alert":	null,
+			"alert_clear":	true,
+			"actions":	[{
+					"id":	"unload",
+					"label":	"Unload",
+					"line":	"unload fps2",
+					"enabled":	false,
+					"reason":	"No filament is loaded",
+					"style":	"normal",
+					"target":	"tile",
+					"confirm":	null,
+					"form":	null
+				}, {
+					"id":	"stop",
+					"label":	"Stop",
+					"line":	"stop fps2",
+					"enabled":	false,
+					"reason":	"Nothing is loading or unloading",
+					"style":	"normal",
+					"target":	"tile",
+					"confirm":	{
+						"title":	"Stop now?",
+						"text":	"What is running stops after the current move.",
+						"ok_label":	"Stop"
+					},
+					"form":	null
+				}],
+			"units":	[{
+					"id":	"bench_ams2_right",
+					"title":	"AMS 2 Pro",
+					"subtitle":	"bench_ams2_right",
+					"online":	true,
+					"status_text":	"",
+					"env":	{
+						"text":	"35% RH | 31°C"
+					},
+					"dryer":	null,
+					"alert":	null,
+					"alert_clear":	true,
+					"info":	{
+						"serial":	"",
+						"firmware":	"",
+						"family":	"AMS 2 Pro"
+					},
+					"actions":	[],
+					"groups":	[{
+							"actions":	[{
+									"id":	"delete_group",
+									"label":	"Delete group",
+									"line":	"delete group T1",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"danger",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}],
+							"name":	"T1",
+							"editable":	true,
+							"reason":	"",
+							"members":	[{
+									"slot_id":	"bench_ams2_right1",
+									"bay":	0,
+									"mine":	true,
+									"dim":	false,
+									"spare":	false,
+									"label":	"Spool 1",
+									"color":	null,
+									"material":	"",
+									"brand":	"",
+									"state":	"Ready",
+									"state_tone":	"neutral"
+								}]
+						}],
+					"ungrouped_bays":	[{
+							"slot_id":	"bench_ams2_right2",
+							"bay":	1,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 2",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}, {
+							"slot_id":	"bench_ams2_right3",
+							"bay":	2,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 3",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}, {
+							"slot_id":	"bench_ams2_right4",
+							"bay":	3,
+							"mine":	true,
+							"dim":	false,
+							"spare":	false,
+							"label":	"Spool 4",
+							"color":	null,
+							"material":	"",
+							"brand":	"",
+							"state":	"Ready",
+							"state_tone":	"neutral"
+						}],
+					"bays":	[{
+							"slot_id":	"bench_ams2_right1",
+							"bay":	0,
+							"tool":	"T1",
+							"label":	"T1",
+							"sublabel":	"Spool 1",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams2_right1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams2_right1",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams2_right1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams2_right1",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams2_right1",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	1,
+														"label":	"T1"
+													}, {
+														"value":	3,
+														"label":	"T3"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams2_right1",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams2_right2",
+							"bay":	1,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 2",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams2_right2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams2_right2",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams2_right2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams2_right2",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams2_right2",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	1,
+														"label":	"T1"
+													}, {
+														"value":	3,
+														"label":	"T3"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams2_right2",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams2_right3",
+							"bay":	2,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 3",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams2_right3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams2_right3",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams2_right3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams2_right3",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams2_right3",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	1,
+														"label":	"T1"
+													}, {
+														"value":	3,
+														"label":	"T3"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams2_right3",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}, {
+							"slot_id":	"bench_ams2_right4",
+							"bay":	3,
+							"tool":	null,
+							"label":	"?",
+							"sublabel":	"Spool 4",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ams2_right4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ams2_right4",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ams2_right4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ams2_right4",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ams2_right4",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	1,
+														"label":	"T1"
+													}, {
+														"value":	3,
+														"label":	"T3"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ams2_right4",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}]
+				}, {
+					"id":	"bench_ht_front",
+					"title":	"AMS HT",
+					"subtitle":	"bench_ht_front",
+					"online":	true,
+					"status_text":	"",
+					"env":	{
+						"text":	"35% RH | 31°C"
+					},
+					"dryer":	null,
+					"alert":	null,
+					"alert_clear":	true,
+					"info":	{
+						"serial":	"",
+						"firmware":	"",
+						"family":	"AMS HT"
+					},
+					"actions":	[],
+					"groups":	[{
+							"actions":	[{
+									"id":	"delete_group",
+									"label":	"Delete group",
+									"line":	"delete group T3",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"danger",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}],
+							"name":	"T3",
+							"editable":	true,
+							"reason":	"",
+							"members":	[{
+									"slot_id":	"bench_ht_front1",
+									"bay":	0,
+									"mine":	true,
+									"dim":	false,
+									"spare":	false,
+									"label":	"Spool 1",
+									"color":	null,
+									"material":	"",
+									"brand":	"",
+									"state":	"Ready",
+									"state_tone":	"neutral"
+								}]
+						}],
+					"ungrouped_bays":	[],
+					"bays":	[{
+							"slot_id":	"bench_ht_front1",
+							"bay":	0,
+							"tool":	"T3",
+							"label":	"T3",
+							"sublabel":	"Spool 1",
+							"spare":	null,
+							"state":	"unknown",
+							"tag":	null,
+							"color":	null,
+							"ink":	"light",
+							"gradient_top":	null,
+							"gradient_bottom":	null,
+							"color_name":	"",
+							"dim":	true,
+							"hatched":	false,
+							"name":	"",
+							"material":	"",
+							"brand":	"",
+							"grams_text":	"",
+							"pct":	-1,
+							"pct_text":	"?",
+							"low":	false,
+							"rfid":	false,
+							"pending_confirmation":	false,
+							"calibrated":	true,
+							"actions":	[{
+									"id":	"load",
+									"label":	"Load",
+									"line":	"spool edit bench_ht_front1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"options":	[{
+														"value":	-1,
+														"label":	"Choose a material"
+													}, {
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save and load",
+										"require_change":	true
+									}
+								}, {
+									"id":	"unload",
+									"label":	"Unload",
+									"line":	"unload bench_ht_front1",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"tile",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"edit_spool",
+									"label":	"Edit spool",
+									"line":	"spool edit bench_ht_front1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"enabled":	false,
+									"reason":	"Spoolman is not set up",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"material",
+												"label":	"Material",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"PLA"
+													}, {
+														"value":	1,
+														"label":	"PETG"
+													}, {
+														"value":	2,
+														"label":	"ABS"
+													}, {
+														"value":	3,
+														"label":	"ASA"
+													}, {
+														"value":	4,
+														"label":	"TPU"
+													}, {
+														"value":	5,
+														"label":	"PA"
+													}, {
+														"value":	6,
+														"label":	"PC"
+													}, {
+														"value":	7,
+														"label":	"PLA-CF"
+													}, {
+														"value":	8,
+														"label":	"PETG-CF"
+													}, {
+														"value":	9,
+														"label":	"PVA"
+													}]
+											}, {
+												"id":	"color",
+												"label":	"Color",
+												"kind":	"select",
+												"value":	-1,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	-1,
+														"label":	"Not set"
+													}, {
+														"value":	16777215,
+														"label":	"white"
+													}, {
+														"value":	10922410,
+														"label":	"silver"
+													}, {
+														"value":	6251368,
+														"label":	"gray"
+													}, {
+														"value":	0,
+														"label":	"black"
+													}, {
+														"value":	10306348,
+														"label":	"brown"
+													}, {
+														"value":	14990696,
+														"label":	"gold"
+													}, {
+														"value":	12660255,
+														"label":	"red"
+													}, {
+														"value":	10297909,
+														"label":	"maroon"
+													}, {
+														"value":	16738835,
+														"label":	"orange"
+													}, {
+														"value":	16051754,
+														"label":	"yellow"
+													}, {
+														"value":	44610,
+														"label":	"green"
+													}, {
+														"value":	2055226,
+														"label":	"forest green"
+													}, {
+														"value":	45495,
+														"label":	"turquoise"
+													}, {
+														"value":	34518,
+														"label":	"cyan"
+													}, {
+														"value":	665993,
+														"label":	"blue"
+													}, {
+														"value":	6177719,
+														"label":	"purple"
+													}, {
+														"value":	15466636,
+														"label":	"magenta"
+													}, {
+														"value":	16079476,
+														"label":	"pink"
+													}]
+											}, {
+												"id":	"vendor",
+												"label":	"Vendor",
+												"kind":	"select",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	0,
+														"label":	"Generic"
+													}]
+											}, {
+												"id":	"remaining",
+												"label":	"Remaining",
+												"kind":	"number",
+												"value":	1000,
+												"min":	0,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"initial",
+												"label":	"Initial weight",
+												"kind":	"number",
+												"value":	1000,
+												"min":	1,
+												"max":	10000,
+												"step":	1,
+												"unit":	"g",
+												"required":	false
+											}, {
+												"id":	"pa",
+												"label":	"PA value",
+												"kind":	"number",
+												"value":	0.02,
+												"min":	0,
+												"max":	2,
+												"step":	0.001,
+												"unit":	"",
+												"required":	false
+											}],
+										"submit_label":	"Save edit",
+										"require_change":	true
+									}
+								}, {
+									"id":	"spool_list_refresh",
+									"label":	"Refresh spools",
+									"line":	"spool list",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"unlink",
+									"label":	"Unlink spool",
+									"line":	"unlink bench_ht_front1",
+									"enabled":	false,
+									"reason":	"No Spoolman spool is linked",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	null
+								}, {
+									"id":	"change_group",
+									"label":	"Change group…",
+									"line":	"change group {group} bench_ht_front1",
+									"enabled":	true,
+									"reason":	"",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	null,
+									"form":	{
+										"fields":	[{
+												"id":	"group",
+												"label":	"Group",
+												"kind":	"select",
+												"value":	3,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	false,
+												"options":	[{
+														"value":	1,
+														"label":	"T1"
+													}, {
+														"value":	3,
+														"label":	"T3"
+													}, {
+														"value":	-1,
+														"label":	"No group"
+													}, {
+														"value":	-2,
+														"label":	"New group"
+													}]
+											}],
+										"submit_label":	"Change group",
+										"require_change":	true
+									}
+								}, {
+									"id":	"calibrate",
+									"label":	"Calibrate",
+									"line":	"calibrate bench_ht_front1",
+									"enabled":	false,
+									"reason":	"Not supported on this unit yet",
+									"style":	"normal",
+									"target":	"ring",
+									"confirm":	{
+										"title":	"Calibrate this spool?",
+										"text":	"The filament moves while the PTFE length is measured.",
+										"ok_label":	"Calibrate"
+									},
+									"form":	null
+								}]
+						}]
+				}]
+		}],
+	"unassigned_units":	[],
+	"alerts":	[],
+	"alert_count":	0,
+	"unread_count":	0,
+	"notice":	null,
+	"nothing_to_load":	{
+		"text":	"Nothing is loading"
+	},
+	"labels":	{
+		"alerts":	"Alerts",
+		"settings":	"Settings",
+		"fault":	"Fault",
+		"pressure":	"Pressure",
+		"no_alerts":	"No alerts",
+		"close":	"Close",
+		"cancel":	"Cancel",
+		"no_response":	"No response from the printer",
+		"edit_failed":	"Could not save the spool:",
+		"action_refused":	"Could not do that:",
+		"groups":	"Groups",
+		"no_group":	"No group",
+		"low":	"Low"
+	},
+	"spoolman":	{
+		"online":	false,
+		"pending":	[]
+	},
+	"settings":	[{
+			"key":	"read_tag_on_insertion",
+			"label":	"Read filament on insertion",
+			"note":	"Read the spool tag when a spool is inserted (~20 s)",
+			"value":	true,
+			"action_on":	{
+				"id":	"setting_on",
+				"label":	"On",
+				"line":	"setting read_tag_on_insertion on",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"action_off":	{
+				"id":	"setting_off",
+				"label":	"Off",
+				"line":	"setting read_tag_on_insertion off",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"selected":	0,
+			"options":	[]
+		}, {
+			"key":	"read_tags_at_startup",
+			"label":	"Read filament on startup",
+			"note":	"Read every spool tag at power-on (~1 min)",
+			"value":	true,
+			"action_on":	{
+				"id":	"setting_on",
+				"label":	"On",
+				"line":	"setting read_tags_at_startup on",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"action_off":	{
+				"id":	"setting_off",
+				"label":	"Off",
+				"line":	"setting read_tags_at_startup off",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"selected":	0,
+			"options":	[]
+		}, {
+			"key":	"auto_reload_on_runout",
+			"label":	"Reload from a spare on runout",
+			"note":	"Hand the lane to the next group member instead of pausing",
+			"value":	true,
+			"action_on":	{
+				"id":	"setting_on",
+				"label":	"On",
+				"line":	"setting auto_reload_on_runout on",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"action_off":	{
+				"id":	"setting_off",
+				"label":	"Off",
+				"line":	"setting auto_reload_on_runout off",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"selected":	0,
+			"options":	[]
+		}, {
+			"key":	"auto_create_spoolman_spools",
+			"label":	"Create Spoolman spools for new tags",
+			"note":	"Add an unknown tag to Spoolman on its first read",
+			"value":	true,
+			"action_on":	{
+				"id":	"setting_on",
+				"label":	"On",
+				"line":	"setting auto_create_spoolman_spools on",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"action_off":	{
+				"id":	"setting_off",
+				"label":	"Off",
+				"line":	"setting auto_create_spoolman_spools off",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"selected":	0,
+			"options":	[]
+		}, {
+			"key":	"apply_pa_on_load",
+			"label":	"Apply pressure advance on load",
+			"note":	"Push the spool's pressure advance to the printer on load",
+			"value":	false,
+			"action_on":	{
+				"id":	"setting_on",
+				"label":	"On",
+				"line":	"setting apply_pa_on_load on",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"action_off":	{
+				"id":	"setting_off",
+				"label":	"Off",
+				"line":	"setting apply_pa_on_load off",
+				"enabled":	true,
+				"reason":	"",
+				"style":	"normal",
+				"target":	"tile",
+				"confirm":	null,
+				"form":	null
+			},
+			"selected":	0,
+			"options":	[]
+		}, {
+			"key":	"language",
+			"label":	"Language",
+			"note":	"The language of this panel and of the display",
+			"value":	false,
+			"action_on":	null,
+			"action_off":	null,
+			"selected":	0,
+			"options":	[{
+					"code":	"en",
+					"label":	"English"
+				}, {
+					"code":	"de",
+					"label":	"Deutsch"
+				}, {
+					"code":	"es",
+					"label":	"Español"
+				}, {
+					"code":	"fr",
+					"label":	"Français"
+				}, {
+					"code":	"it",
+					"label":	"Italiano"
+				}, {
+					"code":	"ja",
+					"label":	"日本語"
+				}, {
+					"code":	"ko",
+					"label":	"한국어"
+				}, {
+					"code":	"pl",
+					"label":	"Polski"
+				}, {
+					"code":	"pt-BR",
+					"label":	"Português (Brasil)"
+				}, {
+					"code":	"ru",
+					"label":	"Русский"
+				}, {
+					"code":	"zh-Hans",
+					"label":	"简体中文"
+				}]
+		}]
+}

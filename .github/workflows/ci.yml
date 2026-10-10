@@ -1,0 +1,277 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Cancel any in-progress run on the same branch when a new push arrives.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Linux: build the SDL simulator, run unit tests, smoke+audit, and the
+  # end-to-end tests against mock_moonraker from the openams checkout.
+  # --------------------------------------------------------------------------
+  linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (with LVGL submodule)
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install SDL2 dev and cmake
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y libsdl2-dev cmake
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Unit tests (ctest)
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Smoke + layout audit
+        run: |
+          set -o pipefail
+          SDL_VIDEODRIVER=dummy ./build/openams-ui-sim --smoke --audit 2>&1 \
+            | tee smoke.log
+          grep -q 'AUDIT TOTAL issues=0' smoke.log
+
+      - name: Cache pip (aiohttp)
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-aiohttp-${{ runner.os }}
+
+      - name: Install aiohttp
+        run: pip install aiohttp
+
+      # openams is private until it is published: with an OPENAMS_READ_TOKEN
+      # secret (read access to OpenAMSOrg/openams) the e2e steps run; without
+      # one they are skipped with a warning. Once openams is public the
+      # anonymous clone works and they always run.
+      - name: Checkout openams (sibling path)
+        id: openams
+        env:
+          OPENAMS_TOKEN: ${{ secrets.OPENAMS_READ_TOKEN }}
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          url=https://github.com/OpenAMSOrg/openams.git
+          if [ -n "$OPENAMS_TOKEN" ]; then
+            url="https://x-access-token:${OPENAMS_TOKEN}@github.com/OpenAMSOrg/openams.git"
+          fi
+          if git clone --depth 1 "$url" "${{ runner.workspace }}/openams"; then
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::openams is not readable (private, and no OPENAMS_READ_TOKEN secret): the mock-Moonraker e2e steps are skipped"
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: e2e – mock Moonraker
+        if: steps.openams.outputs.ok == '1'
+        env:
+          OPENAMS_ROOT: ${{ runner.workspace }}/openams
+        run: |
+          set -o pipefail
+          bash tests/e2e_mock_moonraker.sh 2>&1 | tee e2e_mock.log
+          if grep -q '^SKIP' e2e_mock.log; then
+            echo "::error::e2e_mock_moonraker skipped in CI (openams or aiohttp missing?)"
+            exit 1
+          fi
+
+      - name: e2e – actions (G-code dispatch)
+        if: steps.openams.outputs.ok == '1'
+        env:
+          OPENAMS_ROOT: ${{ runner.workspace }}/openams
+        run: |
+          set -o pipefail
+          bash tests/e2e_actions.sh 2>&1 | tee e2e_actions.log
+          if grep -q '^SKIP' e2e_actions.log; then
+            echo "::error::e2e_actions skipped in CI (openams or aiohttp missing?)"
+            exit 1
+          fi
+
+      - name: Replay recorded fixtures
+        env:
+          OPENAMS_ROOT: ${{ runner.workspace }}/openams
+        run: bash tests/replay_vams_fixtures.sh ./build/openams-ui-sim
+
+      - name: Fixtures validate against the host schema
+        if: steps.openams.outputs.ok == '1'
+        env:
+          OPENAMS_ROOT: ${{ runner.workspace }}/openams
+        run: |
+          pip install jsonschema
+          python3 tests/validate_vams_fixtures.py
+
+  # --------------------------------------------------------------------------
+  # ESP32: build the firmware with ESP-IDF v6.0.1 and check static DRAM usage.
+  # One image per language set (the firmware carries only the languages it was
+  # built with, see cmake/languages.cmake); every set is size-checked the same
+  # way.
+  # --------------------------------------------------------------------------
+  esp32:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v6.0.1
+
+    strategy:
+      fail-fast: false
+      matrix:
+        languages: [latin, ja, ko, zh-Hans]
+
+    name: esp32 (${{ matrix.languages }})
+    steps:
+      - name: Checkout (with LVGL submodule)
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Cache IDF managed components
+        uses: actions/cache@v4
+        with:
+          path: platform/esp32/managed_components
+          key: >-
+            idf-managed-${{ hashFiles('platform/esp32/main/idf_component.yml') }}
+
+      - name: Build firmware
+        working-directory: platform/esp32
+        shell: bash
+        run: |
+          . "${IDF_PATH}/export.sh" >/dev/null
+          idf.py -DMMU_LANGUAGES=${{ matrix.languages }} build
+
+      - name: Size check (DRAM free floor 20000 bytes)
+        working-directory: platform/esp32
+        shell: bash
+        run: |
+          set -o pipefail
+          . "${IDF_PATH}/export.sh" >/dev/null
+          idf.py size --format json2 \
+            | python3 ../../tools/ci/esp32_size_check.py 20000
+
+  # --------------------------------------------------------------------------
+  # Core (WebAssembly): build the openams-core module (no LVGL, no SDL), run the
+  # node tests against the U1c goldens and the action vectors, and hold the
+  # size budget (120 KB raw, 50 KB gzipped).
+  # --------------------------------------------------------------------------
+  core-wasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (no submodules, the core does not use LVGL)
+        uses: actions/checkout@v4
+
+      # The emsdk version the module is developed against (emcc --version).
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 6.0.10
+          actions-cache-folder: emsdk-cache
+
+      - name: Set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24     # runs .ts directly (type stripping) for web/logic
+
+      - name: Action vectors are current
+        run: python3 tools/export_actions_vectors.py --check
+
+      - name: Generated strings are current
+        run: node tools/gen_strings.mjs --check
+
+      # The device fonts must cover every language: each Geist size plus the
+      # CJK face of that size, per language, with nothing on the allow-list.
+      - name: Glyph checker tests
+        run: node --test tools/test/check_glyphs.test.mjs
+
+      - name: Every language's glyphs are in the device fonts
+        run: node tools/check_glyphs.mjs --check
+
+      - name: Generated design tokens are current
+        run: node tools/gen_tokens.mjs --check
+
+      - name: No user-visible literals in src/ui outside the strings table
+        run: node tools/check_literals.mjs
+
+      - name: Typecheck the TypeScript logic
+        run: |
+          cd web/logic
+          npm install --no-save typescript@5
+          npx tsc -p tsconfig.json
+
+      - name: Shim on the host compiler (nothing reads g_mmu)
+        run: bash platform/core-wasm/test_native.sh
+
+      - name: Build openams-core
+        run: bash platform/core-wasm/build.sh
+
+      # The C core's wasm build is the oracle: the TypeScript logic must give
+      # the same views and action results (web/logic/test/diff.test.ts).
+      - name: Node tests (the wasm core, and the TypeScript logic against it)
+        run: node --test web/core/test/*.test.mjs web/logic/test/*.test.ts
+
+      - name: Size budget
+        run: node tools/ci/wasm_size_check.mjs web/core/dist/openams-core.wasm
+
+  # --------------------------------------------------------------------------
+  # The Vue panel (web/vue) and the generator that copies it, with the logic and
+  # the host files, into a Mainsail fork (tools/gen_mainsail.mjs). The fork
+  # itself is checked in its own repository, with
+  #   node tools/gen_mainsail.mjs --out <fork> --check
+  # --------------------------------------------------------------------------
+  web-vue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (no submodules)
+        uses: actions/checkout@v4
+
+      - name: Set up node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install the panel's dependencies
+        working-directory: web/vue
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: web/vue
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: web/vue
+        run: npm run build
+
+      # The runner has no browser: the tests drive the gallery with Chromium.
+      - name: Install the test browser
+        working-directory: web/vue
+        run: npx playwright install --with-deps chromium
+
+      - name: CJK fonts for the fit checks
+        # The i18n fit checks measure ja, ko and zh-Hans text; without the Noto
+        # CJK fonts the runner falls back to other faces and measures wider.
+        run: sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+
+      - name: Tests (Playwright)
+        working-directory: web/vue
+        run: npx playwright test
+
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web/vue/playwright-report
+          if-no-files-found: ignore
+
+      - name: The generator and its tests
+        run: node --test tools/test/*.test.mjs

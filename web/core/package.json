@@ -1,0 +1,13 @@
+{
+  "name": "@openams/core",
+  "version": "0.1.0",
+  "description": "The OpenAMS UI core (model, merge, action mapper, view builders) as a WebAssembly module with a small JS API.",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": ["index.js", "index.d.ts", "dist/openams-core.js", "dist/openams-core.wasm"],
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT"
+}

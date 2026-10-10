@@ -1,0 +1,288 @@
+{
+  "scenario": "cap_name_8",
+  "seed": 710010,
+  "schema_version": 2,
+  "family_map": {
+    "ams_left": "ams2"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true
+          }
+        }
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "openams_ui",
+      "unit": "ams_left",
+      "payload": {
+        "v": 1,
+        "unit": "ams_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-NAME-0000",
+        "online": true,
+        "ready": true,
+        "cal": "c",
+        "lane": {
+          "id": "fps_lane_ams_left",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": {
+              "id": 700,
+              "src": "t"
+            }
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "ams_left-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 24,
+          "rh": 31
+        },
+        "dryer": {
+          "state": "off",
+          "target": 40,
+          "min": 0,
+          "heat": 0.0,
+          "fan": 0.0,
+          "fault": "none",
+          "adapter": null
+        },
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "dryer_start",
+          "dryer_stop",
+          "clear_fault",
+          "rfid_scan"
+        ]
+      }
+    },
+    {
+      "t": 1.0,
+      "kind": "openams_ui",
+      "unit": "ams_left",
+      "payload": {
+        "v": 1,
+        "unit": "ams_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-NAME-0000",
+        "online": true,
+        "ready": true,
+        "cal": "c",
+        "lane": {
+          "id": "fps_lane_ams_left",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": {
+              "id": 700,
+              "src": "t"
+            }
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "ams_left-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 24,
+          "rh": 31
+        },
+        "dryer": {
+          "state": "off",
+          "target": 45,
+          "min": 0,
+          "heat": 0.0,
+          "fan": 0.0,
+          "fault": "none",
+          "adapter": null
+        },
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "dryer_start",
+          "dryer_stop",
+          "clear_fault",
+          "rfid_scan"
+        ]
+      }
+    },
+    {
+      "t": 2.0,
+      "kind": "openams_ui",
+      "unit": "ams_left",
+      "payload": {
+        "v": 1,
+        "unit": "ams_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-NAME-0000",
+        "online": true,
+        "ready": true,
+        "cal": "c",
+        "lane": {
+          "id": "fps_lane_ams_left",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": {
+              "id": 700,
+              "src": "t"
+            }
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "ams_left-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 24,
+          "rh": 31
+        },
+        "dryer": {
+          "state": "off",
+          "target": 50,
+          "min": 0,
+          "heat": 0.0,
+          "fan": 0.0,
+          "fault": "none",
+          "adapter": null
+        },
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "dryer_start",
+          "dryer_stop",
+          "clear_fault",
+          "rfid_scan"
+        ]
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "component_status",
+      "unit": null,
+      "payload": {
+        "spoolman_online": true,
+        "edit": false,
+        "stop": false,
+        "bays": {
+          "ams_left-0": {
+            "spool": {
+              "material": "PLA",
+              "vendor": "Synthetic",
+              "color_hex": "D9534F",
+              "remaining_g": 600,
+              "remaining_pct": 60,
+              "initial_g": 1000
+            },
+            "pending_confirmation": false
+          }
+        }
+      }
+    }
+  ]
+}

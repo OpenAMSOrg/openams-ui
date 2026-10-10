@@ -1,0 +1,4 @@
+MODEL units=1 groups=1 busy=none busy_unit=-1 busy_slot=-1 loaded=0 loaded_unit=-1 loaded_slot=-1 loaded_ext=-1 current_group=-1 motion_settled=1 spoolman_online=1 has_error=0
+UNIT 0 name=ht1 kind=ht variant=AMS HT slots=1 side=0 connected=1 can_dry=1 dry=dehumidifying target=55 remaining_min=240 adapter=0 rh=31 rh_valid=1 temp=24 temp_valid=1 rfid=1
+SLOT 0:0 state=ready cal=configured positioning=0 spool=301 source=tag material=PA-CF brand=Synthetic color=303030 remaining_g=410 remaining_pct=41 pending=0
+GROUP 0 name=T0 count=1 members=0:0

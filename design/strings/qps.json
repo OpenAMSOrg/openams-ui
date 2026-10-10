@@ -1,0 +1,1639 @@
+{
+ "$comment": "The pseudo-locale: generated from en.json by `node tools/gen_strings.mjs --pseudo`, never hand-edited. It exists so the layout, the fonts and the truncation can be reviewed in a language longer than English; the real translations arrive in their own files (i18n-b).",
+ "code": "qps",
+ "name": "Pseudo-locale",
+ "strings": [
+  {
+   "group": "tile tags"
+  },
+  {
+   "id": "TAG_RUNOUT",
+   "text": "[Ŕúñôúť……]"
+  },
+  {
+   "id": "TAG_POSITIONING",
+   "text": "[Ƥôšíťíôñíñğ…………]"
+  },
+  {
+   "id": "TAG_NOT_INSERTED",
+   "text": "[Éɱƥťý……]"
+  },
+  {
+   "id": "TAG_ERROR",
+   "text": "[Éŕŕôŕ……]"
+  },
+  {
+   "id": "TAG_LOADING",
+   "text": "[Ĺôáďíñğ……]"
+  },
+  {
+   "id": "TAG_UNLOADING",
+   "text": "[Úñļôáďíñğ………]"
+  },
+  {
+   "id": "TILE_LOW",
+   "text": "[Ĺôŵ……]"
+  },
+  {
+   "id": "TAG_CONFIRM",
+   "text": "[Çôñƒíŕɱ……]"
+  },
+  {
+   "group": "the tag's detail sentence"
+  },
+  {
+   "id": "TAGD_NOT_INSERTED",
+   "text": "[Ñô šƥôôļ íš íñšéŕťéď.……………………]"
+  },
+  {
+   "id": "TAGD_ERROR",
+   "text": "[Ťĥíš šƥôôļ ŕéƥôŕťéď áñ éŕŕôŕ.……………………………]"
+  },
+  {
+   "id": "TAGD_RUNOUT",
+   "text": "[Ťĥé šƥôôļ ŕáñ ôúť; ťĥé ƥŕíñťéŕ íš šŵíťçĥíñğ ťô ťĥé ñéẋť šƥáŕé.………………………………………………………………]"
+  },
+  {
+   "id": "TAGD_POSITIONING",
+   "text": "[Ťĥé šƥôôļ íš ƀéíñğ ƥôšíťíôñéď íñ ťĥé ƒééďéŕ.……………………………………………]"
+  },
+  {
+   "id": "TAGD_LOADING",
+   "text": "[Ťĥíš šƥôôļ íš ļôáďíñğ íñťô ťĥé ťôôļĥéáď.…………………………………………]"
+  },
+  {
+   "id": "TAGD_UNLOADING",
+   "text": "[Ťĥíš šƥôôļ íš úñļôáďíñğ ƒŕôɱ ťĥé ťôôļĥéáď.…………………………………………]"
+  },
+  {
+   "id": "TAGD_CONFIRM",
+   "text": "[Çôñƒíŕɱ ťĥé ļíñķéď Šƥôôļɱáñ šƥôôļ.…………………………………]"
+  },
+  {
+   "group": "unit alerts"
+  },
+  {
+   "id": "ALERT_DRYER",
+   "text": "[Ťĥé ďŕýéŕ ŕéƥôŕťéď á ƒáúļť.…………………………]"
+  },
+  {
+   "id": "ALERT_ADAPTER",
+   "text": "[Ťĥé ďŕýéŕ'š ƥôŵéŕ áďáƥťéŕ íš ñôť çôññéçťéď.……………………………………………]"
+  },
+  {
+   "group": "composed text: whole-sentence templates. A sentence with a number or a name in it is ONE id with {named} placeholders, never English fragments glued together in code: word order differs between languages (UNIFIED_UI.md 12). tools/gen_strings.mjs --check compares the placeholder set of every one of these across the languages."
+  },
+  {
+   "id": "PCT",
+   "text": "[{pct}%……]"
+  },
+  {
+   "id": "GRAMS",
+   "text": "[{g} ğ……]"
+  },
+  {
+   "id": "ENV_BOTH",
+   "text": "[{rh}% ŔĤ | {temp}°Ç…………………]"
+  },
+  {
+   "id": "ENV_PCT",
+   "text": "[{rh}% ŔĤ………]"
+  },
+  {
+   "id": "ENV_TEMP",
+   "text": "[{temp}°Ç………]"
+  },
+  {
+   "id": "DRYER_ACTIVE",
+   "text": "[{temp}°Ç · {hours}ĥ ļéƒť………………………]"
+  },
+  {
+   "id": "SPOOL_LABEL",
+   "text": "[Šƥôôļ {n}………]"
+  },
+  {
+   "id": "UNIT_SPOOL",
+   "text": "[{unit} Šƥôôļ {n}………………]"
+  },
+  {
+   "id": "UNIT_BAY",
+   "text": "[{unit}:{n}…………]"
+  },
+  {
+   "id": "TOOL_SPOOL",
+   "text": "[{tool} ({unit} Šƥôôļ {n})…………………………]"
+  },
+  {
+   "id": "SPARE_NUMBERED",
+   "text": "[{mark}{n}………]"
+  },
+  {
+   "id": "RUNOUT",
+   "text": "[{tool} ŕáñ ôúť; šŵíťçĥíñğ ťô {spool}……………………………………]"
+  },
+  {
+   "id": "RUNOUT_ALONE",
+   "text": "[{tool} ŕáñ ôúť……………]"
+  },
+  {
+   "id": "RUNOUT_NO_SPARE",
+   "text": "[{tool} ŕáñ ôúť; ñô šƥáŕé šƥôôļ íš ļéƒť………………………………………]"
+  },
+  {
+   "id": "SHORTFALL",
+   "text": "[Ť{tool} ñééďš {need} ğ; íťš šƥôôļš ĥáṽé {have} ğ…………………………………………………]"
+  },
+  {
+   "id": "MESSAGE_SPOOL_ERROR",
+   "text": "[{spool} ŕéƥôŕťéď áñ éŕŕôŕ…………………………]"
+  },
+  {
+   "id": "ALERT_LOW_FILAMENT",
+   "text": "[Ĺôŵ ƒíļáɱéñť: {spool} ĥáš {g} ğ ļéƒť……………………………………]"
+  },
+  {
+   "group": "a Spoolman spool's picker label: one id per set of parts that is there"
+  },
+  {
+   "id": "SPOOL_OPTION_FULL",
+   "text": "[{vendor} {material} · {g} ğ…………………………]"
+  },
+  {
+   "id": "SPOOL_OPTION_NO_GRAMS",
+   "text": "[{vendor} {material}…………………]"
+  },
+  {
+   "id": "SPOOL_OPTION_VENDOR_GRAMS",
+   "text": "[{vendor} · {g} ğ………………]"
+  },
+  {
+   "id": "SPOOL_OPTION_MATERIAL_GRAMS",
+   "text": "[{material} · {g} ğ…………………]"
+  },
+  {
+   "id": "SPOOL_OPTION_VENDOR",
+   "text": "[{vendor}………]"
+  },
+  {
+   "id": "SPOOL_OPTION_MATERIAL",
+   "text": "[{material}…………]"
+  },
+  {
+   "id": "SPOOL_OPTION_GRAMS",
+   "text": "[{g} ğ……]"
+  },
+  {
+   "group": "the device screens: every visible word, so a translation covers the whole UI (UNIFIED_UI.md 12)"
+  },
+  {
+   "id": "SCREEN_LOAD",
+   "text": "[Ĺôáď……]"
+  },
+  {
+   "id": "SCREEN_LOAD_FULL",
+   "text": "[Ĺôáď / Úñļôáď……………]"
+  },
+  {
+   "id": "SCREEN_PRINT",
+   "text": "[Ƥŕíñťíñğ………]"
+  },
+  {
+   "id": "SCREEN_PRINT_MAPPING",
+   "text": "[Ƥŕíñť ɱáƥƥíñğ……………]"
+  },
+  {
+   "id": "SCREEN_MAPPING",
+   "text": "[Ṁáƥƥíñğ……]"
+  },
+  {
+   "id": "SCREEN_ENV",
+   "text": "[Éñṽíŕôñɱéñť…………]"
+  },
+  {
+   "id": "SCREEN_GROUPS",
+   "text": "[Ğŕôúƥš……]"
+  },
+  {
+   "id": "SCREEN_ORDER",
+   "text": "[Ťĥíš úñíť………]"
+  },
+  {
+   "id": "SCREEN_UNITINFO",
+   "text": "[Úñíť íñƒô………]"
+  },
+  {
+   "id": "SCREEN_DEBUG",
+   "text": "[Ďéƀúğ……]"
+  },
+  {
+   "id": "SCREEN_EDIT",
+   "text": "[Éďíť……]"
+  },
+  {
+   "id": "SCREEN_EDIT_SPOOL",
+   "text": "[Éďíť {spool}…………]"
+  },
+  {
+   "id": "SCREEN_EDIT_NONE",
+   "text": "[Éďíť šƥôôļ…………]"
+  },
+  {
+   "id": "SCREEN_HOME",
+   "text": "[Ĥôɱé……]"
+  },
+  {
+   "id": "SCREEN_MENU",
+   "text": "[Ṁéñú……]"
+  },
+  {
+   "id": "MENU_ENV",
+   "text": "[Éñṽ……]"
+  },
+  {
+   "id": "MENU_ALERTS",
+   "text": "[Áļéŕťš……]"
+  },
+  {
+   "id": "MENU_PRINT",
+   "text": "[Ƥŕíñť……]"
+  },
+  {
+   "id": "MENU_GROUPS",
+   "text": "[Ğŕôúƥš……]"
+  },
+  {
+   "id": "MENU_MAP",
+   "text": "[Ṁáƥ……]"
+  },
+  {
+   "id": "MENU_SETUP",
+   "text": "[Šéťúƥ……]"
+  },
+  {
+   "id": "MENU_UNIT",
+   "text": "[Ťĥíš úñíť………]"
+  },
+  {
+   "id": "MENU_INFO",
+   "text": "[Íñƒô……]"
+  },
+  {
+   "id": "BTN_SAVE",
+   "text": "[Šáṽé……]"
+  },
+  {
+   "id": "BTN_RESET",
+   "text": "[Ŕéšéť……]"
+  },
+  {
+   "id": "BTN_BIND",
+   "text": "[Ɓíñď……]"
+  },
+  {
+   "id": "BTN_START",
+   "text": "[Šťáŕť……]"
+  },
+  {
+   "id": "BTN_RESCAN",
+   "text": "[Ŕé-šçáñ……]"
+  },
+  {
+   "id": "BTN_CREATE",
+   "text": "[Çŕéáťé……]"
+  },
+  {
+   "id": "BTN_REMOVE",
+   "text": "[Ŕéɱôṽé……]"
+  },
+  {
+   "id": "BTN_CONFIRM",
+   "text": "[Çôñƒíŕɱ……]"
+  },
+  {
+   "id": "BTN_DONE",
+   "text": "[Ďôñé……]"
+  },
+  {
+   "id": "BTN_YES_FULL",
+   "text": "[Ýéš, ƒúļļ………]"
+  },
+  {
+   "id": "BTN_NO",
+   "text": "[Ñô……]"
+  },
+  {
+   "id": "LOAD_STOPPED",
+   "text": "[Šťôƥƥéď……]"
+  },
+  {
+   "id": "LOAD_LOADED",
+   "text": "[Ĺôáďéď……]"
+  },
+  {
+   "id": "LOAD_UNLOADED",
+   "text": "[Úñļôáďéď………]"
+  },
+  {
+   "id": "LOAD_EXTERNAL",
+   "text": "[Éẋťéŕñáļ šƥôôļ……………]"
+  },
+  {
+   "id": "LOAD_FAILED",
+   "text": "[Ĺôáď ƒáíļéď…………]"
+  },
+  {
+   "id": "UNLOAD_FAILED",
+   "text": "[Úñļôáď ƒáíļéď……………]"
+  },
+  {
+   "id": "LOAD_EXTRUDED",
+   "text": "[Éẋťŕúďéď, çôñťíñúé…………………]"
+  },
+  {
+   "id": "LOAD_NOT_YET",
+   "text": "[Ñôť ýéť, ŕéťŕý……………]"
+  },
+  {
+   "id": "LOAD_NOTHING",
+   "text": "[Ñôťĥíñğ íš ļôáďíñğ…………………]"
+  },
+  {
+   "id": "LOAD_IDLE_NEXT",
+   "text": "[Ťáƥ á šƥôôļ ôñ Ĥôɱé ťô ļôáď ôŕ úñļôáď……………………………………]"
+  },
+  {
+   "id": "LOAD_STARTING",
+   "text": "[Šťáŕťíñğ…………]"
+  },
+  {
+   "id": "LOAD_STARTING_HINT",
+   "text": "[Ťĥé ƥŕíñťéŕ ĥáš ñôť ŕéƥôŕťéď íť ýéť.……………………………………]"
+  },
+  {
+   "id": "LOAD_NO_REPORT",
+   "text": "[Ťĥé ƥŕíñťéŕ ñéṽéŕ ŕéƥôŕťéď íť. Ñôťĥíñğ íš ļôáďíñğ.……………………………………………………]"
+  },
+  {
+   "id": "LOAD_REFUSED",
+   "text": "[Çôúļď ñôť šťáŕť ļôáďíñğ:………………………]"
+  },
+  {
+   "id": "UNLOAD_REFUSED",
+   "text": "[Çôúļď ñôť šťáŕť úñļôáďíñğ:…………………………]"
+  },
+  {
+   "id": "ACTION_REFUSED",
+   "text": "[Çôúļď ñôť ďô ťĥáť:…………………]"
+  },
+  {
+   "id": "LOAD_EXT_LINE",
+   "text": "[Éẋť · {material}………………]"
+  },
+  {
+   "id": "MATERIAL_UNKNOWN",
+   "text": "[úñķñôŵñ……]"
+  },
+  {
+   "id": "MATERIAL_EMPTY",
+   "text": "[éɱƥťý……]"
+  },
+  {
+   "id": "BUSY_EXT_LOADING",
+   "text": "[Ĺôáďíñğ ťĥé éẋťéŕñáļ šƥôôļ…………………………]"
+  },
+  {
+   "id": "BUSY_EXT_UNLOADING",
+   "text": "[Úñļôáďíñğ ťĥé éẋťéŕñáļ šƥôôļ……………………………]"
+  },
+  {
+   "id": "BUSY_SPOOL_LOADING",
+   "text": "[{spool} íš ļôáďíñğ…………………]"
+  },
+  {
+   "id": "BUSY_SPOOL_UNLOADING",
+   "text": "[{spool} íš úñļôáďíñğ……………………]"
+  },
+  {
+   "id": "BUSY_UNIT_LOADING",
+   "text": "[Úñíť {unit} íš ļôáďíñğ……………………]"
+  },
+  {
+   "id": "BUSY_UNIT_UNLOADING",
+   "text": "[Úñíť {unit} íš úñļôáďíñğ………………………]"
+  },
+  {
+   "id": "PRINT_NO_FILAMENT",
+   "text": "[Ñô áçťíṽé ƒíļáɱéñť…………………]"
+  },
+  {
+   "id": "PRINT_NOT_PRINTING",
+   "text": "[Ñôť ƥŕíñťíñğ…………]"
+  },
+  {
+   "id": "PRINT_CHANGE",
+   "text": "[Ƒíļáɱéñť çĥáñğé {n}…………………]"
+  },
+  {
+   "id": "PRINT_CHANGE_STEP",
+   "text": "[Ƒíļáɱéñť çĥáñğé {n} · {step}……………………………]"
+  },
+  {
+   "id": "PRINT_STANDBY",
+   "text": "[Ťĥíš úñíť íš ôñ šťáñďƀý………………………]"
+  },
+  {
+   "id": "PRINT_PAUSE_LOAD",
+   "text": "[Ƥáúšé áñď ļôáď……………]"
+  },
+  {
+   "id": "PRINT_NO_RUNOUT",
+   "text": "[Ñôťĥíñğ ĥáš ŕúñ ôúť ôñ ťĥíš úñíť………………………………]"
+  },
+  {
+   "id": "ENV_TEMPERATURE",
+   "text": "[Ťéɱƥéŕáťúŕé…………]"
+  },
+  {
+   "id": "ENV_TIME",
+   "text": "[Ťíɱé……]"
+  },
+  {
+   "id": "ENV_START",
+   "text": "[Šťáŕť ďŕýíñğ…………]"
+  },
+  {
+   "id": "ENV_STOP",
+   "text": "[Šťôƥ……]"
+  },
+  {
+   "id": "ENV_CUSTOM",
+   "text": "[Çúšťôɱ……]"
+  },
+  {
+   "id": "ENV_ELAPSED",
+   "text": "[{min} ɱíñ éļáƥšéď………………]"
+  },
+  {
+   "id": "ENV_RANGE",
+   "text": "[{name}  ·  {tmin}°-{tmax}°Ç  ·  {hmin}-{hmax} ĥ………………………………………………]"
+  },
+  {
+   "id": "ENV_LEVEL",
+   "text": "[ļéṽéļ……]"
+  },
+  {
+   "id": "ENV_RH",
+   "text": "[% ŔĤ……]"
+  },
+  {
+   "id": "ENV_DEGC",
+   "text": "[°Ç……]"
+  },
+  {
+   "id": "ENV_TARGET_TEMP",
+   "text": "[{c}°Ç……]"
+  },
+  {
+   "id": "ENV_TARGET_HOURS",
+   "text": "[{h} ĥ……]"
+  },
+  {
+   "id": "ENV_DRY_AT",
+   "text": "[Ďŕý áť {c}°Ç ƒôŕ {h} ĥ……………………]"
+  },
+  {
+   "id": "ENV_DRY_DETAIL",
+   "text": "[{unit} · {variant} · {tmin}-{tmax}°Ç, {hmin}-{hmax} ĥ………………………………………………………]"
+  },
+  {
+   "id": "ENV_CANNOT",
+   "text": "[Çáññôť ďŕý…………]"
+  },
+  {
+   "id": "ENV_CANNOT_REASON",
+   "text": "[ťĥíš úñíť çáññôť ďŕý……………………]"
+  },
+  {
+   "id": "ENV_HEAD_UNIT",
+   "text": "[{unit} · {variant}…………………]"
+  },
+  {
+   "id": "ENV_SCALE_TITLE",
+   "text": "[Ĥúɱíďíťý šçáļé……………]"
+  },
+  {
+   "id": "ENV_LEVEL_A",
+   "text": "[Á  ṽéŕý ďŕý…………]"
+  },
+  {
+   "id": "ENV_LEVEL_A_NOTE",
+   "text": "[íďéáļ ƒôŕ ƥŕíñťíñğ…………………]"
+  },
+  {
+   "id": "ENV_LEVEL_B",
+   "text": "[Ɓ  ďŕý……]"
+  },
+  {
+   "id": "ENV_LEVEL_B_NOTE",
+   "text": "[ğôôď ƒôŕ ƥŕíñťíñğ………………]"
+  },
+  {
+   "id": "ENV_LEVEL_C",
+   "text": "[Ç  ƒáíŕ……]"
+  },
+  {
+   "id": "ENV_LEVEL_C_NOTE",
+   "text": "[ďŕý šƥôôļš ƀéƒôŕé ļôñğ ƥŕíñťš……………………………]"
+  },
+  {
+   "id": "ENV_LEVEL_D",
+   "text": "[Ď  ĥúɱíď………]"
+  },
+  {
+   "id": "ENV_LEVEL_D_NOTE",
+   "text": "[ŕéƥļáçé ťĥé ďéšíççáñť šôôñ…………………………]"
+  },
+  {
+   "id": "ENV_LEVEL_E",
+   "text": "[É  ṽéŕý ĥúɱíď……………]"
+  },
+  {
+   "id": "ENV_LEVEL_E_NOTE",
+   "text": "[ŕéƥļáçé ťĥé ďéšíççáñť……………………]"
+  },
+  {
+   "id": "ENV_BELOW",
+   "text": "[Ɓéļôŵ 20% ŔĤ…………]"
+  },
+  {
+   "id": "ENV_BELOW_NOTE",
+   "text": "[šúíťš ɱôšť ƒíļáɱéñť…………………]"
+  },
+  {
+   "id": "ENV_ABOVE",
+   "text": "[Áƀôṽé 40% ŔĤ…………]"
+  },
+  {
+   "id": "ENV_ABOVE_NOTE",
+   "text": "[ďŕý ťĥé šƥôôļš ƀéƒôŕé ƥŕíñťíñğ………………………………]"
+  },
+  {
+   "id": "ORDER_BIND_TITLE",
+   "text": "[Ɓíñď ťô {unit} ({variant})?…………………………]"
+  },
+  {
+   "id": "ORDER_BIND_BODY",
+   "text": "[Ťĥíš ďíšƥļáý ŵíļļ šĥôŵ úñíť {unit}.……………………………………]"
+  },
+  {
+   "id": "ORDER_RESCAN_TITLE",
+   "text": "[Ŕé-šçáñ úñíťš?……………]"
+  },
+  {
+   "id": "ORDER_RESCAN_HEAD",
+   "text": "[Úñƥļúğ áñď ŕéƥļúğ éáçĥ úñíť…………………………]"
+  },
+  {
+   "id": "ORDER_RESCAN_NOTE",
+   "text": "[ÍĎš ƒôļļôŵ çáƀļé ôŕďéŕ, ñôť ƥĥýšíçáļ ƥôšíťíôñ.………………………………………………]"
+  },
+  {
+   "id": "ORDER_SLOTS",
+   "text": "[Šļôťš: {n}…………]"
+  },
+  {
+   "id": "ORDER_THIS_DISPLAY",
+   "text": "[Ťĥíš ďíšƥļáý…………]"
+  },
+  {
+   "id": "ORDER_LOCKED",
+   "text": "[Úñļôáď ƒíŕšť: ťĥíš úñíť'š ƒíļáɱéñť íš íñ ťĥé ťôôļĥéáď………………………………………………………]"
+  },
+  {
+   "id": "ORDER_FEEDS",
+   "text": "[Ƒééďš……]"
+  },
+  {
+   "id": "ORDER_NOZZLES",
+   "text": "[Ĺéƒť ñôžžļé / Ŕíğĥť ñôžžļé…………………………]"
+  },
+  {
+   "id": "SIDE_LEFT",
+   "text": "[Ĺéƒť……]"
+  },
+  {
+   "id": "SIDE_RIGHT",
+   "text": "[Ŕíğĥť……]"
+  },
+  {
+   "id": "ORDER_WAITING",
+   "text": "[Ŵáíťíñğ ƒôŕ úñíťš...……………………]"
+  },
+  {
+   "id": "ORDER_WAITING_NOTE",
+   "text": "[Úñƥļúğ éṽéŕý úñíť, ťĥéñ ƥļúğ ťĥéɱ ƀáçķ íñ ťĥé ôŕďéŕ ýôú ŵáñť ťĥéɱ ñúɱƀéŕéď.………………………………………………………………………………]"
+  },
+  {
+   "id": "ORDER_NONE",
+   "text": "[Ñô úñíťš çôññéçťéď…………………]"
+  },
+  {
+   "id": "ORDER_RESCAN",
+   "text": "[Ŕé-šçáñ úñíťš……………]"
+  },
+  {
+   "id": "ORDER_RESCAN_SUB",
+   "text": "[Ñúɱƀéŕ ťĥé úñíťš íñ çáƀļé ôŕďéŕ………………………………]"
+  },
+  {
+   "id": "GROUP_LOADED",
+   "text": "[Ĺôáďéď……]"
+  },
+  {
+   "id": "GROUP_EMPTY",
+   "text": "[Éɱƥťý……]"
+  },
+  {
+   "id": "GROUP_ERROR",
+   "text": "[Éŕŕôŕ……]"
+  },
+  {
+   "id": "GROUP_NO_SPARE",
+   "text": "[Ñô šƥáŕé………]"
+  },
+  {
+   "id": "GROUP_READY",
+   "text": "[Ŕéáďý……]"
+  },
+  {
+   "id": "GROUP_NEXT",
+   "text": "[ñéẋť ôñ ŕúñôúť……………]"
+  },
+  {
+   "id": "GROUP_NOT_IN",
+   "text": "[Ñôť íñ á ğŕôúƥ……………]"
+  },
+  {
+   "id": "GROUP_NO_USE",
+   "text": "[Ñô ğŕôúƥ úšéš ťĥíš úñíť………………………]"
+  },
+  {
+   "id": "MAP_NO_SPOOL",
+   "text": "[Ñô šƥôôļ………]"
+  },
+  {
+   "id": "MAP_NO_GROUP",
+   "text": "[Ñô ğŕôúƥ………]"
+  },
+  {
+   "id": "MAP_EMPTY",
+   "text": "[éɱƥťý……]"
+  },
+  {
+   "id": "MAP_MISSING",
+   "text": "[Ť{n} ĥáš ñô šƥôôļ ŕéáďý………………………]"
+  },
+  {
+   "id": "GP_NEW",
+   "text": "[Ñéŵ ğŕôúƥ………]"
+  },
+  {
+   "id": "GP_MEMBERS",
+   "text": "[Ṁéɱƀéŕš: {n}…………]"
+  },
+  {
+   "id": "GP_MOVED",
+   "text": "[{spool} → {group}………………]"
+  },
+  {
+   "id": "GP_REMOVED",
+   "text": "[{spool} ŕéɱôṽéď ƒŕôɱ ğŕôúƥ…………………………]"
+  },
+  {
+   "id": "GP_REMOVE_TITLE",
+   "text": "[Ŕéɱôṽé {spool} ƒŕôɱ {group}?……………………………]"
+  },
+  {
+   "id": "GP_FOR",
+   "text": "[Ğŕôúƥ ƒôŕ {spool}………………]"
+  },
+  {
+   "id": "GP_REMOVE_FROM",
+   "text": "[Ŕéɱôṽé ƒŕôɱ {group}…………………]"
+  },
+  {
+   "id": "GP_ASSIGN_TITLE",
+   "text": "[Áššíğñ ťô {group}………………]"
+  },
+  {
+   "id": "GP_ROW",
+   "text": "[{spool} · {material}……………………]"
+  },
+  {
+   "id": "GP_ALREADY",
+   "text": "[Áļŕéáďý íñ ťĥíš ğŕôúƥ……………………]"
+  },
+  {
+   "id": "GP_NONE_AVAIL",
+   "text": "[Ñô šƥôôļ áṽáíļáƀļé…………………]"
+  },
+  {
+   "id": "GP_NONE_NOTE",
+   "text": "[Ťĥíš úñíť ĥáš ñô ƒíļáɱéñť ťô áššíğñ……………………………………]"
+  },
+  {
+   "id": "SS_HOW_FULL",
+   "text": "[Ĥôŵ ƒúļļ? {spool}………………]"
+  },
+  {
+   "id": "SS_NEW_SPOOL",
+   "text": "[Ñéŵ šƥôôļ íñ {spool}……………………]"
+  },
+  {
+   "id": "SS_ASSIGN",
+   "text": "[Áššíğñ ťô {spool}………………]"
+  },
+  {
+   "id": "SS_UNLINK",
+   "text": "[Úñļíñķ šƥôôļ…………]"
+  },
+  {
+   "id": "SS_UNKNOWN",
+   "text": "[Úñķñôŵñ……]"
+  },
+  {
+   "id": "SS_GRAMS",
+   "text": "[{g}ğ……]"
+  },
+  {
+   "id": "SET_FILAMENT",
+   "text": "[Ƒíļáɱéñť………]"
+  },
+  {
+   "id": "SET_DRYING",
+   "text": "[Ďŕýíñğ……]"
+  },
+  {
+   "id": "SET_ROTATE",
+   "text": "[Ŕôťáťé šƥôôļš ŵĥíļé ďŕýíñğ…………………………]"
+  },
+  {
+   "id": "SET_ROTATE_NOTE",
+   "text": "[Ťúŕñ ťĥé šƥôôļš ďúŕíñğ á ďŕýíñğ çýçļé……………………………………]"
+  },
+  {
+   "id": "SET_UNITINFO_SUB",
+   "text": "[Ṁôďéļ, šéŕíáļ áñď ƒíŕɱŵáŕé…………………………]"
+  },
+  {
+   "id": "SET_GROUPS_SUB",
+   "text": "[Ñáɱéď ğŕôúƥš áñď ťĥé ôŕďéŕ ťĥéý ƀáçķ éáçĥ ôťĥéŕ úƥ……………………………………………………]"
+  },
+  {
+   "id": "SET_DISPLAY",
+   "text": "[Ďíšƥļáý……]"
+  },
+  {
+   "id": "SET_CALIBRATE",
+   "text": "[Çáļíƀŕáťé ťôúçĥ………………]"
+  },
+  {
+   "id": "SET_CALIBRATE_SUB",
+   "text": "[Ťáƥ ƒôúŕ ťáŕğéťš ťô áļíğñ ťĥé ťôúçĥšçŕééñ…………………………………………]"
+  },
+  {
+   "id": "SET_BRIGHTNESS",
+   "text": "[Ɓŕíğĥťñéšš…………]"
+  },
+  {
+   "id": "SET_BRIGHT_VALUE",
+   "text": "[{pct} %……]"
+  },
+  {
+   "id": "SET_CONTRAST",
+   "text": "[Çôñťŕášť………]"
+  },
+  {
+   "id": "SET_STANDARD",
+   "text": "[Šťáñďáŕď………]"
+  },
+  {
+   "id": "SET_HIGH",
+   "text": "[Ĥíğĥ……]"
+  },
+  {
+   "id": "SET_DIM",
+   "text": "[Ďíɱ áƒťéŕ………]"
+  },
+  {
+   "id": "SET_OFF",
+   "text": "[Šçŕééñ ôƒƒ áƒťéŕ………………]"
+  },
+  {
+   "id": "SET_NEVER",
+   "text": "[Ñéṽéŕ……]"
+  },
+  {
+   "id": "SET_MINUTES",
+   "text": "[{n} ɱíñ……]"
+  },
+  {
+   "id": "SET_ROTATE180",
+   "text": "[Ŕôťáťé 180°…………]"
+  },
+  {
+   "id": "UI_SERIAL",
+   "text": "[Šéŕíáļ……]"
+  },
+  {
+   "id": "UI_FIRMWARE",
+   "text": "[Ƒíŕɱŵáŕé………]"
+  },
+  {
+   "id": "UI_UPDATE",
+   "text": "[Úƥďáťé áṽáíļáƀļé………………]"
+  },
+  {
+   "id": "UI_LATEST",
+   "text": "[Ĺáťéšť……]"
+  },
+  {
+   "id": "EDIT_COLOR",
+   "text": "[Çôļôŕ……]"
+  },
+  {
+   "id": "EDIT_COLOR_UNSET",
+   "text": "[Ñôť šéť……]"
+  },
+  {
+   "id": "EDIT_COLOR_RO",
+   "text": "[Ƒíļáɱéñť íñƒô ŕéáď ƒŕôɱ ťáğ - ŕéáď-ôñļý………………………………………]"
+  },
+  {
+   "id": "EDIT_RESET_TITLE",
+   "text": "[Ŕéšéť {spool}?……………]"
+  },
+  {
+   "id": "EDIT_RESET_NOTE",
+   "text": "[Çļéáŕš ṽéñďôŕ, ɱáťéŕíáļ, çôļôŕ áñď ƤÁ. Ťĥé šƥôôļ šĥôŵš ? úñťíļ ýôú šéť íť áğáíñ.……………………………………………………………………………………]"
+  },
+  {
+   "id": "EDIT_LOCKED_PRINT",
+   "text": "[Ťĥíš šƥôôļ íš íñ úšé ƀý ťĥé ŕúññíñğ ƥŕíñť…………………………………………]"
+  },
+  {
+   "id": "EDIT_LOCKED_TAG",
+   "text": "[Ƒíļáɱéñť íñƒô ŵáš ŕéáď ƒŕôɱ ťĥé ťáğ……………………………………]"
+  },
+  {
+   "id": "EDIT_NOTHING_CLEAR",
+   "text": "[Ñôťĥíñğ ťô çļéáŕ ôñ ťĥíš šƥôôļ………………………………]"
+  },
+  {
+   "id": "EDIT_NO_CHANGES",
+   "text": "[Ñô çĥáñğéš ťô šáṽé…………………]"
+  },
+  {
+   "id": "EDIT_EDITED",
+   "text": "[Éďíťéď……]"
+  },
+  {
+   "id": "EDIT_NONE",
+   "text": "[Ñô šƥôôļ íš šéļéçťéď……………………]"
+  },
+  {
+   "id": "EDIT_VENDOR",
+   "text": "[Ṽéñďôŕ……]"
+  },
+  {
+   "id": "EDIT_MATERIAL",
+   "text": "[Ṁáťéŕíáļ………]"
+  },
+  {
+   "id": "EDIT_PA",
+   "text": "[ƤÁ ṽáļúé………]"
+  },
+  {
+   "id": "EDIT_FROM_TAG",
+   "text": "[Ŕéáď ƒŕôɱ ťáğ……………]"
+  },
+  {
+   "id": "EDIT_SAVED",
+   "text": "[Šáṽéď {spool}……………]"
+  },
+  {
+   "id": "EDIT_WAS_RESET",
+   "text": "[{spool} ŕéšéť……………]"
+  },
+  {
+   "id": "HS_NEXT",
+   "text": "[{group} · ñéẋť ôñ ŕúñôúť: {spool}…………………………………]"
+  },
+  {
+   "id": "HS_NO_SPARE",
+   "text": "[{group} · ñô šƥáŕé šƥôôļ………………………]"
+  },
+  {
+   "id": "HS_OFFLINE",
+   "text": "[Úñíť íš ñôť çôññéçťéď……………………]"
+  },
+  {
+   "id": "HS_BUSY",
+   "text": "[Úñíť íš ƀúšý, ƥļéášé ŵáíť…………………………]"
+  },
+  {
+   "id": "HS_PRINTING",
+   "text": "[Íñ úšé ƀý ťĥé ŕúññíñğ ƥŕíñť…………………………]"
+  },
+  {
+   "id": "HS_EMPTY",
+   "text": "[Šƥôôļ íš éɱƥťý……………]"
+  },
+  {
+   "id": "HS_UNKNOWN",
+   "text": "[Ƒíļáɱéñť ťýƥé íš úñķñôŵñ………………………]"
+  },
+  {
+   "id": "HS_NO_TAG",
+   "text": "[Ñô ťáğ ôñ ťĥíš šƥôôļ……………………]"
+  },
+  {
+   "id": "HS_TITLE",
+   "text": "[{tool} · {material}…………………]"
+  },
+  {
+   "id": "HS_LOAD_UNLOADS",
+   "text": "[Ĺôáď (úñļôáďš {tool} ƒíŕšť)…………………………]"
+  },
+  {
+   "id": "HS_LOAD_EXT",
+   "text": "[Ĺôáď (úñļôáďš Éẋť ƒíŕšť)………………………]"
+  },
+  {
+   "id": "HS_EDIT",
+   "text": "[Éďíť……]"
+  },
+  {
+   "id": "HS_REREAD",
+   "text": "[Ŕé-ŕéáď……]"
+  },
+  {
+   "id": "HS_CHANGE_GROUP",
+   "text": "[Çĥáñğé ğŕôúƥ………………]"
+  },
+  {
+   "id": "HS_ASSIGN",
+   "text": "[Áššíğñ Šƥôôļɱáñ šƥôôļ……………………]"
+  },
+  {
+   "id": "ALERTS_EARLIER",
+   "text": "[Éáŕļíéŕ……]"
+  },
+  {
+   "id": "ALERTS_CLEAR",
+   "text": "[Çļéáŕ ŕéšôļṽéď……………]"
+  },
+  {
+   "id": "DEBUG_SCENARIOS",
+   "text": "[Šçéñáŕíôš………]"
+  },
+  {
+   "id": "UI_COMING_SOON",
+   "text": "[Çôɱíñğ šôôñ…………]"
+  },
+  {
+   "id": "COLOR_WHITE",
+   "text": "[ŵĥíťé……]"
+  },
+  {
+   "id": "COLOR_SILVER",
+   "text": "[šíļṽéŕ……]"
+  },
+  {
+   "id": "COLOR_GRAY",
+   "text": "[ğŕáý……]"
+  },
+  {
+   "id": "COLOR_BLACK",
+   "text": "[ƀļáçķ……]"
+  },
+  {
+   "id": "COLOR_BROWN",
+   "text": "[ƀŕôŵñ……]"
+  },
+  {
+   "id": "COLOR_GOLD",
+   "text": "[ğôļď……]"
+  },
+  {
+   "id": "COLOR_RED",
+   "text": "[ŕéď……]"
+  },
+  {
+   "id": "COLOR_MAROON",
+   "text": "[ɱáŕôôñ……]"
+  },
+  {
+   "id": "COLOR_ORANGE",
+   "text": "[ôŕáñğé……]"
+  },
+  {
+   "id": "COLOR_YELLOW",
+   "text": "[ýéļļôŵ……]"
+  },
+  {
+   "id": "COLOR_GREEN",
+   "text": "[ğŕééñ……]"
+  },
+  {
+   "id": "COLOR_FOREST_GREEN",
+   "text": "[ƒôŕéšť ğŕééñ…………]"
+  },
+  {
+   "id": "COLOR_TURQUOISE",
+   "text": "[ťúŕɋúôíšé………]"
+  },
+  {
+   "id": "COLOR_CYAN",
+   "text": "[çýáñ……]"
+  },
+  {
+   "id": "COLOR_BLUE",
+   "text": "[ƀļúé……]"
+  },
+  {
+   "id": "COLOR_PURPLE",
+   "text": "[ƥúŕƥļé……]"
+  },
+  {
+   "id": "COLOR_MAGENTA",
+   "text": "[ɱáğéñťá……]"
+  },
+  {
+   "id": "COLOR_PINK",
+   "text": "[ƥíñķ……]"
+  },
+  {
+   "id": "STEP_HEAT",
+   "text": "[Ĥéáť ťĥé ñôžžļé………………]"
+  },
+  {
+   "id": "STEP_CUT",
+   "text": "[Çúť ƒíļáɱéñť…………]"
+  },
+  {
+   "id": "STEP_RETRACT",
+   "text": "[Ƥúļļ ƀáçķ çúŕŕéñť ƒíļáɱéñť…………………………]"
+  },
+  {
+   "id": "STEP_FEED",
+   "text": "[Ƥúšĥ ñéŵ ƒíļáɱéñť íñťô éẋťŕúďéŕ………………………………]"
+  },
+  {
+   "id": "STEP_PURGE",
+   "text": "[Ƥúŕğé ôļď ƒíļáɱéñť…………………]"
+  },
+  {
+   "id": "STEP_GRAB",
+   "text": "[Ğŕáƀ ñéŵ ƒíļáɱéñť………………]"
+  },
+  {
+   "id": "STEP_CALIBRATE",
+   "text": "[Çáļíƀŕáťé ƤŤƑÉ ļéñğťĥ……………………]"
+  },
+  {
+   "id": "STEP_HOME",
+   "text": "[Ĥôɱé ťĥé áẋéš……………]"
+  },
+  {
+   "id": "REST_PATH",
+   "text": "[{tool} · {spool} · {material}……………………………]"
+  },
+  {
+   "id": "REST_PATH_NO_MATERIAL",
+   "text": "[{tool} · {spool}………………]"
+  },
+  {
+   "id": "REST_READY",
+   "text": "[Ŕéáďý: {tools}……………]"
+  },
+  {
+   "id": "REST_INSERT",
+   "text": "[Íñšéŕť á šƥôôļ……………]"
+  },
+  {
+   "id": "STEP_CLEAN",
+   "text": "[Çļéáñ ťĥé ñôžžļé………………]"
+  },
+  {
+   "id": "STEP_DETAIL",
+   "text": "[{step} · {detail}………………]"
+  },
+  {
+   "id": "SAVE_AND_LOAD",
+   "text": "[Šáṽé áñď ļôáď……………]"
+  },
+  {
+   "id": "MATERIAL_CHOOSE",
+   "text": "[Çĥôôšé á ɱáťéŕíáļ………………]"
+  },
+  {
+   "id": "REASON_CMD_TOO_LONG",
+   "text": "[çôɱɱáñď ťôô ļôñğ………………]"
+  },
+  {
+   "id": "REASON_FORM_MISSING",
+   "text": "[ɱíššíñğ ƒôŕɱ ṽáļúé: {key}…………………………]"
+  },
+  {
+   "id": "REASON_LINE_TOO_LONG",
+   "text": "[áçťíôñ ļíñé ťôô ļôñğ……………………]"
+  },
+  {
+   "group": "generic"
+  },
+  {
+   "group": "the toolhead's neutral status line"
+  },
+  {
+   "id": "STATUS_LOADING",
+   "text": "[Ĺôáďíñğ ƒíļáɱéñť………………]"
+  },
+  {
+   "id": "STATUS_UNLOADING",
+   "text": "[Úñļôáďíñğ ƒíļáɱéñť…………………]"
+  },
+  {
+   "id": "STATUS_LOADED",
+   "text": "[Ƒíļáɱéñť ļôáďéď………………]"
+  },
+  {
+   "id": "STATUS_NO_FILAMENT",
+   "text": "[Ñô ƒíļáɱéñť ļôáďéď…………………]"
+  },
+  {
+   "id": "STATUS_RUNOUT",
+   "text": "[Ƒíļáɱéñť ŕáñ ôúť………………]"
+  },
+  {
+   "group": "unit"
+  },
+  {
+   "id": "UNIT_OFFLINE",
+   "text": "[Ôƒƒļíñé……]"
+  },
+  {
+   "group": "panel chrome labels"
+  },
+  {
+   "id": "LABEL_ALERTS",
+   "text": "[Áļéŕťš……]"
+  },
+  {
+   "id": "LABEL_SETTINGS",
+   "text": "[Šéťťíñğš………]"
+  },
+  {
+   "id": "LABEL_FAULT",
+   "text": "[Ƒáúļť……]"
+  },
+  {
+   "id": "LABEL_PRESSURE",
+   "text": "[Ƥŕéššúŕé………]"
+  },
+  {
+   "id": "LABEL_NO_ALERTS",
+   "text": "[Ñô áļéŕťš………]"
+  },
+  {
+   "id": "LABEL_CLOSE",
+   "text": "[Çļôšé……]"
+  },
+  {
+   "id": "LABEL_CANCEL",
+   "text": "[Çáñçéļ……]"
+  },
+  {
+   "id": "LABEL_NO_RESPONSE",
+   "text": "[Ñô ŕéšƥôñšé ƒŕôɱ ťĥé ƥŕíñťéŕ……………………………]"
+  },
+  {
+   "id": "LABEL_EDIT_FAILED",
+   "text": "[Çôúļď ñôť šáṽé ťĥé šƥôôļ:…………………………]"
+  },
+  {
+   "group": "action labels"
+  },
+  {
+   "id": "ACTION_LOAD",
+   "text": "[Ĺôáď……]"
+  },
+  {
+   "id": "ACTION_UNLOAD",
+   "text": "[Úñļôáď……]"
+  },
+  {
+   "id": "ACTION_STOP",
+   "text": "[Šťôƥ……]"
+  },
+  {
+   "id": "ACTION_RETRY_LOAD",
+   "text": "[Ŕéťŕý……]"
+  },
+  {
+   "id": "ACTION_RESUME",
+   "text": "[Ŕéšúɱé……]"
+  },
+  {
+   "id": "ACTION_CLEAR_FAULT",
+   "text": "[Çļéáŕ ƒáúļť…………]"
+  },
+  {
+   "id": "ACTION_CLEAR_ERRORS",
+   "text": "[Çļéáŕ éŕŕôŕš…………]"
+  },
+  {
+   "id": "ACTION_DRY_START",
+   "text": "[Šťáŕť ďŕýíñğ…………]"
+  },
+  {
+   "id": "ACTION_DRY_STOP",
+   "text": "[Šťôƥ ďŕýíñğ…………]"
+  },
+  {
+   "id": "ACTION_ON",
+   "text": "[Ôñ……]"
+  },
+  {
+   "id": "ACTION_OFF",
+   "text": "[Ôƒƒ……]"
+  },
+  {
+   "id": "ACTION_EDIT_SPOOL",
+   "text": "[Éďíť šƥôôļ…………]"
+  },
+  {
+   "id": "ACTION_CHANGE_GROUP",
+   "text": "[Çĥáñğé ğŕôúƥ…………]"
+  },
+  {
+   "id": "ACTION_SAVE_EDIT",
+   "text": "[Šáṽé éďíť………]"
+  },
+  {
+   "id": "ACTION_DISMISS",
+   "text": "[Ďíšɱíšš……]"
+  },
+  {
+   "id": "ACTION_LIST",
+   "text": "[Ĺíšť……]"
+  },
+  {
+   "id": "ACTION_ASSIGN_SPOOL",
+   "text": "[Áššíğñ šƥôôļ…………]"
+  },
+  {
+   "id": "ACTION_REFRESH_SPOOLS",
+   "text": "[Ŕéƒŕéšĥ šƥôôļš……………]"
+  },
+  {
+   "id": "ACTION_UNLINK",
+   "text": "[Úñļíñķ šƥôôļ…………]"
+  },
+  {
+   "id": "ACTION_REREAD",
+   "text": "[Ŕé-ŕéáď ťáğ…………]"
+  },
+  {
+   "id": "ACTION_CALIBRATE",
+   "text": "[Çáļíƀŕáťé………]"
+  },
+  {
+   "id": "ACTION_DELETE_GROUP",
+   "text": "[Ďéļéťé ğŕôúƥ…………]"
+  },
+  {
+   "id": "ACTION_CONFIRM_SPOOL",
+   "text": "[Çôñƒíŕɱ šƥôôļ……………]"
+  },
+  {
+   "group": "disabled reasons"
+  },
+  {
+   "id": "REASON_POSITIONING",
+   "text": "[Ťĥé šƥôôļ íš šťíļļ ƀéíñğ ƥôšíťíôñéď……………………………………]"
+  },
+  {
+   "id": "REASON_NOT_GROUPED",
+   "text": "[Áššíğñ ťĥíš šƥôôļ ťô á ťôôļ ƒíŕšť…………………………………]"
+  },
+  {
+   "id": "REASON_NO_HOST_ID",
+   "text": "[Ťĥé ƥŕíñťéŕ ĥáš ñôť šééñ ťĥíš šƥôôļ ýéť………………………………………]"
+  },
+  {
+   "id": "REASON_NOTHING_BUSY",
+   "text": "[Ñôťĥíñğ íš ļôáďíñğ ôŕ úñļôáďíñğ………………………………]"
+  },
+  {
+   "id": "REASON_UNIT_UNKNOWN",
+   "text": "[Ťĥé ƥŕíñťéŕ ĥáš ñôť ŕéƥôŕťéď ťĥíš úñíť ýéť…………………………………………]"
+  },
+  {
+   "id": "REASON_NO_TARGET",
+   "text": "[Ñô ťáŕğéť íš šéť………………]"
+  },
+  {
+   "id": "REASON_LANE_UNKNOWN",
+   "text": "[Ťĥé ƥŕíñťéŕ ĥáš ñôť ŕéƥôŕťéď ťĥíš úñíť'š ļáñé ýéť…………………………………………………]"
+  },
+  {
+   "id": "REASON_NO_FILAMENT",
+   "text": "[Ñô ƒíļáɱéñť íš ļôáďéď……………………]"
+  },
+  {
+   "id": "REASON_BAY_EMPTY",
+   "text": "[Ñô šƥôôļ íš íñšéŕťéď……………………]"
+  },
+  {
+   "id": "REASON_ALREADY_LOADED",
+   "text": "[Ťĥíš šƥôôļ íš áļŕéáďý ļôáďéď……………………………]"
+  },
+  {
+   "id": "REASON_NOT_LOADED",
+   "text": "[Ťĥíš šƥôôļ íš ñôť ļôáďéď………………………]"
+  },
+  {
+   "id": "REASON_BUSY_HERE",
+   "text": "[Ťĥé ťôôļĥéáď íš ƀúšý ŵíťĥ ťĥíš šƥôôļ……………………………………]"
+  },
+  {
+   "id": "REASON_BAY_ERROR",
+   "text": "[Ťĥíš šƥôôļ ŕéƥôŕťéď áñ éŕŕôŕ……………………………]"
+  },
+  {
+   "id": "REASON_NOT_SUPPORTED",
+   "text": "[Ñôť šúƥƥôŕťéď ôñ ťĥíš úñíť ýéť………………………………]"
+  },
+  {
+   "id": "REASON_CALIBRATE_FIRST",
+   "text": "[Çáļíƀŕáťé ťĥíš ƀáý ƒíŕšť………………………]"
+  },
+  {
+   "id": "REASON_NOT_NOW",
+   "text": "[Ñôť áṽáíļáƀļé ŕíğĥť ñôŵ………………………]"
+  },
+  {
+   "id": "REASON_NO_LINK",
+   "text": "[Ñô Šƥôôļɱáñ šƥôôļ íš ļíñķéď…………………………]"
+  },
+  {
+   "id": "REASON_DRYER_IDLE",
+   "text": "[Ťĥé ďŕýéŕ íš ñôť ŕúññíñğ………………………]"
+  },
+  {
+   "id": "REASON_EDIT_NO_SPOOLMAN",
+   "text": "[Šƥôôļɱáñ íš ñôť šéť úƥ……………………]"
+  },
+  {
+   "id": "REASON_SPOOLMAN_OFFLINE",
+   "text": "[Šƥôôļɱáñ íš ôƒƒļíñé…………………]"
+  },
+  {
+   "id": "REASON_EDIT_RANGE",
+   "text": "[Á ŵéíğĥť ôŕ ťĥé ƤÁ ṽáļúé íš ôúť ôƒ ŕáñğé…………………………………………]"
+  },
+  {
+   "id": "REASON_EDIT_EXCEEDS",
+   "text": "[Ťĥé ŕéɱáíñíñğ ŵéíğĥť çáññôť éẋçééď ťĥé íñíťíáļ ŵéíğĥť………………………………………………………]"
+  },
+  {
+   "id": "REASON_EDIT_STALE",
+   "text": "[Ťĥáť çĥôíçé íš ñô ļôñğéŕ ôñ ťĥé ļíšť. Éďíť ťĥé šƥôôļ áğáíñ.……………………………………………………………]"
+  },
+  {
+   "id": "REASON_GROUP_BUSY",
+   "text": "[Ťĥé ťôôļĥéáď íš ƀúšý……………………]"
+  },
+  {
+   "id": "REASON_GROUP_RUNOUT",
+   "text": "[Ťĥé ťôôļĥéáď íš ĥáñďļíñğ á ŕúñôúť…………………………………]"
+  },
+  {
+   "id": "REASON_GROUP_LOADED",
+   "text": "[Ťĥíš ğŕôúƥ íš ļôáďéď íñ ťĥé ťôôļĥéáď……………………………………]"
+  },
+  {
+   "group": "confirms"
+  },
+  {
+   "id": "CONFIRM_UNLOAD_TITLE",
+   "text": "[Úñļôáď ŵĥíļé ƥŕíñťíñğ?……………………]"
+  },
+  {
+   "id": "CONFIRM_UNLOAD_TEXT",
+   "text": "[Ťĥé ƥŕíñť ŵíļļ ƥáúšé ŵĥíļé ťĥé ťôôļĥéáď úñļôáďš.…………………………………………………]"
+  },
+  {
+   "id": "CONFIRM_UNLOAD_OK",
+   "text": "[Úñļôáď……]"
+  },
+  {
+   "id": "CONFIRM_STOP_TITLE",
+   "text": "[Šťôƥ ñôŵ?………]"
+  },
+  {
+   "id": "CONFIRM_STOP_TEXT",
+   "text": "[Ŵĥáť íš ŕúññíñğ šťôƥš áƒťéŕ ťĥé çúŕŕéñť ɱôṽé.………………………………………………]"
+  },
+  {
+   "id": "CONFIRM_STOP_OK",
+   "text": "[Šťôƥ……]"
+  },
+  {
+   "id": "CONFIRM_CLEAR_FAULT_TITLE",
+   "text": "[Çļéáŕ ťĥíš ƒáúļť?………………]"
+  },
+  {
+   "id": "CONFIRM_CLEAR_FAULT_TEXT",
+   "text": "[Ôñļý çļáíɱ ťĥíš ôñçé ťĥé ƥŕôƀļéɱ íš áçťúáļļý šôļṽéď.……………………………………………………]"
+  },
+  {
+   "id": "CONFIRM_CLEAR_FAULT_OK",
+   "text": "[Çļéáŕ ƒáúļť…………]"
+  },
+  {
+   "id": "CONFIRM_CLEAR_ERRORS_TITLE",
+   "text": "[Çļéáŕ éṽéŕý éŕŕôŕ?…………………]"
+  },
+  {
+   "id": "CONFIRM_CLEAR_ERRORS_TEXT",
+   "text": "[Ôñļý çļáíɱ ťĥíš ôñçé ťĥé ƥŕôƀļéɱ íš áçťúáļļý šôļṽéď.……………………………………………………]"
+  },
+  {
+   "id": "CONFIRM_CLEAR_ERRORS_OK",
+   "text": "[Çļéáŕ éŕŕôŕš…………]"
+  },
+  {
+   "id": "CONFIRM_CALIBRATE_TITLE",
+   "text": "[Çáļíƀŕáťé ťĥíš šƥôôļ?……………………]"
+  },
+  {
+   "id": "CONFIRM_CALIBRATE_TEXT",
+   "text": "[Ťĥé ƒíļáɱéñť ɱôṽéš ŵĥíļé ťĥé ƤŤƑÉ ļéñğťĥ íš ɱéášúŕéď.………………………………………………………]"
+  },
+  {
+   "id": "CONFIRM_CALIBRATE_OK",
+   "text": "[Çáļíƀŕáťé………]"
+  },
+  {
+   "group": "alert titles, by severity"
+  },
+  {
+   "id": "ALERT_TITLE_STOP",
+   "text": "[Šťôƥ……]"
+  },
+  {
+   "id": "ALERT_TITLE_PAUSE",
+   "text": "[Ƥáúšé……]"
+  },
+  {
+   "id": "ALERT_TITLE_INFO",
+   "text": "[Íñƒô……]"
+  },
+  {
+   "group": "panel notices"
+  },
+  {
+   "id": "PANEL_NO_UNITS",
+   "text": "[Ñô úñíťš çôññéçťéď…………………]"
+  },
+  {
+   "id": "PANEL_NOT_READY",
+   "text": "[Ŵáíťíñğ ƒôŕ ťĥé ƥŕíñťéŕ………………………]"
+  },
+  {
+   "id": "PANEL_HOST_OFFLINE",
+   "text": "[Ĥôšť ôƒƒļíñé…………]"
+  },
+  {
+   "id": "NOTICE_NOTHING_TO_LOAD",
+   "text": "[Ñôťĥíñğ íš ļôáďíñğ…………………]"
+  },
+  {
+   "group": "dryer form field"
+  },
+  {
+   "id": "FIELD_TARGET_LABEL",
+   "text": "[Ťáŕğéť……]"
+  },
+  {
+   "id": "FIELD_HOURS_LABEL",
+   "text": "[Ĥôúŕš……]"
+  },
+  {
+   "id": "FIELD_TARGET_UNIT",
+   "text": "[Ç……]"
+  },
+  {
+   "id": "FIELD_HOURS_UNIT",
+   "text": "[ĥ……]"
+  },
+  {
+   "id": "FIELD_SPOOL_LABEL",
+   "text": "[Šƥôôļ……]"
+  },
+  {
+   "id": "FIELD_REMAINING_LABEL",
+   "text": "[Ŕéɱáíñíñğ………]"
+  },
+  {
+   "id": "FIELD_INITIAL_LABEL",
+   "text": "[Íñíťíáļ ŵéíğĥť……………]"
+  },
+  {
+   "id": "FIELD_WEIGHT_UNIT",
+   "text": "[ğ……]"
+  },
+  {
+   "id": "FIELD_GROUP_LABEL",
+   "text": "[Ğŕôúƥ……]"
+  },
+  {
+   "group": "dryer pill text (the non-formatted tones)"
+  },
+  {
+   "id": "DRYER_COOLING",
+   "text": "[Çôôļíñğ……]"
+  },
+  {
+   "group": "toolhead card"
+  },
+  {
+   "id": "TOOLHEAD_DEFAULT_TITLE",
+   "text": "[Ťôôļĥéáď………]"
+  },
+  {
+   "group": "the host's five settings (C2 4.9): title then note, same order as"
+  },
+  {
+   "id": "SETTING_0_TITLE",
+   "text": "[Ŕéáď ƒíļáɱéñť ôñ íñšéŕťíôñ…………………………]"
+  },
+  {
+   "id": "SETTING_0_NOTE",
+   "text": "[Ŕéáď ťĥé šƥôôļ ťáğ ŵĥéñ á šƥôôļ íš íñšéŕťéď (~20 š)……………………………………………………]"
+  },
+  {
+   "id": "SETTING_1_TITLE",
+   "text": "[Ŕéáď ƒíļáɱéñť ôñ šťáŕťúƥ………………………]"
+  },
+  {
+   "id": "SETTING_1_NOTE",
+   "text": "[Ŕéáď éṽéŕý šƥôôļ ťáğ áť ƥôŵéŕ-ôñ (~1 ɱíñ)…………………………………………]"
+  },
+  {
+   "id": "SETTING_2_TITLE",
+   "text": "[Ŕéļôáď ƒŕôɱ á šƥáŕé ôñ ŕúñôúť……………………………]"
+  },
+  {
+   "id": "SETTING_2_NOTE",
+   "text": "[Ĥáñď ťĥé ļáñé ťô ťĥé ñéẋť ğŕôúƥ ɱéɱƀéŕ íñšťéáď ôƒ ƥáúšíñğ…………………………………………………………]"
+  },
+  {
+   "id": "SETTING_3_TITLE",
+   "text": "[Çŕéáťé Šƥôôļɱáñ šƥôôļš ƒôŕ ñéŵ ťáğš……………………………………]"
+  },
+  {
+   "id": "SETTING_3_NOTE",
+   "text": "[Áďď áñ úñķñôŵñ ťáğ ťô Šƥôôļɱáñ ôñ íťš ƒíŕšť ŕéáď…………………………………………………]"
+  },
+  {
+   "id": "SETTING_4_TITLE",
+   "text": "[Áƥƥļý ƥŕéššúŕé áďṽáñçé ôñ ļôáď………………………………]"
+  },
+  {
+   "id": "SETTING_4_NOTE",
+   "text": "[Ƥúšĥ ťĥé šƥôôļ'š ƥŕéššúŕé áďṽáñçé ťô ťĥé ƥŕíñťéŕ ôñ ļôáď…………………………………………………………]"
+  },
+  {
+   "group": "the language row: the same ids, but a choice, not an on/off switch"
+  },
+  {
+   "id": "SETTING_5_TITLE",
+   "text": "[Ĺáñğúáğé………]"
+  },
+  {
+   "id": "SETTING_5_NOTE",
+   "text": "[Ťĥé ļáñğúáğé ôƒ ťĥíš ƥáñéļ áñď ôƒ ťĥé ďíšƥļáý………………………………………………]"
+  }
+ ],
+ "setting_keys": [
+  "read_tag_on_insertion",
+  "read_tags_at_startup",
+  "auto_reload_on_runout",
+  "auto_create_spoolman_spools",
+  "apply_pa_on_load",
+  "language"
+ ]
+}

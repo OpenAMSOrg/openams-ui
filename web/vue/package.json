@@ -1,0 +1,36 @@
+{
+  "name": "@openams/vue",
+  "version": "0.1.0",
+  "description": "The OpenAMS Mainsail panel: Vue 2.7 + Vuetify 2.7 components that render the OpenAMS logic's view tree.",
+  "private": true,
+  "type": "module",
+  "main": "dist/openams-panel.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "tokens": "node tools/gen_tokens.mjs",
+    "dev": "npm run tokens && vite",
+    "gallery": "npm run tokens && vite --port ${PW_PORT:-5179} --host 127.0.0.1 --strictPort",
+    "build": "npm run tokens && vite build && vite build --config vite.gallery.config.ts",
+    "test": "playwright test",
+    "typecheck": "npm run tokens && vue-tsc --noEmit",
+    "shoot": "npm run tokens && node tools/shoot.mjs"
+  },
+  "dependencies": {
+    "@mdi/js": "^7.0.0",
+    "vue": "^2.7.10",
+    "vue-property-decorator": "^9.1.2",
+    "vuetify": "^2.7.2"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "1.63.0",
+    "@vitejs/plugin-vue2": "^2.3.3",
+    "sass": "^1.77.8",
+    "typescript": "~5.3.3",
+    "vite": "^6.0.0",
+    "vue-tsc": "^1.8.27"
+  },
+  "license": "MIT"
+}

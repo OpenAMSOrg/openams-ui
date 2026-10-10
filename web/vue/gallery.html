@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenAMS panel gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #0d0f12;
+            color: #e6e9ed;
+            font-family: "Geist", system-ui, sans-serif;
+        }
+
+        #controls {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 20px;
+            align-items: center;
+            padding: 10px 16px;
+            background: #14161a;
+            border-bottom: 1px solid #262a31;
+            font-size: 13px;
+        }
+
+        #controls label {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            color: #9aa3ad;
+        }
+
+        #controls select,
+        #controls input[type=range] {
+            font: inherit;
+        }
+
+        #controls select {
+            background: #1c2128;
+            color: inherit;
+            border: 1px solid #2c323a;
+            border-radius: 6px;
+            padding: 4px 6px;
+        }
+
+        .seg {
+            display: inline-flex;
+            border: 1px solid #2c323a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .seg button {
+            font: inherit;
+            background: #1c2128;
+            color: #9aa3ad;
+            border: 0;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .seg button[aria-pressed=true] {
+            background: #2f7de1;
+            color: #fff;
+        }
+
+        #stage {
+            padding: 20px 16px 60px;
+            overflow-x: auto;
+        }
+
+        .frame {
+            margin: 0 auto;
+        }
+
+        .card {
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .card.dark {
+            background: #14161a;
+            padding: 0;
+        }
+
+        .card.light {
+            background: #f4f5f7;
+            padding: 0;
+        }
+
+        h1.cap {
+            font: 600 12px/1 "Geist", sans-serif;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #8a929c;
+            margin: 22px 0 8px;
+        }
+
+        /* The host cards: a v-app (what Mainsail gives the panel) on a gray or
+           a white card, with the wrapper's own theme mapping (6). An app fills
+           the page by default; here it is only a card. */
+        .card.gray,
+        .card.white {
+            font-family: Roboto, system-ui, sans-serif;
+        }
+
+        .card.gray {
+            background: #1e1e1e;
+            color: rgba(255, 255, 255, 0.87);
+        }
+
+        .card.white {
+            background: #fff;
+            color: rgba(0, 0, 0, 0.87);
+        }
+
+        .card.gray .v-application,
+        .card.gray .v-application--wrap,
+        .card.white .v-application,
+        .card.white .v-application--wrap {
+            padding: 0;
+            min-height: 0;
+            background: inherit;
+            color: inherit;
+            font-family: inherit;
+            line-height: normal;
+        }
+
+        .card.gray .oams-panel,
+        .card.white .oams-panel {
+            --oams-accent: var(--v-primary-base);
+            --oams-error: var(--v-error-base);
+            --oams-warn: var(--v-warning-base);
+            --oams-ok: var(--v-success-base);
+            --oams-info: var(--v-info-base);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app"></div>
+    <script type="module" src="/gallery/main.ts"></script>
+</body>
+
+</html>

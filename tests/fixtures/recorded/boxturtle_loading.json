@@ -1,0 +1,1995 @@
+{
+  "scenario": "boxturtle_loading",
+  "seed": 34041403,
+  "schema_version": 2,
+  "family_map": {
+    "box": "boxturtle"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "topology": {
+          "schema_version": 1,
+          "fps": [
+            "fps1"
+          ],
+          "oams": {
+            "box": {
+              "idx": 1,
+              "lane": "fps1",
+              "kind": "oams",
+              "family": "boxturtle",
+              "bays": 8,
+              "capabilities": {
+                "bays": 8,
+                "physical_observation": true,
+                "dryer": false,
+                "heater_control": false,
+                "rfid": false,
+                "ptfe_calibration": false,
+                "hub_hes_calibration": false,
+                "device_owned_motion_control": true,
+                "normal_motion": true
+              }
+            }
+          },
+          "groups": {
+            "T0": {
+              "lane": "fps1",
+              "bays": [
+                "box-0"
+              ]
+            },
+            "T1": {
+              "lane": "fps1",
+              "bays": [
+                "box-1"
+              ]
+            }
+          }
+        },
+        "devices": {
+          "box": {
+            "schema_version": 1,
+            "oams_idx": 1,
+            "connected": true,
+            "hardware_snapshot_ready": true,
+            "family": "boxturtle",
+            "bay_count": 8,
+            "fps_name": "fps1",
+            "path_length_mm": 0.0,
+            "current_spool": null,
+            "f1s_hes_value": [
+              true,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false
+            ],
+            "hub_hes_value": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "protocol_version": 3,
+            "firmware_owns_liveness": true,
+            "capabilities": {
+              "bays": 8,
+              "physical_observation": true,
+              "dryer": false,
+              "heater_control": false,
+              "rfid": false,
+              "ptfe_calibration": false,
+              "hub_hes_calibration": false,
+              "device_owned_motion_control": true,
+              "normal_motion": true,
+              "preload": true,
+              "unpreload": true,
+              "eject": true,
+              "home": false
+            },
+            "identity": {
+              "firmware": null,
+              "board": null
+            },
+            "calibration": {
+              "state": "uncalibrated",
+              "path_length_mm": null
+            },
+            "environment": null,
+            "dryer": null,
+            "faults": [],
+            "follower_uncertain": false,
+            "bays": [
+              {
+                "index": 0,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "calibrate_ptfe",
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 1,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "calibrate_ptfe",
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 2,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "calibrate_ptfe",
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 3,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "calibrate_ptfe",
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 4,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 5,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 6,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 7,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              }
+            ],
+            "telemetry": {
+              "domain": {
+                "motion_state_name": "idle",
+                "motion_stage_name": null,
+                "motion_fault_name": "none",
+                "system_fault_name": "none",
+                "dryer_fault_name": "none"
+              }
+            },
+            "supported_actions": [
+              "load",
+              "unload",
+              "follower",
+              "preload",
+              "unpreload",
+              "eject"
+            ]
+          }
+        },
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes": [
+          {
+            "id": "fps1",
+            "state": "unloaded",
+            "current_group": null,
+            "current_slot": null,
+            "following": false,
+            "direction": 1,
+            "message": null,
+            "pressure": 0.5,
+            "set_point": null
+          }
+        ],
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 3.55,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.5,
+            "set_point": null,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true
+          }
+        },
+        "api_version": 1,
+        "schema": "openams.manager",
+        "commands": {
+          "cancel": "OAMSM_LOAD_FILAMENT_CANCEL",
+          "reset": "OAMSM_CLEAR_ERRORS"
+        },
+        "units": [
+          {
+            "id": "1",
+            "name": "box",
+            "kind": "oams",
+            "topology": "hub",
+            "lane": "fps1",
+            "connected": true,
+            "slots": [
+              {
+                "id": 0,
+                "bay": 0,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 1,
+                "bay": 1,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 2,
+                "bay": 2,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 3,
+                "bay": 3,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 4,
+                "bay": 4,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 5,
+                "bay": 5,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 6,
+                "bay": 6,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 7,
+                "bay": 7,
+                "ready": false,
+                "loaded": false
+              }
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "name": "T0",
+            "lane": "fps1",
+            "slots": [
+              0
+            ]
+          },
+          {
+            "name": "T1",
+            "lane": "fps1",
+            "slots": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "openams_ui",
+      "unit": "box",
+      "payload": {
+        "v": 1,
+        "unit": "box",
+        "idx": 1,
+        "family": "boxturtle",
+        "online": true,
+        "ready": true,
+        "cal": "u",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "u",
+            "a": "capqe",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "u",
+            "a": "capqe",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "u",
+            "a": "capqe",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "r",
+            "cal": "u",
+            "a": "capqe",
+            "sp": null
+          },
+          {
+            "id": 4,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "box-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T1",
+            "b": [
+              "box-1"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": []
+      }
+    },
+    {
+      "t": 0.5,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "topology": {
+          "schema_version": 1,
+          "fps": [
+            "fps1"
+          ],
+          "oams": {
+            "box": {
+              "idx": 1,
+              "lane": "fps1",
+              "kind": "oams",
+              "family": "boxturtle",
+              "bays": 8,
+              "capabilities": {
+                "bays": 8,
+                "physical_observation": true,
+                "dryer": false,
+                "heater_control": false,
+                "rfid": false,
+                "ptfe_calibration": false,
+                "hub_hes_calibration": false,
+                "device_owned_motion_control": true,
+                "normal_motion": true
+              }
+            }
+          },
+          "groups": {
+            "T0": {
+              "lane": "fps1",
+              "bays": [
+                "box-0"
+              ]
+            },
+            "T1": {
+              "lane": "fps1",
+              "bays": [
+                "box-1"
+              ]
+            }
+          }
+        },
+        "devices": {
+          "box": {
+            "schema_version": 1,
+            "oams_idx": 1,
+            "connected": true,
+            "hardware_snapshot_ready": true,
+            "family": "boxturtle",
+            "bay_count": 8,
+            "fps_name": "fps1",
+            "path_length_mm": 0.0,
+            "current_spool": null,
+            "f1s_hes_value": [
+              true,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false
+            ],
+            "hub_hes_value": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "protocol_version": 3,
+            "firmware_owns_liveness": true,
+            "capabilities": {
+              "bays": 8,
+              "physical_observation": true,
+              "dryer": false,
+              "heater_control": false,
+              "rfid": false,
+              "ptfe_calibration": false,
+              "hub_hes_calibration": false,
+              "device_owned_motion_control": true,
+              "normal_motion": true,
+              "preload": true,
+              "unpreload": true,
+              "eject": true,
+              "home": false
+            },
+            "identity": {
+              "firmware": null,
+              "board": null
+            },
+            "calibration": {
+              "state": "uncalibrated",
+              "path_length_mm": null
+            },
+            "environment": null,
+            "dryer": null,
+            "faults": [],
+            "follower_uncertain": false,
+            "bays": [
+              {
+                "index": 0,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 1,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 2,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 3,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 4,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 5,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 6,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 7,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              }
+            ],
+            "telemetry": {
+              "domain": {
+                "motion_state_name": "idle",
+                "motion_stage_name": null,
+                "motion_fault_name": "none",
+                "system_fault_name": "none",
+                "dryer_fault_name": "none"
+              }
+            },
+            "supported_actions": [
+              "load",
+              "unload",
+              "follower",
+              "preload",
+              "unpreload",
+              "eject"
+            ]
+          }
+        },
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes": [
+          {
+            "id": "fps1",
+            "state": "loading",
+            "current_group": "T0",
+            "current_slot": 0,
+            "following": false,
+            "direction": 1,
+            "message": null,
+            "pressure": 0.5,
+            "set_point": null
+          }
+        ],
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "LOADING",
+            "group": "T0",
+            "unit": [
+              1,
+              0
+            ],
+            "runout": "idle",
+            "following": false,
+            "since": 3.6,
+            "message": null,
+            "state": "loading",
+            "current_slot": 0,
+            "direction": 1,
+            "pressure": 0.5,
+            "set_point": null,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": {
+              "plan": [
+                "cut",
+                "retract",
+                "feed",
+                "purge"
+              ],
+              "index": null,
+              "failed": null
+            },
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": false
+          }
+        },
+        "api_version": 1,
+        "schema": "openams.manager",
+        "commands": {
+          "cancel": "OAMSM_LOAD_FILAMENT_CANCEL",
+          "reset": "OAMSM_CLEAR_ERRORS"
+        },
+        "units": [
+          {
+            "id": "1",
+            "name": "box",
+            "kind": "oams",
+            "topology": "hub",
+            "lane": "fps1",
+            "connected": true,
+            "slots": [
+              {
+                "id": 0,
+                "bay": 0,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 1,
+                "bay": 1,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 2,
+                "bay": 2,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 3,
+                "bay": 3,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 4,
+                "bay": 4,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 5,
+                "bay": 5,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 6,
+                "bay": 6,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 7,
+                "bay": 7,
+                "ready": false,
+                "loaded": false
+              }
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "name": "T0",
+            "lane": "fps1",
+            "slots": [
+              0
+            ]
+          },
+          {
+            "name": "T1",
+            "lane": "fps1",
+            "slots": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "t": 1.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "topology": {
+          "schema_version": 1,
+          "fps": [
+            "fps1"
+          ],
+          "oams": {
+            "box": {
+              "idx": 1,
+              "lane": "fps1",
+              "kind": "oams",
+              "family": "boxturtle",
+              "bays": 8,
+              "capabilities": {
+                "bays": 8,
+                "physical_observation": true,
+                "dryer": false,
+                "heater_control": false,
+                "rfid": false,
+                "ptfe_calibration": false,
+                "hub_hes_calibration": false,
+                "device_owned_motion_control": true,
+                "normal_motion": true
+              }
+            }
+          },
+          "groups": {
+            "T0": {
+              "lane": "fps1",
+              "bays": [
+                "box-0"
+              ]
+            },
+            "T1": {
+              "lane": "fps1",
+              "bays": [
+                "box-1"
+              ]
+            }
+          }
+        },
+        "devices": {
+          "box": {
+            "schema_version": 1,
+            "oams_idx": 1,
+            "connected": true,
+            "hardware_snapshot_ready": true,
+            "family": "boxturtle",
+            "bay_count": 8,
+            "fps_name": "fps1",
+            "path_length_mm": 0.0,
+            "current_spool": null,
+            "f1s_hes_value": [
+              true,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false
+            ],
+            "hub_hes_value": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "protocol_version": 3,
+            "firmware_owns_liveness": true,
+            "capabilities": {
+              "bays": 8,
+              "physical_observation": true,
+              "dryer": false,
+              "heater_control": false,
+              "rfid": false,
+              "ptfe_calibration": false,
+              "hub_hes_calibration": false,
+              "device_owned_motion_control": true,
+              "normal_motion": true,
+              "preload": true,
+              "unpreload": true,
+              "eject": true,
+              "home": false
+            },
+            "identity": {
+              "firmware": null,
+              "board": null
+            },
+            "calibration": {
+              "state": "uncalibrated",
+              "path_length_mm": null
+            },
+            "environment": null,
+            "dryer": null,
+            "faults": [],
+            "follower_uncertain": false,
+            "bays": [
+              {
+                "index": 0,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 1,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 2,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 3,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 4,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 5,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 6,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 7,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              }
+            ],
+            "telemetry": {
+              "domain": {
+                "motion_state_name": "loading",
+                "motion_stage_name": "cut",
+                "motion_fault_name": "none",
+                "system_fault_name": "none",
+                "dryer_fault_name": "none"
+              }
+            },
+            "supported_actions": [
+              "load",
+              "unload",
+              "follower",
+              "preload",
+              "unpreload",
+              "eject"
+            ]
+          }
+        },
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes": [
+          {
+            "id": "fps1",
+            "state": "loading",
+            "current_group": "T0",
+            "current_slot": 0,
+            "following": false,
+            "direction": 1,
+            "message": null,
+            "pressure": 0.5,
+            "set_point": null
+          }
+        ],
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "LOADING",
+            "group": "T0",
+            "unit": [
+              1,
+              0
+            ],
+            "runout": "idle",
+            "following": false,
+            "since": 3.6,
+            "message": null,
+            "state": "loading",
+            "current_slot": 0,
+            "direction": 1,
+            "pressure": 0.5,
+            "set_point": null,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": {
+              "plan": [
+                "cut",
+                "retract",
+                "feed",
+                "purge"
+              ],
+              "index": 0,
+              "failed": null
+            },
+            "motion_stage": "cut",
+            "extruder": "extruder",
+            "motion_settled": false
+          }
+        },
+        "api_version": 1,
+        "schema": "openams.manager",
+        "commands": {
+          "cancel": "OAMSM_LOAD_FILAMENT_CANCEL",
+          "reset": "OAMSM_CLEAR_ERRORS"
+        },
+        "units": [
+          {
+            "id": "1",
+            "name": "box",
+            "kind": "oams",
+            "topology": "hub",
+            "lane": "fps1",
+            "connected": true,
+            "slots": [
+              {
+                "id": 0,
+                "bay": 0,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 1,
+                "bay": 1,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 2,
+                "bay": 2,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 3,
+                "bay": 3,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 4,
+                "bay": 4,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 5,
+                "bay": 5,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 6,
+                "bay": 6,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 7,
+                "bay": 7,
+                "ready": false,
+                "loaded": false
+              }
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "name": "T0",
+            "lane": "fps1",
+            "slots": [
+              0
+            ]
+          },
+          {
+            "name": "T1",
+            "lane": "fps1",
+            "slots": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "t": 1.0,
+      "kind": "openams_ui",
+      "unit": "box",
+      "payload": {
+        "v": 1,
+        "unit": "box",
+        "idx": 1,
+        "family": "boxturtle",
+        "online": true,
+        "ready": true,
+        "cal": "u",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "LOADING",
+          "group": "T0",
+          "bay": "box-0",
+          "stage": [
+            [
+              "cut",
+              "retract",
+              "feed",
+              "purge"
+            ],
+            0,
+            null
+          ],
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": false
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "u",
+            "a": "apqe",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "u",
+            "a": "apqe",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "u",
+            "a": "apqe",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "r",
+            "cal": "u",
+            "a": "apqe",
+            "sp": null
+          },
+          {
+            "id": 4,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "box-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T1",
+            "b": [
+              "box-1"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": []
+      }
+    },
+    {
+      "t": 1.5,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "topology": {
+          "schema_version": 1,
+          "fps": [
+            "fps1"
+          ],
+          "oams": {
+            "box": {
+              "idx": 1,
+              "lane": "fps1",
+              "kind": "oams",
+              "family": "boxturtle",
+              "bays": 8,
+              "capabilities": {
+                "bays": 8,
+                "physical_observation": true,
+                "dryer": false,
+                "heater_control": false,
+                "rfid": false,
+                "ptfe_calibration": false,
+                "hub_hes_calibration": false,
+                "device_owned_motion_control": true,
+                "normal_motion": true
+              }
+            }
+          },
+          "groups": {
+            "T0": {
+              "lane": "fps1",
+              "bays": [
+                "box-0"
+              ]
+            },
+            "T1": {
+              "lane": "fps1",
+              "bays": [
+                "box-1"
+              ]
+            }
+          }
+        },
+        "devices": {
+          "box": {
+            "schema_version": 1,
+            "oams_idx": 1,
+            "connected": true,
+            "hardware_snapshot_ready": true,
+            "family": "boxturtle",
+            "bay_count": 8,
+            "fps_name": "fps1",
+            "path_length_mm": 0.0,
+            "current_spool": null,
+            "f1s_hes_value": [
+              true,
+              true,
+              true,
+              true,
+              false,
+              false,
+              false,
+              false
+            ],
+            "hub_hes_value": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "protocol_version": 3,
+            "firmware_owns_liveness": true,
+            "capabilities": {
+              "bays": 8,
+              "physical_observation": true,
+              "dryer": false,
+              "heater_control": false,
+              "rfid": false,
+              "ptfe_calibration": false,
+              "hub_hes_calibration": false,
+              "device_owned_motion_control": true,
+              "normal_motion": true,
+              "preload": true,
+              "unpreload": true,
+              "eject": true,
+              "home": false
+            },
+            "identity": {
+              "firmware": null,
+              "board": null
+            },
+            "calibration": {
+              "state": "uncalibrated",
+              "path_length_mm": null
+            },
+            "environment": null,
+            "dryer": null,
+            "faults": [],
+            "follower_uncertain": false,
+            "bays": [
+              {
+                "index": 0,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 1,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 2,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 3,
+                "ready": true,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool",
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 4,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 5,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 6,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              },
+              {
+                "index": 7,
+                "ready": false,
+                "loaded": false,
+                "calibrated": false,
+                "calibration_state": "uncalibrated",
+                "path_length_mm": null,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "preload",
+                  "unpreload",
+                  "eject"
+                ]
+              }
+            ],
+            "telemetry": {
+              "domain": {
+                "motion_state_name": "loading",
+                "motion_stage_name": "retract",
+                "motion_fault_name": "none",
+                "system_fault_name": "none",
+                "dryer_fault_name": "none"
+              }
+            },
+            "supported_actions": [
+              "load",
+              "unload",
+              "follower",
+              "preload",
+              "unpreload",
+              "eject"
+            ]
+          }
+        },
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes": [
+          {
+            "id": "fps1",
+            "state": "loading",
+            "current_group": "T0",
+            "current_slot": 0,
+            "following": false,
+            "direction": 1,
+            "message": null,
+            "pressure": 0.5,
+            "set_point": null
+          }
+        ],
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "LOADING",
+            "group": "T0",
+            "unit": [
+              1,
+              0
+            ],
+            "runout": "idle",
+            "following": false,
+            "since": 3.6,
+            "message": null,
+            "state": "loading",
+            "current_slot": 0,
+            "direction": 1,
+            "pressure": 0.5,
+            "set_point": null,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": {
+              "plan": [
+                "cut",
+                "retract",
+                "feed",
+                "purge"
+              ],
+              "index": 1,
+              "failed": null
+            },
+            "motion_stage": "retract",
+            "extruder": "extruder",
+            "motion_settled": false
+          }
+        },
+        "api_version": 1,
+        "schema": "openams.manager",
+        "commands": {
+          "cancel": "OAMSM_LOAD_FILAMENT_CANCEL",
+          "reset": "OAMSM_CLEAR_ERRORS"
+        },
+        "units": [
+          {
+            "id": "1",
+            "name": "box",
+            "kind": "oams",
+            "topology": "hub",
+            "lane": "fps1",
+            "connected": true,
+            "slots": [
+              {
+                "id": 0,
+                "bay": 0,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 1,
+                "bay": 1,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 2,
+                "bay": 2,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 3,
+                "bay": 3,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 4,
+                "bay": 4,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 5,
+                "bay": 5,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 6,
+                "bay": 6,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 7,
+                "bay": 7,
+                "ready": false,
+                "loaded": false
+              }
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "name": "T0",
+            "lane": "fps1",
+            "slots": [
+              0
+            ]
+          },
+          {
+            "name": "T1",
+            "lane": "fps1",
+            "slots": [
+              1
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "t": 1.5,
+      "kind": "openams_ui",
+      "unit": "box",
+      "payload": {
+        "v": 1,
+        "unit": "box",
+        "idx": 1,
+        "family": "boxturtle",
+        "online": true,
+        "ready": true,
+        "cal": "u",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "LOADING",
+          "group": "T0",
+          "bay": "box-0",
+          "stage": [
+            [
+              "cut",
+              "retract",
+              "feed",
+              "purge"
+            ],
+            1,
+            null
+          ],
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": false
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "u",
+            "a": "apqe",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "u",
+            "a": "apqe",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "u",
+            "a": "apqe",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "r",
+            "cal": "u",
+            "a": "apqe",
+            "sp": null
+          },
+          {
+            "id": 4,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "e",
+            "cal": "u",
+            "a": "pqe",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "box-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T1",
+            "b": [
+              "box-1"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": []
+      }
+    }
+  ]
+}

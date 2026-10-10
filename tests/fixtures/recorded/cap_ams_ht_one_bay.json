@@ -1,0 +1,128 @@
+{
+  "scenario": "cap_ams_ht_one_bay",
+  "seed": 710006,
+  "schema_version": 2,
+  "family_map": {
+    "ht1": "ams_ht"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true
+          }
+        }
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "openams_ui",
+      "unit": "ht1",
+      "payload": {
+        "v": 1,
+        "unit": "ht1",
+        "idx": 1,
+        "family": "ams_ht",
+        "serial": "SYN-HT-0001",
+        "online": true,
+        "ready": true,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": {
+              "id": 301,
+              "src": "t"
+            }
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "ht1-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 24,
+          "rh": 31
+        },
+        "dryer": {
+          "state": "timed_dry",
+          "target": 55,
+          "min": 240,
+          "heat": 40.0,
+          "fan": 60.0,
+          "fault": "none",
+          "adapter": null
+        },
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "dryer_start",
+          "clear_fault",
+          "rfid_scan"
+        ]
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "component_status",
+      "unit": null,
+      "payload": {
+        "spoolman_online": true,
+        "edit": false,
+        "stop": false,
+        "bays": {
+          "ht1-0": {
+            "spool": {
+              "material": "PA-CF",
+              "vendor": "Synthetic",
+              "color_hex": "303030",
+              "remaining_g": 410,
+              "remaining_pct": 41,
+              "initial_g": 1000
+            },
+            "pending_confirmation": false
+          }
+        }
+      }
+    }
+  ]
+}

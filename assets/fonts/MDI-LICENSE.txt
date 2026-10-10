@@ -1,0 +1,1 @@
+Material Design Icons (materialdesignicons-webfont.ttf) is licensed under the Apache License 2.0 — https://github.com/Templarian/MaterialDesign-Webfont

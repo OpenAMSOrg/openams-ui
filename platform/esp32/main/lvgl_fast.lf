@@ -1,0 +1,13 @@
+# LVGL's per-pixel software drawing, run from IRAM instead of flash: the
+# display draws RGB565, so the RGB565 blend, the generic blend and fill, and
+# the masks (rounded corners, rings) are where every frame's time goes. From
+# flash each cache miss stalls the loop; from IRAM it never does. About 24 KB
+# of the 34 KB IRAM left.
+[mapping:lvgl_fast]
+archive: liblvgl.a
+entries:
+    lv_draw_sw_blend_to_rgb565 (noflash)
+    lv_draw_sw_blend (noflash)
+    lv_draw_sw_fill (noflash)
+    lv_draw_sw_mask (noflash)
+    lv_draw_sw_mask_rect (noflash)

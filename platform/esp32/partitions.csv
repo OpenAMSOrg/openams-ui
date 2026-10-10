@@ -1,0 +1,10 @@
+# Name,   Type, SubType, Offset,  Size, Flags
+# Two OTA app slots, no factory app: an update downloads to the inactive slot
+# and the bootloader picks between them (see docs/ESP32_OTA.md). nvs keeps its
+# original offset/size so stored Wi-Fi and Moonraker settings survive an OTA
+# from the previous factory layout.
+nvs,      data, nvs,     0x9000,   0x6000,
+phy_init, data, phy,     0xf000,   0x1000,
+otadata,  data, ota,     0x10000,  0x2000,
+ota_0,    app,  ota_0,   0x20000,  0x1F0000,
+ota_1,    app,  ota_1,   0x210000, 0x1F0000,

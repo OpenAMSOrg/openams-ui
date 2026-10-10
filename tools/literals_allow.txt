@@ -1,0 +1,19 @@
+# Literals src/ui/ may hold that are not sentences to translate: material and
+# vendor names (proper nouns and filament codes), the demo Spoolman list.
+PLA
+PETG
+ABS
+ASA
+TPU
+PA
+PC
+PLA-CF
+PETG-CF
+PVA
+Bambu
+Prusament
+Polymaker
+eSUN
+Sunlu
+Generic
+Bambu Lab

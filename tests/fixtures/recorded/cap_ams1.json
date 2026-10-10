@@ -1,0 +1,143 @@
+{
+  "scenario": "cap_ams1",
+  "seed": 710007,
+  "schema_version": 2,
+  "family_map": {
+    "am1": "ams1"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true
+          }
+        }
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "openams_ui",
+      "unit": "am1",
+      "payload": {
+        "v": 1,
+        "unit": "am1",
+        "idx": 1,
+        "family": "ams1",
+        "serial": "SYN-AMS1-0001",
+        "online": true,
+        "ready": true,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "lad",
+            "sp": {
+              "id": 401,
+              "src": "m"
+            }
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "c",
+            "a": "la",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "am1-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T1",
+            "b": [
+              "am1-1"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "component_status",
+      "unit": null,
+      "payload": {
+        "spoolman_online": true,
+        "edit": false,
+        "stop": false,
+        "bays": {
+          "am1-0": {
+            "spool": {
+              "material": "PLA",
+              "vendor": "Synthetic",
+              "color_hex": "E8E8E8",
+              "remaining_g": 900,
+              "remaining_pct": 90,
+              "initial_g": 1000
+            },
+            "pending_confirmation": false
+          }
+        }
+      }
+    }
+  ]
+}

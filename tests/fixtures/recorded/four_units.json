@@ -1,0 +1,4418 @@
+{
+  "scenario": "four_units",
+  "seed": 0,
+  "schema_version": 2,
+  "family_map": {
+    "bench_ams2_left": "ams2",
+    "bench_ams2_right": "ams2",
+    "bench_ams1_rear": "ams1",
+    "bench_ht_front": "ams_ht"
+  },
+  "events": [
+    {
+      "t": 4.919,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": false,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 4.919,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_left",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0001",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "bench_ams2_left-0"
+            ],
+            "s": "e"
+          },
+          {
+            "n": "T2"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 4.919,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "e"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 4.919,
+      "kind": "openams_ui",
+      "unit": "bench_ams1_rear",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams1_rear",
+        "idx": 3,
+        "family": "ams1",
+        "serial": "SYN-FOUR-0003",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 9,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 10,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 11,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0"
+          },
+          {
+            "n": "T2",
+            "b": [
+              "bench_ams1_rear-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 4.919,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 5.422,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": false,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 5.422,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_left",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0001",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "bench_ams2_left-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T2"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 5.422,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 5.422,
+      "kind": "openams_ui",
+      "unit": "bench_ams1_rear",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams1_rear",
+        "idx": 3,
+        "family": "ams1",
+        "serial": "SYN-FOUR-0003",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 9,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 10,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 11,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0"
+          },
+          {
+            "n": "T2",
+            "b": [
+              "bench_ams1_rear-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 5.422,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 5.924,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 6.427,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 7.681,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 9.189,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 10.194,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 10.194,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_left",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0001",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "bench_ams2_left-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T2"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 10.194,
+      "kind": "openams_ui",
+      "unit": "bench_ams1_rear",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams1_rear",
+        "idx": 3,
+        "family": "ams1",
+        "serial": "SYN-FOUR-0003",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 9,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 10,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 11,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0"
+          },
+          {
+            "n": "T2",
+            "b": [
+              "bench_ams1_rear-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 10.443,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 11.703,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 12.963,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 14.223,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 15.483,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 15.736,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 16.744,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": false,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 16.744,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": false
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 16.744,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": false,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": false
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": []
+      }
+    },
+    {
+      "t": 16.993,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": false,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 18.253,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": false,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 18.757,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 18.757,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 18.757,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 19.761,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 20.766,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 21.771,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": false,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": false,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 21.771,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_left",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0001",
+        "online": false,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": false
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "bench_ams2_left-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T2"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": []
+      }
+    },
+    {
+      "t": 21.771,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": false,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": false
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": []
+      }
+    },
+    {
+      "t": 21.771,
+      "kind": "openams_ui",
+      "unit": "bench_ams1_rear",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams1_rear",
+        "idx": 3,
+        "family": "ams1",
+        "serial": "SYN-FOUR-0003",
+        "online": false,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": false
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 9,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 10,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 11,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0"
+          },
+          {
+            "n": "T2",
+            "b": [
+              "bench_ams1_rear-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": []
+      }
+    },
+    {
+      "t": 21.771,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": false
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 22.273,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": false,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544229.197944765,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": false,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 26.778,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": false,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 26.778,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_left",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0001",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "bench_ams2_left-0"
+            ],
+            "s": "e"
+          },
+          {
+            "n": "T2"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 26.778,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "e"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 26.778,
+      "kind": "openams_ui",
+      "unit": "bench_ams1_rear",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams1_rear",
+        "idx": 3,
+        "family": "ams1",
+        "serial": "SYN-FOUR-0003",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 9,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 10,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 11,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0"
+          },
+          {
+            "n": "T2",
+            "b": [
+              "bench_ams1_rear-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 26.778,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 27.281,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": false,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 27.281,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_left",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0001",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "bench_ams2_left-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T2"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 27.281,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 27.281,
+      "kind": "openams_ui",
+      "unit": "bench_ams1_rear",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams1_rear",
+        "idx": 3,
+        "family": "ams1",
+        "serial": "SYN-FOUR-0003",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 9,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 10,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 11,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0"
+          },
+          {
+            "n": "T2",
+            "b": [
+              "bench_ams1_rear-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 27.281,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 27.783,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544251.058746992,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544251.058746992,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 28.286,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544251.058746992,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544251.058746992,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 29.793,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544251.058746992,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544251.058746992,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 38.223,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": false,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 38.223,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_left",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0001",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "bench_ams2_left-0"
+            ],
+            "s": "e"
+          },
+          {
+            "n": "T2"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 38.223,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "e"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 38.223,
+      "kind": "openams_ui",
+      "unit": "bench_ams1_rear",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams1_rear",
+        "idx": 3,
+        "family": "ams1",
+        "serial": "SYN-FOUR-0003",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 9,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 10,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 11,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0"
+          },
+          {
+            "n": "T2",
+            "b": [
+              "bench_ams1_rear-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 38.223,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "e"
+          }
+        ],
+        "env": null,
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 38.726,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": false,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 0.0,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.0,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 38.726,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_left",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_left",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0001",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "bench_ams2_left-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T2"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 38.726,
+      "kind": "openams_ui",
+      "unit": "bench_ams2_right",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams2_right",
+        "idx": 2,
+        "family": "ams2",
+        "serial": "SYN-FOUR-0002",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 5,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 6,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 7,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1",
+            "b": [
+              "bench_ams2_right-0"
+            ],
+            "s": "r"
+          },
+          {
+            "n": "T3"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 38.726,
+      "kind": "openams_ui",
+      "unit": "bench_ams1_rear",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ams1_rear",
+        "idx": 3,
+        "family": "ams1",
+        "serial": "SYN-FOUR-0003",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 9,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 10,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 11,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0"
+          },
+          {
+            "n": "T2",
+            "b": [
+              "bench_ams1_rear-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 38.726,
+      "kind": "openams_ui",
+      "unit": "bench_ht_front",
+      "payload": {
+        "v": 1,
+        "unit": "bench_ht_front",
+        "idx": 4,
+        "family": "ams_ht",
+        "serial": "SYN-FOUR-0004",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T1"
+          },
+          {
+            "n": "T3",
+            "b": [
+              "bench_ht_front-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 31,
+          "rh": 35
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 39.228,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544262.603407805,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544262.603407805,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 39.731,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544262.603407805,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544262.603407805,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 40.233,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544262.603407805,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544262.603407805,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 41.238,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544262.603407805,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 544262.603407805,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.02,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    }
+  ]
+}

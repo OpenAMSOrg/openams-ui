@@ -1,0 +1,120 @@
+diff --git a/src/components/mixins/dashboard.ts b/src/components/mixins/dashboard.ts
+index 7da36854..146529cf 100644
+--- a/src/components/mixins/dashboard.ts
++++ b/src/components/mixins/dashboard.ts
+@@ -16,6 +16,7 @@ import {
+     mdiWebcam,
+     mdiAdjust,
+     mdiMulticast,
++    mdiViewGrid,
+ } from '@mdi/js'
+ import { afcIconLogo } from '@/plugins/afcIcons'
+ 
+@@ -79,6 +80,8 @@ export default class DashboardMixin extends BaseMixin {
+                 return mdiMulticast
+             case 'afc':
+                 return afcIconLogo
++            case 'openams':
++                return mdiViewGrid
+ 
+             default:
+                 return mdiInformation
+diff --git a/src/locales/en.json b/src/locales/en.json
+index 538ceb46..9b0ba771 100644
+--- a/src/locales/en.json
++++ b/src/locales/en.json
+@@ -949,6 +949,10 @@
+             },
+             "Unknown": "Unknown"
+         },
++        "OpenamsPanel": {
++            "Headline": "OpenAMS",
++            "NoUnits": "No OpenAMS units are connected."
++        },
+         "SpoolmanPanel": {
+             "ActiveSpool": "Active Spool",
+             "ChangeSpool": "Change Spool",
+diff --git a/src/pages/Dashboard.vue b/src/pages/Dashboard.vue
+index 73276768..4f502939 100644
+--- a/src/pages/Dashboard.vue
++++ b/src/pages/Dashboard.vue
+@@ -93,6 +93,7 @@ import MacrosPanel from '@/components/panels/MacrosPanel.vue'
+ import MiniconsolePanel from '@/components/panels/MiniconsolePanel.vue'
+ import MinSettingsPanel from '@/components/panels/MinSettingsPanel.vue'
+ import MiscellaneousPanel from '@/components/panels/MiscellaneousPanel.vue'
++import OpenamsPanel from '@/components/panels/OpenamsPanel.vue'
+ import SpoolmanPanel from '@/components/panels/SpoolmanPanel.vue'
+ import MmuPanel from '@/components/panels/MmuPanel.vue'
+ import StatusPanel from '@/components/panels/StatusPanel.vue'
+@@ -112,6 +113,7 @@ import WebcamPanel from '@/components/panels/WebcamPanel.vue'
+         MiniconsolePanel,
+         MinSettingsPanel,
+         MiscellaneousPanel,
++        OpenamsPanel,
+         SpoolmanPanel,
+         MmuPanel,
+         StatusPanel,
+diff --git a/src/store/gui/getters.ts b/src/store/gui/getters.ts
+index 2da26954..d2b7d011 100644
+--- a/src/store/gui/getters.ts
++++ b/src/store/gui/getters.ts
+@@ -92,6 +92,11 @@ export const getters: GetterTree<GuiState, RootState> = {
+             allPanels = allPanels.filter((name) => name !== 'afc')
+         }
+ 
++        // remove openams panel, if no OpenAMS module exists in Klipper
++        if (!rootState.printer?.oams_manager) {
++            allPanels = allPanels.filter((name) => name !== 'openams')
++        }
++
+         // remove mmu panel, if no Happy Hare exists in Klipper
+         if (!rootState.printer?.mmu) {
+             allPanels = allPanels.filter((name) => name !== 'mmu')
+diff --git a/src/store/socket/actions.ts b/src/store/socket/actions.ts
+index 24263cd2..106f2f29 100644
+--- a/src/store/socket/actions.ts
++++ b/src/store/socket/actions.ts
+@@ -2,6 +2,8 @@ import Vue from 'vue'
+ import { ActionTree } from 'vuex'
+ import { SocketState } from '@/store/socket/types'
+ import { RootState } from '@/store/types'
++import { EventBus } from '@/plugins/eventBus'
++import { OPENAMS_SPOOLMAN_STATUS } from '@/components/panels/Openams/adapter'
+ 
+ export const actions: ActionTree<SocketState, RootState> = {
+     reset({ commit }) {
+@@ -139,6 +141,10 @@ export const actions: ActionTree<SocketState, RootState> = {
+                 dispatch('server/sensor/updateSensors', payload.params[0], { root: true })
+                 break
+ 
++            case 'notify_openams_spoolman_status':
++                EventBus.$emit(OPENAMS_SPOOLMAN_STATUS, payload.params[0])
++                break
++
+             default:
+                 window.console.debug(payload)
+         }
+diff --git a/src/store/variables.ts b/src/store/variables.ts
+index 1646c776..66c9791f 100644
+--- a/src/store/variables.ts
++++ b/src/store/variables.ts
+@@ -110,6 +110,7 @@ export const maxGcodeHistory = 50
+  */
+ export const allDashboardPanels = [
+     'afc',
++    'openams',
+     'toolhead-control',
+     'extruder-control',
+     'macros',
+diff --git a/vite.config.ts b/vite.config.ts
+index 48b24834..55c815c2 100644
+--- a/vite.config.ts
++++ b/vite.config.ts
+@@ -162,6 +162,6 @@ export default defineConfig({
+ 
+     test: {
+         environment: 'node',
+-        include: ['tests/**/*.spec.ts'],
++        include: ['tests/**/*.spec.ts', 'src/**/*.test.ts'],
+     },
+ })

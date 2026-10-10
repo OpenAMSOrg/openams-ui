@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-gallery/
+review/
+test-results/
+playwright-report/
+src/tokens.css
+src/tokens.scss

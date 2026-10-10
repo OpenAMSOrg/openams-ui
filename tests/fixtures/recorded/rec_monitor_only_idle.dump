@@ -1,0 +1,8 @@
+MODEL units=1 groups=2 busy=none busy_unit=-1 busy_slot=-1 loaded=0 loaded_unit=-1 loaded_slot=-1 loaded_ext=-1 current_group=-1 motion_settled=1 spoolman_online=0 has_error=0
+UNIT 0 name=ams_a kind=4slot variant=AMS 2 Pro slots=4 side=0 connected=1 can_dry=0 dry=idle target=0 remaining_min=0 adapter=0 rh=31 rh_valid=1 temp=24 temp_valid=1 rfid=0
+SLOT 0:0 state=ready cal=configured positioning=0 spool=-1 source=unknown material= brand= color=000000 remaining_g=-1 remaining_pct=-1 pending=0
+SLOT 0:1 state=empty cal=configured positioning=0 spool=-1 source=unknown material= brand= color=000000 remaining_g=-1 remaining_pct=-1 pending=0
+SLOT 0:2 state=ready cal=configured positioning=0 spool=-1 source=unknown material= brand= color=000000 remaining_g=-1 remaining_pct=-1 pending=0
+SLOT 0:3 state=empty cal=configured positioning=0 spool=-1 source=unknown material= brand= color=000000 remaining_g=-1 remaining_pct=-1 pending=0
+GROUP 0 name=T0 count=1 members=0:0
+GROUP 1 name=T1 count=1 members=0:1

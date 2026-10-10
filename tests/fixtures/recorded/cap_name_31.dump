@@ -1,0 +1,5 @@
+MODEL units=1 groups=1 busy=none busy_unit=-1 busy_slot=-1 loaded=0 loaded_unit=-1 loaded_slot=-1 loaded_ext=-1 current_group=-1 motion_settled=1 spoolman_online=1 has_error=0
+UNIT 0 name=ams_left_unit_with_long_nam_1xx kind=4slot variant=AMS 2 Pro slots=2 side=0 connected=1 can_dry=1 dry=idle target=50 remaining_min=0 adapter=0 rh=31 rh_valid=1 temp=24 temp_valid=1 rfid=1
+SLOT 0:0 state=ready cal=configured positioning=0 spool=700 source=tag material=PLA brand=Synthetic color=D9534F remaining_g=600 remaining_pct=60 pending=0
+SLOT 0:1 state=empty cal=configured positioning=0 spool=-1 source=unknown material= brand= color=000000 remaining_g=-1 remaining_pct=-1 pending=0
+GROUP 0 name=T0 count=1 members=0:0

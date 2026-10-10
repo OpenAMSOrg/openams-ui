@@ -1,0 +1,17 @@
+{
+  "name": "@openams/logic",
+  "version": "0.1.0",
+  "description": "The OpenAMS UI logic (model, view builders, action mapper) in strict TypeScript, kept identical to the C core by differential tests.",
+  "type": "module",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.6.0"
+  },
+  "license": "MIT"
+}

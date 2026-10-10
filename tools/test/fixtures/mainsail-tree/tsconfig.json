@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "es2020",
+        "module": "esnext",
+        "strict": true,
+        "moduleResolution": "bundler",
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "lib": ["esnext", "dom", "dom.iterable", "scripthost"]
+    },
+    "include": ["src/**/*.ts", "src/**/*.vue"],
+    "exclude": ["node_modules"]
+}

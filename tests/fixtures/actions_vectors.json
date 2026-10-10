@@ -1,0 +1,287 @@
+{
+  "source": "tests/test_actions_map.c (tools/export_actions_vectors.py)",
+  "fixture": "loaded",
+  "note": "Each line is resolved against the model the fixture builds (tests/fixtures/recorded/<fixture>.json applied in order). kind: gcode {script}, rpc {method, params}, error {reason}, local.",
+  "vectors": [
+    {
+      "line": "load oams11",
+      "kind": "error",
+      "reason": "This spool is already loaded"
+    },
+    {
+      "line": "load oams12",
+      "kind": "error",
+      "reason": "Not available right now"
+    },
+    {
+      "line": "unload oams11",
+      "kind": "gcode",
+      "script": "OPENAMS_UNLOAD FPS=fps1"
+    },
+    {
+      "line": "unload oams14",
+      "kind": "error",
+      "reason": "This spool is not loaded"
+    },
+    {
+      "line": "load oams13",
+      "kind": "error",
+      "reason": "No spool is inserted"
+    },
+    {
+      "line": "pause and load oams12",
+      "kind": "error",
+      "reason": "Not available right now"
+    },
+    {
+      "line": "change group 1 oams12",
+      "kind": "gcode",
+      "script": "OAMSM_ASSIGN_BAY GROUP=T1 OAMS=oams1 BAY=1"
+    },
+    {
+      "line": "change group 0 oams12",
+      "kind": "error",
+      "reason": "This group is loaded in the toolhead"
+    },
+    {
+      "line": "change group 0 oams11",
+      "kind": "error",
+      "reason": "This group is loaded in the toolhead"
+    },
+    {
+      "line": "change group -1 oams12",
+      "kind": "gcode",
+      "script": "OAMSM_UNASSIGN_BAY GROUP=T1 OAMS=oams1 BAY=1"
+    },
+    {
+      "line": "change group -1 oams13",
+      "kind": "error",
+      "reason": "Assign this spool to a tool first"
+    },
+    {
+      "line": "change group -2 oams12",
+      "kind": "gcode",
+      "script": "OAMSM_CREATE_GROUP GROUP=T2\nOAMSM_ASSIGN_BAY GROUP=T2 OAMS=oams1 BAY=1"
+    },
+    {
+      "line": "change group 7 oams12",
+      "kind": "local"
+    },
+    {
+      "line": "change group -3 oams12",
+      "kind": "local"
+    },
+    {
+      "line": "change group 1 oams99",
+      "kind": "local"
+    },
+    {
+      "line": "change group T1 oams12",
+      "kind": "local"
+    },
+    {
+      "line": "delete group T0",
+      "kind": "error",
+      "reason": "This group is loaded in the toolhead"
+    },
+    {
+      "line": "delete group T1",
+      "kind": "gcode",
+      "script": "OAMSM_DELETE_GROUP GROUP=T1"
+    },
+    {
+      "line": "group delete T1",
+      "kind": "gcode",
+      "script": "OAMSM_DELETE_GROUP GROUP=T1"
+    },
+    {
+      "line": "delete group T9",
+      "kind": "local"
+    },
+    {
+      "line": "fault clear_errors",
+      "kind": "gcode",
+      "script": "OAMSM_CLEAR_ERRORS"
+    },
+    {
+      "line": "fault clear_fault oams1",
+      "kind": "gcode",
+      "script": "OAMS_CLEAR_FAULT OAMS=1"
+    },
+    {
+      "line": "fault retry_load T1",
+      "kind": "gcode",
+      "script": "OAMSM_LOAD_FILAMENT GROUP=T1"
+    },
+    {
+      "line": "fault resume",
+      "kind": "gcode",
+      "script": "RESUME"
+    },
+    {
+      "line": "resume",
+      "kind": "gcode",
+      "script": "RESUME"
+    },
+    {
+      "line": "display home",
+      "kind": "local"
+    },
+    {
+      "line": "open notice",
+      "kind": "local"
+    },
+    {
+      "line": "open active error",
+      "kind": "local"
+    },
+    {
+      "line": "alerts",
+      "kind": "local"
+    },
+    {
+      "line": "screens",
+      "kind": "local"
+    },
+    {
+      "line": "back home",
+      "kind": "local"
+    },
+    {
+      "line": "print status",
+      "kind": "local"
+    },
+    {
+      "line": "load status",
+      "kind": "local"
+    },
+    {
+      "line": "bind display to oams1",
+      "kind": "local"
+    },
+    {
+      "line": "side front",
+      "kind": "local"
+    },
+    {
+      "line": "rotate cw",
+      "kind": "local"
+    },
+    {
+      "line": "edit T0",
+      "kind": "local"
+    },
+    {
+      "line": "change group T1",
+      "kind": "local"
+    },
+    {
+      "line": "confirm mapping: keep",
+      "kind": "local"
+    },
+    {
+      "line": "  T0 -> oams11",
+      "kind": "local"
+    },
+    {
+      "line": "clear resolved alerts",
+      "kind": "local"
+    },
+    {
+      "line": "rescan units",
+      "kind": "local"
+    },
+    {
+      "line": "retry",
+      "kind": "local"
+    },
+    {
+      "line": "finished continue",
+      "kind": "local"
+    },
+    {
+      "line": "ok",
+      "kind": "local"
+    },
+    {
+      "line": "stop drying",
+      "kind": "local"
+    },
+    {
+      "line": "filament extruded, continue",
+      "kind": "local"
+    },
+    {
+      "line": "not extruded yet, retry",
+      "kind": "local"
+    },
+    {
+      "line": "retry (problem solved)",
+      "kind": "local"
+    },
+    {
+      "line": "frobnicate",
+      "kind": "local"
+    },
+    {
+      "line": "",
+      "kind": "local"
+    },
+    {
+      "line": "load",
+      "kind": "local"
+    },
+    {
+      "line": "load oams99",
+      "kind": "local"
+    },
+    {
+      "line": "unload oams99",
+      "kind": "local"
+    },
+    {
+      "line": "assign T1 oams99",
+      "kind": "local"
+    },
+    {
+      "line": "fault clear_fault oams9",
+      "kind": "local"
+    },
+    {
+      "line": "spool list",
+      "kind": "rpc",
+      "method": "server.spoolman.proxy",
+      "params": {
+        "request_method": "GET",
+        "path": "/v1/spool"
+      }
+    },
+    {
+      "line": "spool confirm oams11 750",
+      "kind": "rpc",
+      "method": "server.openams_spoolman.confirm",
+      "params": {
+        "bay": "oams1-0",
+        "remaining_g": 750
+      }
+    },
+    {
+      "line": "vendor list",
+      "kind": "rpc",
+      "method": "server.spoolman.proxy",
+      "params": {
+        "request_method": "GET",
+        "path": "/v1/vendor"
+      }
+    },
+    {
+      "line": "spool edit oams11 color=255",
+      "kind": "error",
+      "reason": "Spoolman is not set up"
+    },
+    {
+      "line": "spool confirm oams99 500",
+      "kind": "local"
+    }
+  ]
+}

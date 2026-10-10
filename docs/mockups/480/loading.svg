@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B0E12"/>
+      <stop offset="1" stop-color="#12161C"/>
+    </linearGradient>
+    <style>text { font-family: Inter, "Segoe UI", Helvetica, Arial, sans-serif; }</style>
+  </defs>
+  <rect width="480" height="320" fill="url(#bg)"/>
+
+  <text x="16" y="32" font-size="20" font-weight="600" fill="#F2F5F8">Loading A3</text>
+  <circle cx="21" cy="50" r="5" fill="#D23B3B"/>
+  <text x="34" y="55" font-size="14" font-weight="500" fill="#F2F5F8">PLA</text>
+  <text x="66" y="55" font-size="14" font-weight="500" fill="#5A6572">·</text>
+  <text x="78" y="55" font-size="14" font-weight="500" fill="#8D98A5">Red</text>
+
+  <line x1="24" y1="92" x2="24" y2="252" stroke="#2A3340" stroke-width="2"/>
+  <line x1="24" y1="92" x2="24" y2="172" stroke="#3DDC97" stroke-width="2"/>
+
+  <circle cx="24" cy="92" r="8" fill="#3DDC97"/>
+  <polyline points="19,92 23,96 30,88" fill="none" stroke="#0B0E12" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="44" y="97" font-size="14" font-weight="500" fill="#8D98A5">Heat the nozzle</text>
+
+  <circle cx="24" cy="132" r="8" fill="#3DDC97"/>
+  <polyline points="19,132 23,136 30,128" fill="none" stroke="#0B0E12" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="44" y="137" font-size="14" font-weight="500" fill="#8D98A5">Cut filament</text>
+
+  <circle cx="24" cy="172" r="7" fill="none" stroke="#2A3340" stroke-width="2"/>
+  <circle cx="24" cy="172" r="7" fill="none" stroke="#3DDC97" stroke-width="2" stroke-linecap="round" stroke-dasharray="18 26" transform="rotate(-90 24 172)"/>
+  <text x="44" y="177" font-size="14" font-weight="500" fill="#F2F5F8">Pull back current filament</text>
+
+  <circle cx="24" cy="212" r="7.5" fill="none" stroke="#5A6572" stroke-width="1"/>
+  <text x="44" y="217" font-size="14" font-weight="500" fill="#5A6572">Push new filament</text>
+
+  <circle cx="24" cy="252" r="7.5" fill="none" stroke="#5A6572" stroke-width="1"/>
+  <text x="44" y="257" font-size="14" font-weight="500" fill="#5A6572">Purge</text>
+
+  <rect x="0" y="284" width="480" height="36" fill="#1E252E"/>
+  <line x1="0" y1="284" x2="480" y2="284" stroke="#2A3340" stroke-width="1"/>
+  <text x="240" y="308" font-size="16" font-weight="600" fill="#F2555A" text-anchor="middle">Stop</text>
+</svg>

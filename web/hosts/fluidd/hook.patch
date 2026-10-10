@@ -1,0 +1,92 @@
+diff --git a/src/locales/en.yaml b/src/locales/en.yaml
+index 7a656e5..fdea99e 100644
+--- a/src/locales/en.yaml
++++ b/src/locales/en.yaml
+@@ -1428,3 +1428,5 @@ app:
+     tooltip:
+       restore_backup: Restore Backup
+       delete_backup: Delete Backup
++  openams:
++    Headline: "OpenAMS"
+diff --git a/src/store/layout/state.ts b/src/store/layout/state.ts
+index 36e57ac..1438d39 100644
+--- a/src/store/layout/state.ts
++++ b/src/store/layout/state.ts
+@@ -74,7 +74,8 @@ export const createState = (): LayoutState => {
+           { id: 'gcode-preview-card', enabled: true, collapsed: false },
+           { id: 'bed-mesh-card', enabled: false, collapsed: false },
+           { id: 'beacon-card', enabled: false, collapsed: false },
+-          { id: 'afc-card', enabled: true, collapsed: false }
++          { id: 'afc-card', enabled: true, collapsed: false },
++          { id: 'openams-card', enabled: true, collapsed: false }
+         ]
+       },
+       diagnostics: {
+diff --git a/src/store/socket/actions.ts b/src/store/socket/actions.ts
+index 781ca11..d8788bf 100644
+--- a/src/store/socket/actions.ts
++++ b/src/store/socket/actions.ts
+@@ -10,6 +10,7 @@ import { jwtDecode } from 'jwt-decode'
+ import type { TokenKeys } from '../config/types'
+ import i18n from '@/plugins/i18n'
+ import { isMoonrakerNotFoundError, isMoonrakerUnauthorizedError, isSocketError, type SocketError } from '@/util/is-socket-error'
++import { OPENAMS_SPOOLMAN_STATUS } from '@/components/widgets/openams/adapter'
+ 
+ const MODULES_TO_RESET_ON_DROP = [
+   'server',
+@@ -437,6 +438,14 @@ export const actions = {
+ 
+   async notifySpoolmanStatusChanged ({ dispatch }, payload: Moonraker.NotificationPayload<'notify_spoolman_status_changed'>) {
+     dispatch('spoolman/onStatusChanged', payload.spoolman_connected, { root: true })
++  },
++
++  /**
++   * notify_openams_spoolman_status is outside Fluidd's notification map, so it
++   * has no store module of its own: the OpenAMS card takes it off the bus.
++   */
++  async notifyOpenamsSpoolmanStatus (_, payload: unknown) {
++    EventBus.bus.$emit(OPENAMS_SPOOLMAN_STATUS, payload)
+   }
+ } satisfies ActionTree<SocketState, RootState>
+ 
+diff --git a/src/views/Dashboard.vue b/src/views/Dashboard.vue
+index a01c43f..911a68e 100644
+--- a/src/views/Dashboard.vue
++++ b/src/views/Dashboard.vue
+@@ -55,6 +55,7 @@ import SensorsCard from '@/components/widgets/sensors/SensorsCard.vue'
+ import RunoutSensorsCard from '@/components/widgets/runout-sensors/RunoutSensorsCard.vue'
+ import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
+ import AfcCard from '@/components/widgets/afc/AfcCard.vue'
++import OpenamsCard from '@/components/widgets/openams/OpenamsCard.vue'
+ import type Sortable from 'sortablejs'
+ 
+ @Component({
+@@ -77,7 +78,8 @@ import type Sortable from 'sortablejs'
+     SensorsCard,
+     RunoutSensorsCard,
+     BeaconCard,
+-    AfcCard
++    AfcCard,
++    OpenamsCard
+   }
+ })
+ export default class Dashboard extends Mixins(StateMixin) {
+@@ -154,6 +156,10 @@ export default class Dashboard extends Mixins(StateMixin) {
+     return this.$typedGetters['printer/getSupportsAfc']
+   }
+ 
++  get supportsOpenams (): boolean {
++    return this.$typedState.printer.printer.oams_manager != null
++  }
++
+   get hasMacros (): boolean {
+     return this.$typedGetters['macros/getVisibleMacros'].length > 0
+   }
+@@ -237,6 +243,7 @@ export default class Dashboard extends Mixins(StateMixin) {
+     if (item.id === 'sensors-card' && !this.hasSensors) return true
+     if (item.id === 'temperature-card' && !this.hasHeatersOrTemperatureSensors) return true
+     if (item.id === 'afc-card' && !this.supportsAfc) return true
++    if (item.id === 'openams-card' && !this.supportsOpenams) return true
+ 
+     // Otherwise return the opposite of whatever the enabled state is.
+     return !item.enabled

@@ -1,0 +1,75 @@
+# MMU display firmware for the ESP32-2432S028 "Cheap Yellow Display":
+# ESP32-D0WD-V3, 4 MB flash (DIO), no PSRAM.
+
+# --- CPU / clock ---
+CONFIG_ESP32_DEFAULT_CPU_FREQ_240=y
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ=240
+
+# --- Flash: 4 MB, DIO, 40 MHz (safe for these boards) ---
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# --- No PSRAM on this board ---
+CONFIG_SPIRAM=n
+
+# --- FreeRTOS tick at 1000 Hz ---
+CONFIG_FREERTOS_HZ=1000
+
+# --- Compiler: optimise for performance (LVGL rendering is CPU-bound) ---
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# --- Logging: INFO by default ---
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
+
+# --- Main task stack: LVGL + our display/touch drivers run in a task we
+# create ourselves with an explicit stack (see app_main.c); the startup task
+# itself only does init work, but give it headroom too. ---
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# --- Disable Wi-Fi/Bluetooth: this firmware is display-only for now ---
+CONFIG_BT_ENABLED=n
+
+# --- Wi-Fi buffers: heap headroom for the Moonraker link. The display's traffic
+# is small JSON (a 3 KB object list, a ~1.5 KB status reply, a 1 KB broadcast
+# per second), one TCP stream at a few KB/s, so the IDF defaults (10 static RX
+# buffers of ~1.6 KB each, 32 dynamic TX buffers) only starve the heap: measured,
+# the parse of the object list failed with 9.5 KB free. 6 static RX buffers is
+# still above the receive block-ack window (RX_BA_WIN=6 needs at most 2x the
+# static count) and 16 dynamic TX buffers cover the handful of requests in
+# flight. Nothing else in the Wi-Fi memory settings is changed. ---
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=6
+CONFIG_ESP_WIFI_DYNAMIC_TX_BUFFER_NUM=16
+
+# --- OTA: two app slots (see partitions.csv), no factory app. Rollback: the
+# bootloader boots a freshly-updated image as "pending verify" and falls back
+# to the previous slot on the next reset unless the app confirms itself valid
+# first (platform/esp32/main/ota.c, called from app_main.c). ---
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+# A printer host on the LAN usually serves the update over plain HTTP
+# (e.g. Moonraker's /server/files/...), so esp_https_ota must accept it too.
+CONFIG_ESP_HTTPS_OTA_ALLOW_HTTP=y
+
+# --- LVGL: only our own sources, no upstream examples/demos in the image ---
+CONFIG_LV_BUILD_EXAMPLES=n
+CONFIG_LV_BUILD_DEMOS=n
+
+# --- LVGL config comes from the repo's shared lv_conf.h, not Kconfig/menuconfig.
+# CONFIG_LV_CONF_SKIP defaults to y (Kconfig-only config, ignoring lv_conf.h
+# entirely) -- that silently drops every setting in the shared lv_conf.h,
+# which is why LV_FONT_MONTSERRAT_20 etc. built as empty translation units
+# the first time around. Setting it to n restores the normal
+# LV_CONF_INCLUDE_SIMPLE path lv_conf_internal.h takes for every other
+# LVGL target. ---
+CONFIG_LV_CONF_SKIP=n
+
+# HTTPS OTA: Mozilla's "common" CA subset (the CAs behind most of the web,
+# GitHub's included) instead of the full bundle saves about 50 KB of flash.
+# A host signed by a rare CA needs plain http or a custom bundle.
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_DEFAULT_CMN=y
+
+# Flash in quad I/O at 80 MHz: LVGL draws from code in flash (through the
+# cache), so instruction fetch bandwidth is drawing speed.
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y

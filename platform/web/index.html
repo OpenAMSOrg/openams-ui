@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MMU display — interactive preview</title>
+<meta name="description" content="Interactive browser preview of the MMU display, a touchscreen for AMS-style filament units.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+  :root {
+    --bg: #0B0E12;
+    --panel: #12161C;
+    --text: #F2F5F8;
+    --text-dim: #9AA5B1;
+    --accent: #3DDC97;
+    --border: #232A33;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px;
+  }
+  .wrap { width: 100%; max-width: 720px; }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    text-align: center;
+  }
+  .lede {
+    color: var(--text-dim);
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+    margin: 0 0 20px;
+  }
+  .lede strong { color: var(--text); font-weight: 600; }
+
+  .stage {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .canvas-frame {
+    width: 100%;
+    max-width: 960px;
+    aspect-ratio: 480 / 320;
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+    position: relative;
+  }
+  #canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    touch-action: none;
+  }
+  .loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    background: #000;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .loading.hidden { opacity: 0; }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+  }
+  .field label {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 500;
+  }
+  select {
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  select:disabled { opacity: 0.5; }
+
+  details.log {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+  }
+  details.log summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    list-style: none;
+  }
+  details.log summary::-webkit-details-marker { display: none; }
+  details.log summary::before { content: "▸ "; color: var(--accent); }
+  details.log[open] summary::before { content: "▾ "; }
+  #action-log {
+    margin: 10px 0 0;
+    max-height: 160px;
+    overflow-y: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  #action-log div:last-child { color: var(--text); }
+  #action-log .empty { color: var(--text-dim); font-style: italic; }
+
+  .feedback {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .feedback a {
+    display: inline-block;
+    background: var(--accent);
+    color: #06120C;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    padding: 12px 22px;
+    border-radius: 999px;
+    transition: filter 0.15s ease;
+  }
+  .feedback a:hover { filter: brightness(1.08); }
+
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  footer a { color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MMU display — interactive preview</h1>
+  <p class="lede">
+    A <strong>touchscreen that clips onto one AMS-style filament unit</strong>,
+    running here in your browser exactly as it runs on the hardware. Tap it
+    like a touchscreen — the mouse (or your finger, on a phone) is the stylus.
+  </p>
+
+  <div class="stage">
+    <div class="canvas-frame">
+      <canvas id="canvas" width="480" height="320" oncontextmenu="event.preventDefault()"></canvas>
+      <div class="loading" id="loading">Loading preview…</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="field">
+      <label for="unit-picker">Unit</label>
+      <select id="unit-picker" disabled>
+        <option value="A">AMS 2 Pro (A)</option>
+        <option value="B">AMS (B)</option>
+        <option value="HT-A">AMS HT (HT-A)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="scenario-picker">Scenario</label>
+      <select id="scenario-picker" disabled>
+        <option value="idle">Idle — normal standby</option>
+        <option value="loading">Loading — a load in progress</option>
+        <option value="error">Error — feed failure, paused</option>
+        <option value="drying">Drying — heating and dehumidifying</option>
+        <option value="printing">Printing — active print status</option>
+        <option value="runout">Runout — auto-refill switched units</option>
+        <option value="dual">Dual — left/right extruder grouping</option>
+        <option value="remote">Remote — controlled from another unit</option>
+      </select>
+    </div>
+  </div>
+
+  <details class="log">
+    <summary>What you tapped</summary>
+    <div id="action-log"><span class="empty">Nothing yet — try tapping a slot on the display.</span></div>
+  </details>
+
+  <div class="feedback">
+    <a id="feedback-link" href="https://github.com/OpenAMSOrg/mmu-display-demo/issues/new" target="_blank" rel="noopener">
+      Send feedback
+    </a>
+  </div>
+
+  <footer>
+    This is a preview build for early feedback, not the shipping firmware UI.<br>
+    <a href="https://github.com/OpenAMSOrg/mmu-display-demo">github.com/OpenAMSOrg/mmu-display-demo</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var params = new URLSearchParams(window.location.search);
+  var initialScenario = params.get("scenario") || "idle";
+  var initialUnit = params.get("unit") || "A";
+
+  var unitPicker = document.getElementById("unit-picker");
+  var scenarioPicker = document.getElementById("scenario-picker");
+  var loadingEl = document.getElementById("loading");
+  var logEl = document.getElementById("action-log");
+  var feedbackLink = document.getElementById("feedback-link");
+
+  if ([].slice.call(unitPicker.options).some(function (o) { return o.value === initialUnit; })) {
+    unitPicker.value = initialUnit;
+  }
+  if ([].slice.call(scenarioPicker.options).some(function (o) { return o.value === initialScenario; })) {
+    scenarioPicker.value = initialScenario;
+  }
+
+  function feedbackBody() {
+    return [
+      "What did you like?",
+      "",
+      "",
+      "What confused you?",
+      "",
+      "",
+      "Unit / scenario you were testing: " + unitPicker.value + " / " + scenarioPicker.value,
+      ""
+    ].join("\n");
+  }
+
+  function updateFeedbackLink() {
+    var url = "https://github.com/OpenAMSOrg/mmu-display-demo/issues/new"
+      + "?title=" + encodeURIComponent("Feedback: MMU display preview")
+      + "&body=" + encodeURIComponent(feedbackBody());
+    feedbackLink.href = url;
+  }
+  updateFeedbackLink();
+
+  window.mmuActionLog = function (line) {
+    if (logEl.querySelector(".empty")) logEl.innerHTML = "";
+    var row = document.createElement("div");
+    row.textContent = line;
+    logEl.appendChild(row);
+    while (logEl.children.length > 200) logEl.removeChild(logEl.firstChild);
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+
+  var Module = {
+    canvas: document.getElementById("canvas"),
+    arguments: ["--scenario", initialScenario, "--unit", initialUnit],
+    print: function (text) { console.log(text); },
+    printErr: function (text) { console.error(text); },
+    onRuntimeInitialized: function () {
+      loadingEl.classList.add("hidden");
+      unitPicker.disabled = false;
+      scenarioPicker.disabled = false;
+    }
+  };
+  window.Module = Module;
+
+  unitPicker.addEventListener("change", function () {
+    if (Module.ccall) Module.ccall("web_set_unit", null, ["string"], [unitPicker.value]);
+    updateFeedbackLink();
+  });
+  scenarioPicker.addEventListener("change", function () {
+    if (Module.ccall) Module.ccall("web_set_scenario", null, ["string"], [scenarioPicker.value]);
+    updateFeedbackLink();
+  });
+
+  var script = document.createElement("script");
+  script.src = "openams-ui-web.js";
+  script.onerror = function () {
+    loadingEl.textContent = "Could not load the preview (openams-ui-web.js failed to load).";
+  };
+  document.body.appendChild(script);
+})();
+</script>
+</body>
+</html>

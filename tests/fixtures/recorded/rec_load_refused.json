@@ -1,0 +1,206 @@
+{
+  "scenario": "rec_load_refused",
+  "seed": 21558909,
+  "schema_version": 2,
+  "family_map": {
+    "ams_a": "ams2"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 9.549999999999983,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.5,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "openams_ui",
+      "unit": "ams_a",
+      "payload": {
+        "v": 1,
+        "unit": "ams_a",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "4AE0298B93FA0C1BAD01533F",
+        "online": true,
+        "ready": false,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "ams_a-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 24,
+          "rh": 31
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    },
+    {
+      "t": 0.5,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 9.549999999999983,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.5,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    },
+    {
+      "t": 1.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 9.549999999999983,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.5,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "filament_temp_c": null
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "scenario": "cap_monitor_only",
+  "seed": 710001,
+  "schema_version": 2,
+  "family_map": {
+    "mon1": "ams2"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": false,
+        "current_group": null,
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true
+          }
+        }
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "openams_ui",
+      "unit": "mon1",
+      "payload": {
+        "v": 1,
+        "unit": "mon1",
+        "idx": 1,
+        "family": "ams2",
+        "serial": "SYN-MON-0001",
+        "online": true,
+        "ready": false,
+        "cal": "u",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "u",
+            "a": "ad",
+            "sp": {
+              "id": 101,
+              "src": "m"
+            }
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "u",
+            "a": "ad",
+            "sp": {
+              "id": 102,
+              "src": "m"
+            }
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "u",
+            "a": "ad",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "u",
+            "a": "ad",
+            "sp": null
+          }
+        ],
+        "groups": [],
+        "env": {
+          "t": 24,
+          "rh": 31
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": []
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "component_status",
+      "unit": null,
+      "payload": {
+        "spoolman_online": true,
+        "edit": false,
+        "stop": false,
+        "bays": {
+          "mon1-0": {
+            "spool": {
+              "material": "PLA",
+              "vendor": "Synthetic",
+              "color_hex": "D9534F",
+              "remaining_g": 640,
+              "remaining_pct": 64,
+              "initial_g": 1000
+            },
+            "pending_confirmation": false
+          },
+          "mon1-1": {
+            "spool": {
+              "material": "PETG",
+              "vendor": "Synthetic",
+              "color_hex": "2F9EC4",
+              "remaining_g": 880,
+              "remaining_pct": 88,
+              "initial_g": 1000
+            },
+            "pending_confirmation": false
+          }
+        }
+      }
+    }
+  ]
+}

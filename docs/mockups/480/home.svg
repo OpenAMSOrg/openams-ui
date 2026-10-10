@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B0E12"/>
+      <stop offset="1" stop-color="#12161C"/>
+    </linearGradient>
+    <linearGradient id="pla" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D75353"/>
+      <stop offset="1" stop-color="#82292B"/>
+    </linearGradient>
+    <linearGradient id="cf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3A3E45"/>
+      <stop offset="1" stop-color="#16181C"/>
+    </linearGradient>
+    <style>
+      text { font-family: Inter, "Segoe UI", Helvetica, Arial, sans-serif; }
+    </style>
+  </defs>
+  <rect width="480" height="320" fill="url(#bg)"/>
+
+  <text x="12" y="26" font-size="16" font-weight="600" fill="#F2F5F8">AMS 2 Pro</text>
+  <text x="124" y="26" font-size="14" font-weight="500" fill="#8D98A5">(A)</text>
+
+  <rect x="214" y="8" width="152" height="24" rx="12" fill="#161B22"/>
+  <text x="228" y="24" font-size="12" font-weight="500" fill="#F2F5F8">31%</text>
+  <text x="256" y="24" font-size="12" font-weight="400" fill="#8D98A5">RH</text>
+  <rect x="282" y="14" width="1" height="12" fill="#5A6572"/>
+  <text x="292" y="24" font-size="12" font-weight="500" fill="#F2F5F8">24°C</text>
+
+  <g fill="none" stroke="#F2F5F8" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M446 11 a4 4 0 0 1 8 0 c0 4 2.2 5 2.2 8 h-12.4 c0-3 2.2-4 2.2-8z"/>
+    <path d="M447 20.5 a3 1.6 0 0 0 6 0"/>
+  </g>
+
+  <rect x="8" y="48" width="110" height="150" rx="10" fill="url(#pla)"/>
+  <rect x="8" y="48" width="110" height="150" rx="10" fill="none" stroke="#3DDC97" stroke-width="2"/>
+  <text x="18" y="72" font-size="20" font-weight="600" fill="#F4F7F8">A1</text>
+  <rect x="78" y="56" width="28" height="18" rx="9" fill="#0B0E12" fill-opacity="0.47"/>
+  <text x="92" y="69" font-size="12" font-weight="500" fill="#F4F7F8" text-anchor="middle">T0</text>
+  <text x="18" y="94" font-size="12" font-weight="500" fill="#F4F7F8">PLA</text>
+  <text x="18" y="112" font-size="12" font-weight="400" fill="#F4F7F8" fill-opacity="0.67">Bambu</text>
+  <text x="18" y="130" font-size="12" font-weight="400" fill="#F4F7F8" fill-opacity="0.78">next B2</text>
+  <circle cx="63" cy="160" r="24" fill="none" stroke="#F4F7F8" stroke-opacity="0.27" stroke-width="4"/>
+  <circle cx="63" cy="160" r="24" fill="none" stroke="#F4F7F8" stroke-width="4" stroke-linecap="round" stroke-dasharray="123.7 27.1" transform="rotate(-90 63 160)"/>
+  <text x="63" y="164" font-size="14" font-weight="500" fill="#F4F7F8" text-anchor="middle">82%</text>
+
+  <rect x="126" y="48" width="110" height="150" rx="10" fill="url(#cf)"/>
+  <text x="136" y="72" font-size="20" font-weight="600" fill="#F4F7F8">A2</text>
+  <rect x="196" y="56" width="28" height="18" rx="9" fill="#0B0E12" fill-opacity="0.47"/>
+  <text x="210" y="69" font-size="12" font-weight="500" fill="#F4F7F8" text-anchor="middle">T1</text>
+  <text x="136" y="94" font-size="12" font-weight="500" fill="#F4F7F8">PETG-CF</text>
+  <text x="136" y="112" font-size="12" font-weight="400" fill="#F4F7F8" fill-opacity="0.67">Generic</text>
+  <text x="136" y="130" font-size="12" font-weight="400" fill="#F4F7F8" fill-opacity="0.67">no spare</text>
+  <circle cx="181" cy="160" r="24" fill="none" stroke="#F4F7F8" stroke-opacity="0.27" stroke-width="4"/>
+  <circle cx="181" cy="160" r="24" fill="none" stroke="#F4F7F8" stroke-width="4" stroke-linecap="round" stroke-dasharray="67.9 82.9" transform="rotate(-90 181 160)"/>
+  <text x="181" y="164" font-size="14" font-weight="500" fill="#F4F7F8" text-anchor="middle">45%</text>
+
+  <rect x="244" y="48" width="110" height="150" rx="10" fill="#161B22"/>
+  <text x="254" y="72" font-size="20" font-weight="600" fill="#5A6572">A3</text>
+  <text x="299" y="130" font-size="12" font-weight="400" fill="#5A6572" text-anchor="middle">Empty</text>
+
+  <rect x="362" y="48" width="110" height="150" rx="10" fill="#161B22"/>
+  <text x="372" y="72" font-size="20" font-weight="600" fill="#8D98A5">A4</text>
+  <text x="417" y="124" font-size="28" font-weight="600" fill="#8D98A5" text-anchor="middle">?</text>
+  <text x="417" y="156" font-size="12" font-weight="400" fill="#5A6572" text-anchor="middle">Unknown</text>
+
+  <rect x="62" y="198" width="2" height="8" fill="#2A3340"/>
+  <rect x="180" y="198" width="2" height="8" fill="#2A3340"/>
+  <rect x="298" y="198" width="2" height="8" fill="#2A3340"/>
+  <rect x="416" y="198" width="2" height="8" fill="#2A3340"/>
+  <polyline points="63,206 63,222 32,222 32,237" fill="none" stroke="#D75353" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+
+  <g fill="#F2F5F8" transform="translate(23,237)">
+    <rect x="3" y="1" width="12" height="3" rx="1"/>
+    <rect x="6" y="4" width="6" height="3"/>
+    <polygon points="5,7 13,7 11,16 7,16"/>
+  </g>
+
+  <text x="52" y="252" font-size="14" font-weight="500" fill="#F2F5F8">T0</text>
+  <text x="72" y="252" font-size="14" font-weight="500" fill="#5A6572">·</text>
+  <rect x="86" y="245" width="10" height="10" rx="2" fill="#D23B3B"/>
+  <text x="102" y="252" font-size="14" font-weight="500" fill="#F2F5F8">A1 PLA</text>
+  <text x="158" y="252" font-size="14" font-weight="500" fill="#5A6572">·</text>
+  <text x="170" y="252" font-size="12" font-weight="400" fill="#8D98A5">Bambu</text>
+
+  <rect x="0" y="272" width="480" height="48" fill="#0B0E12"/>
+  <line x1="0" y1="272" x2="480" y2="272" stroke="#1E252E" stroke-width="1"/>
+  <g stroke="#8D98A5" stroke-width="2" stroke-linecap="round">
+    <line x1="109" y1="290" x2="131" y2="290"/>
+    <line x1="109" y1="296" x2="131" y2="296"/>
+    <line x1="109" y1="302" x2="131" y2="302"/>
+  </g>
+  <path d="M360 288c-5 7-10 10-10 16a10 10 0 0 0 20 0c0-6-5-9-10-16z" fill="none" stroke="#8D98A5" stroke-width="2"/>
+</svg>

@@ -1,0 +1,656 @@
+{
+  "scenario": "ams1_unverified",
+  "seed": 31776743,
+  "schema_version": 2,
+  "family_map": {
+    "oams1": "ams1"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": null,
+        "topology": {
+          "schema_version": 1,
+          "fps": [
+            "fps1"
+          ],
+          "oams": {
+            "oams1": {
+              "idx": 1,
+              "lane": "fps1",
+              "kind": "oams",
+              "family": "ams1",
+              "bays": 4,
+              "capabilities": {
+                "family": "ams1",
+                "display_name": "AMS 1",
+                "bays": 4,
+                "feeder_drive_type": "brushed_spool_drives_with_brushless_hub",
+                "spool_drive_count": 4,
+                "feed_motor_control": "device_owned_speed_current",
+                "device_owned_motion_control": true,
+                "dryer": false,
+                "dryer_zone_count": 0,
+                "dryer_module_count": 0,
+                "dryer_independent_zones": false,
+                "heater_count": 0,
+                "fan_count": 0,
+                "dryer_temperature_sensor_count": 0,
+                "spool_rotation_during_drying": false,
+                "dryer_target_min_c": null,
+                "dryer_target_max_c": null,
+                "vent_count": 0,
+                "autonomous_follower": false,
+                "ptfe_calibration": false,
+                "hub_hes_calibration": false,
+                "rfid": false,
+                "host_sensor_configuration": false,
+                "runtime_pid_tuning": false,
+                "logger_control": false,
+                "error_led_control": false,
+                "rfid_reader_scope": "per_bay",
+                "rfid_uid_inventory": false,
+                "rfid_material_metadata": "host_owned",
+                "schema_version": 1,
+                "board_name": "ams1",
+                "firmware_version": "vams-ams1",
+                "build_version": "vams-ams1",
+                "firmware_capability_schema": 5,
+                "telemetry": true,
+                "normal_motion": false,
+                "heater_control": false,
+                "vent_control": false,
+                "fan_control": false,
+                "vent_current_sense": false,
+                "performance_unsupported_sentinel": 4294967295,
+                "rfid_reader_count": 4,
+                "vent_actuator_count": 0,
+                "telemetry_channels": [
+                  "board",
+                  "domain",
+                  "follower",
+                  "motor",
+                  "motor_control",
+                  "ptfe"
+                ]
+              }
+            }
+          },
+          "groups": {
+            "T0": {
+              "lane": "fps1",
+              "bays": [
+                "oams1-0"
+              ]
+            }
+          }
+        },
+        "devices": {
+          "oams1": {
+            "schema_version": 1,
+            "current_spool": null,
+            "oams_idx": 1,
+            "connected": true,
+            "fps_value": 0.0,
+            "fps_upper_threshold": 0.75,
+            "fps_lower_threshold": 0.25,
+            "f1s_hes_value": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "hub_hes_value": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "fps_target": 0.5,
+            "current_kp": 0.0,
+            "current_ki": 0.0,
+            "current_kd": 0.0,
+            "current_target": 0.3,
+            "f1s_hes_value_0": 1,
+            "f1s_hes_value_1": 0,
+            "f1s_hes_value_2": 0,
+            "f1s_hes_value_3": 0,
+            "hub_hes_value_0": 0,
+            "hub_hes_value_1": 0,
+            "hub_hes_value_2": 0,
+            "hub_hes_value_3": 0,
+            "kp": 0.0,
+            "ki": 0.0,
+            "kd": 0.0,
+            "encoder_clicks": 0,
+            "i_value": 0.0,
+            "protocol_version": 3,
+            "gen_matched_protocol": true,
+            "family": "ams1",
+            "bay_count": 4,
+            "capabilities": {
+              "family": "ams1",
+              "display_name": "AMS 1",
+              "bays": 4,
+              "feeder_drive_type": "brushed_spool_drives_with_brushless_hub",
+              "spool_drive_count": 4,
+              "feed_motor_control": "device_owned_speed_current",
+              "device_owned_motion_control": true,
+              "dryer": false,
+              "dryer_zone_count": 0,
+              "dryer_module_count": 0,
+              "dryer_independent_zones": false,
+              "heater_count": 0,
+              "fan_count": 0,
+              "dryer_temperature_sensor_count": 0,
+              "spool_rotation_during_drying": false,
+              "dryer_target_min_c": null,
+              "dryer_target_max_c": null,
+              "vent_count": 0,
+              "autonomous_follower": false,
+              "ptfe_calibration": false,
+              "hub_hes_calibration": false,
+              "rfid": false,
+              "host_sensor_configuration": false,
+              "runtime_pid_tuning": false,
+              "logger_control": false,
+              "error_led_control": false,
+              "rfid_reader_scope": "per_bay",
+              "rfid_uid_inventory": false,
+              "rfid_material_metadata": "host_owned",
+              "schema_version": 1,
+              "board_name": "ams1",
+              "firmware_version": "vams-ams1",
+              "build_version": "vams-ams1",
+              "firmware_capability_schema": 5,
+              "telemetry": true,
+              "normal_motion": false,
+              "heater_control": false,
+              "vent_control": false,
+              "fan_control": false,
+              "vent_current_sense": false,
+              "performance_unsupported_sentinel": 4294967295,
+              "rfid_reader_count": 4,
+              "vent_actuator_count": 0,
+              "telemetry_channels": [
+                "board",
+                "domain",
+                "follower",
+                "motor",
+                "motor_control",
+                "ptfe"
+              ]
+            },
+            "capability_warnings": [],
+            "identity": {
+              "serial": "1FB20001752BC7C0CA7E8CE5",
+              "firmware": "vams-ams1",
+              "board": "ams1"
+            },
+            "calibration": {
+              "state": "configured",
+              "path_length_mm": 1754.3859649122808
+            },
+            "environment": {
+              "temp_c": 24.0,
+              "rh_pct": 31.0,
+              "source": "firmware"
+            },
+            "dryer": null,
+            "faults": [],
+            "follower_uncertain": false,
+            "bays": [
+              {
+                "index": 0,
+                "ready": true,
+                "loaded": false,
+                "calibrated": true,
+                "calibration_state": "configured",
+                "path_length_mm": 1754.3859649122808,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": [
+                  "set_spool"
+                ]
+              },
+              {
+                "index": 1,
+                "ready": false,
+                "loaded": false,
+                "calibrated": true,
+                "calibration_state": "configured",
+                "path_length_mm": 1754.3859649122808,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": []
+              },
+              {
+                "index": 2,
+                "ready": false,
+                "loaded": false,
+                "calibrated": true,
+                "calibration_state": "configured",
+                "path_length_mm": 1754.3859649122808,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": []
+              },
+              {
+                "index": 3,
+                "ready": false,
+                "loaded": false,
+                "calibrated": true,
+                "calibration_state": "configured",
+                "path_length_mm": 1754.3859649122808,
+                "positioning": false,
+                "spool_id": null,
+                "link_source": "none",
+                "tag": null,
+                "spool_hint": null,
+                "supported_actions": []
+              }
+            ],
+            "telemetry": {
+              "follower": {
+                "state": 0,
+                "fault": 0,
+                "forward": 0,
+                "motor_enabled": 0,
+                "buffer_valid": 0,
+                "buffer_permille": 0,
+                "commanded_frequency_millihz": 0,
+                "adaptive_current_counts": 0,
+                "commanded_current_ma": 0,
+                "cycle_count": 0,
+                "stall_recoveries": 0,
+                "demand_permille_per_s": 0,
+                "last_on_ms": 0,
+                "last_off_ms": 0,
+                "timestamp": 9.149999999999984,
+                "state_name": "disarmed",
+                "fault_name": "none",
+                "commanded_frequency_hz": 0.0
+              },
+              "motor": {
+                "enabled": 1,
+                "forward": 0,
+                "frequency_millihz": 0,
+                "duty_permille": 0,
+                "current_target_ma": 0,
+                "temperature_valid": 0,
+                "temperature_centic": 0,
+                "actual_freq_millihz": 0,
+                "current_adc": 0,
+                "applied_duty": 0,
+                "drive_fault": 0,
+                "timestamp": 9.249999999999984,
+                "temperature_c": null,
+                "frequency_hz": 0.0,
+                "actual_frequency_hz": 0.0,
+                "current_ma": 0.0,
+                "rpm": 0.0
+              },
+              "motor_control": {
+                "control_state": 0,
+                "hes_confidence": 0,
+                "current_id": 0,
+                "phase_error": 0,
+                "voltage_d": 0,
+                "voltage_q": 0,
+                "current_angle": 0,
+                "current_phase_confidence": 0,
+                "current_hes_error": 0,
+                "fused_angle": 0,
+                "fused_confidence": 0,
+                "step": 0,
+                "timestamp": 9.249999999999984
+              },
+              "board": {
+                "f1s_counts": 0,
+                "filament_present": 1,
+                "hub_counts": 0,
+                "hub_filament_present": 0,
+                "door_counts": 0,
+                "door_closed": 0,
+                "encoder_clicks": 0,
+                "buffer_permille": 0,
+                "f1s_overcurrent_level": 0,
+                "f1s_overcurrent_active": 0,
+                "f1s_overcurrent_trips": 0,
+                "buffer_valid": 0,
+                "timestamp": 9.349999999999984
+              },
+              "domain": {
+                "motion_state": 0,
+                "motion_stage": 0,
+                "motion_fault": 0,
+                "dryer_state": 0,
+                "dryer_fault": 0,
+                "system_fault": 0,
+                "timestamp": 9.449999999999983,
+                "motion_state_name": "idle",
+                "motion_stage_name": "stopped",
+                "dryer_state_name": "off",
+                "motion_fault_name": "none",
+                "dryer_fault_name": "none",
+                "system_fault_name": "none"
+              },
+              "environment": {
+                "rh_centipercent": 3100,
+                "temperature_centic": 2400,
+                "valid": 1,
+                "timestamp": 5.549999999999997
+              },
+              "runtime": {
+                "rx_overrun": 0,
+                "rx_errors": 0,
+                "tx_errors": 0,
+                "adc_missed": 0,
+                "adc_errors": 0,
+                "adc_stale": 0,
+                "adc_age_ms": 0,
+                "motor_dropped": 0,
+                "motor_backlog": 0,
+                "dma_timestamp": 9.549999999999983,
+                "rx_budget": 0,
+                "late_cycles": 0,
+                "max_lateness_ms": 0,
+                "scheduler_timestamp": 8.849999999999985,
+                "i2c_completed": 0,
+                "i2c_errors": 0,
+                "i2c_timeouts": 0,
+                "i2c_recoveries": 0,
+                "i2c_retries": 0,
+                "i2c_queue_full": 0,
+                "i2c_queued": 0,
+                "i2c_dma_reads": 0,
+                "i2c_dma_errors": 0,
+                "i2c_timestamp": 8.949999999999985,
+                "clock_source": 0,
+                "platform_timestamp": 9.049999999999985
+              },
+              "f1s": {
+                "sensor": {
+                  "f1s_1": 0,
+                  "f1s_2": 0,
+                  "f1s_3": 0,
+                  "f1s_4": 0,
+                  "hub_1": 0,
+                  "hub_2": 0,
+                  "hub_3": 0,
+                  "hub_4": 0,
+                  "timestamp": 9.449999999999983
+                },
+                "sensor_timestamp": 9.449999999999983,
+                "drive": {
+                  "current_counts": 0,
+                  "current_average_counts": 0,
+                  "current_zero_counts": 0,
+                  "current_peak_counts": 0,
+                  "current_samples": 0,
+                  "duty_permille": 0,
+                  "current_faults": 0,
+                  "current_valid": 0,
+                  "current_active": 0,
+                  "calibration_valid": 0,
+                  "direction_valid_mask": 0,
+                  "sensor_valid_mask": 0,
+                  "load_direction_mask": 0,
+                  "timestamp": 9.449999999999983
+                },
+                "drive_timestamp": 9.449999999999983,
+                "transfer": {
+                  "transfer_phase": 0,
+                  "transfer_fault": 0,
+                  "motion_stage": 0,
+                  "timestamp": 9.449999999999983
+                },
+                "transfer_timestamp": 9.449999999999983
+              },
+              "f1s_sensor": {
+                "f1s_1": 0,
+                "f1s_2": 0,
+                "f1s_3": 0,
+                "f1s_4": 0,
+                "hub_1": 0,
+                "hub_2": 0,
+                "hub_3": 0,
+                "hub_4": 0,
+                "timestamp": 9.449999999999983
+              },
+              "f1s_drive": {
+                "current_counts": 0,
+                "current_average_counts": 0,
+                "current_zero_counts": 0,
+                "current_peak_counts": 0,
+                "current_samples": 0,
+                "duty_permille": 0,
+                "current_faults": 0,
+                "current_valid": 0,
+                "current_active": 0,
+                "calibration_valid": 0,
+                "direction_valid_mask": 0,
+                "sensor_valid_mask": 0,
+                "load_direction_mask": 0,
+                "timestamp": 9.449999999999983
+              },
+              "f1s_transfer": {
+                "transfer_phase": 0,
+                "transfer_fault": 0,
+                "motion_stage": 0,
+                "timestamp": 9.449999999999983
+              },
+              "ptfe": {
+                "configured": 0,
+                "calibrating": 0,
+                "path_clicks": 2000,
+                "last_calibrated_clicks": 2000,
+                "encoder_raw_clicks": 0,
+                "encoder_origin_clicks": 0,
+                "encoder_relative_clicks": 0,
+                "timestamp": 8.649999999999986
+              }
+            },
+            "supported_actions": [
+              "clear_errors",
+              "clear_fault"
+            ],
+            "thermal": {
+              "valid": false,
+              "temperature_c": null,
+              "trip_c": 100.0,
+              "slope_c_per_min": null,
+              "total_on_s": 9.099999999999984,
+              "recent_on_fraction": 0.14147449476571297,
+              "recent_rms_current_ma": 0.0,
+              "sample_span_s": 0.0
+            }
+          }
+        },
+        "settings": {
+          "read_tag_on_insertion": true,
+          "read_tags_at_startup": true,
+          "auto_reload_on_runout": true,
+          "auto_create_spoolman_spools": true,
+          "apply_pa_on_load": false
+        },
+        "lanes": [
+          {
+            "id": "fps1",
+            "state": "unloaded",
+            "current_group": null,
+            "current_slot": null,
+            "following": false,
+            "direction": 1,
+            "message": null,
+            "pressure": 0.5,
+            "set_point": 0.5
+          }
+        ],
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "UNLOADED",
+            "group": null,
+            "unit": null,
+            "runout": "idle",
+            "following": false,
+            "since": 9.549999999999983,
+            "message": null,
+            "state": "unloaded",
+            "current_slot": null,
+            "direction": 1,
+            "pressure": 0.5,
+            "set_point": 0.5,
+            "reload_target": null,
+            "runout_from": null,
+            "stage": null,
+            "motion_stage": null,
+            "extruder": "extruder",
+            "motion_settled": true
+          }
+        },
+        "api_version": 1,
+        "schema": "openams.manager",
+        "commands": {
+          "cancel": "OAMSM_LOAD_FILAMENT_CANCEL",
+          "reset": "OAMSM_CLEAR_ERRORS"
+        },
+        "units": [
+          {
+            "id": "1",
+            "name": "oams1",
+            "kind": "oams",
+            "topology": "hub",
+            "lane": "fps1",
+            "connected": true,
+            "slots": [
+              {
+                "id": 0,
+                "bay": 0,
+                "ready": true,
+                "loaded": false
+              },
+              {
+                "id": 1,
+                "bay": 1,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 2,
+                "bay": 2,
+                "ready": false,
+                "loaded": false
+              },
+              {
+                "id": 3,
+                "bay": 3,
+                "ready": false,
+                "loaded": false
+              }
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "name": "T0",
+            "lane": "fps1",
+            "slots": [
+              0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "t": 0.0,
+      "kind": "openams_ui",
+      "unit": "oams1",
+      "payload": {
+        "v": 1,
+        "unit": "oams1",
+        "idx": 1,
+        "family": "ams1",
+        "serial": "1FB20001752BC7C0CA7E8CE5",
+        "online": true,
+        "ready": true,
+        "cal": "c",
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "a",
+            "sp": null
+          },
+          {
+            "id": 1,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 2,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          },
+          {
+            "id": 3,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "oams1-0"
+            ],
+            "s": "r"
+          }
+        ],
+        "env": {
+          "t": 24,
+          "rh": 31
+        },
+        "dryer": null,
+        "fault": null,
+        "nf": 0,
+        "act": [
+          "clear_fault"
+        ]
+      }
+    }
+  ]
+}
