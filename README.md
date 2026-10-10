@@ -8,6 +8,8 @@ The ready-made Mainsail with the panel is
 (`src/model`, `src/backend`, `src/view`) feeds three renderers: the LVGL
 screens on an ESP32 display, a desktop simulator and a Vue 2 web panel.
 
+![The OpenAMS panel in Mainsail: the toolhead's pressure, an AMS HT and an AMS 2 Pro with their spools, humidity and temperature](docs/images/openams-panel-mainsail.png)
+
 Target hardware is LCDWiki's 4.0 inch ESP32-32E display (E32R40T:
 ESP32-WROOM-32E, 520 KB SRAM, no PSRAM, 4 MB flash): a 480x320 ST7796S panel
 over SPI with an XPT2046 resistive touch controller. Pins and
