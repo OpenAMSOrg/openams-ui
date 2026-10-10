@@ -62,13 +62,19 @@ function loadLanguage(code) {
   const file = resolve(STRING_DIR, `${code}.json`);
   if (!existsSync(file)) return null;
   const doc = JSON.parse(readFileSync(file, 'utf8'));
-  const entries = doc.strings.filter((e) => e.id);
+  // "<ID>@<case>" is a case form of ID (see genTables): not an id of its own.
+  const entries = doc.strings.filter((e) => e.id && !e.id.includes('@'));
+  const forms = doc.strings.filter((e) => e.id && e.id.includes('@')).map((e) => {
+    const at = e.id.indexOf('@');
+    return { base: e.id.slice(0, at), kase: e.id.slice(at + 1), text: e.text };
+  });
   const groups = doc.strings.filter((e) => e.group);
   return {
     code: doc.code ?? code,
     name: doc.name ?? code,
     ids: entries.map((e) => e.id),
     text: new Map(entries.map((e) => [e.id, e.text])),
+    forms,
     groups,
     settingKeys: doc.setting_keys ?? [],
   };
@@ -96,7 +102,9 @@ function loadLanguages() {
  *  conversion, in the order they appear. Two languages may not disagree on this
  *  set, or a translated action line/form would reach the mapper differently. */
 function placeholders(text) {
-  return [...text.matchAll(/\{[^{}]*\}|%[-+ #0-9.*']*(?:hh|h|ll|l|z)?[diouxXeEfgGaAcspn%]/g)].map((m) => m[0]);
+  // "{spool@acc}" is still the placeholder "{spool}", asked for in a case.
+  return [...text.matchAll(/\{[^{}]*\}|%[-+ #0-9.*']*(?:hh|h|ll|l|z)?[diouxXeEfgGaAcspn%]/g)]
+    .map((m) => m[0].replace(/@[^{}]*\}$/, '}'));
 }
 
 /* ------------------------------------------------------------------ pseudo */
@@ -202,6 +210,19 @@ function genTables(langs) {
   out.push(list('k_lang_code', (l) => cLiteral(l.code)));
   out.push(list('k_lang_name', (l) => cLiteral(l.name)));
   out.push(list('*const k_tables', (l) => `k_table_${ident(l.code)}`));
+
+  // Case forms. A language whose nouns change with their role gives the forms
+  // of a placeholder's own text ("SPOOL_LABEL@acc": "Катушку {n}"), and its
+  // templates ask for one ("Сбросить {spool@acc}?"). vs_format() matches the
+  // placeholder's text against the base template and rebuilds it in the case.
+  out.push('', '/* Case forms per language: {base id, case, text}, ended by id -1. */');
+  out.push('typedef struct { int id; const char *kase; const char *text; } vs_form_t;');
+  for (const lang of langs.filter((l) => l.forms.length)) {
+    const rows = lang.forms.map((f) => `    { VS_${f.base}, ${cLiteral(f.kase)}, ${cLiteral(f.text)} },`);
+    out.push(...guard(lang, [`static const vs_form_t k_forms_${ident(lang.code)}[] = {`, ...rows, '    { -1, NULL, NULL },', '};']));
+  }
+  out.push('static const vs_form_t *const k_forms[VS_LANG_COUNT] = {',
+    ...langs.flatMap((l) => guard(l, [`    ${l.forms.length ? `k_forms_${ident(l.code)}` : 'NULL'},`])), '};');
   return out.join('\n') + '\n';
 }
 
@@ -233,6 +254,14 @@ function genTs(langs, master) {
     for (const id of lang.ids) out.push(`  ${id}: ${JSON.stringify(lang.text.get(id))},`);
     out.push('};', '');
   }
+  out.push('/** Case forms, by language: [base id, case, text] (see strings.ts format()). */');
+  out.push('export const FORMS: Record<string, ReadonlyArray<readonly [StrId, string, string]>> = {');
+  for (const lang of langs.filter((l) => l.forms.length)) {
+    out.push(`  ${cLiteral(lang.code)}: [`);
+    for (const f of lang.forms) out.push(`    [${JSON.stringify(f.base)}, ${JSON.stringify(f.kase)}, ${JSON.stringify(f.text)}],`);
+    out.push('  ],');
+  }
+  out.push('};', '');
   out.push('/** Every language table, keyed by code, English first. */');
   out.push('export const TABLES: Record<string, Partial<Record<StrId, string>>> = {');
   for (const lang of langs) out.push(`  ${cLiteral(lang.code)}: STR_${ident(lang.code)},`);
@@ -266,6 +295,18 @@ function checkLanguages(langs, master) {
       const got = placeholders(lang.text.get(id) ?? '').sort().join(' ');
       if (want !== got) {
         problems.push(`${lang.code}: "${id}" placeholders [${got}] differ from English's [${want}]`);
+      }
+    }
+    for (const f of lang.forms) {
+      if (!master.text.has(f.base)) {
+        problems.push(`${lang.code}: "${f.base}@${f.kase}" is a form of no id of ${MASTER}.json`);
+        continue;
+      }
+      if (!/^[a-z]+$/.test(f.kase)) problems.push(`${lang.code}: "${f.base}@${f.kase}": a case is lowercase letters`);
+      const want = placeholders(master.text.get(f.base)).sort().join(' ');
+      const got = placeholders(f.text).sort().join(' ');
+      if (want !== got) {
+        problems.push(`${lang.code}: "${f.base}@${f.kase}" placeholders [${got}] differ from English's [${want}]`);
       }
     }
     const keys = lang.settingKeys.join(',');

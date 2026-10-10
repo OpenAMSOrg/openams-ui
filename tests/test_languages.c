@@ -122,12 +122,41 @@ static void test_a_missing_code_stays_english(void)
     assert(strcmp(view_str(VS_TAG_RUNOUT), english) == 0);
 }
 
+/* A template's {spool@acc} rebuilds the spool label in that case (Russian
+ * declines it); text no case form matches goes in as it is; English, which has
+ * no forms, is unchanged. */
+static void test_case_forms(void)
+{
+    char out[96];
+    vs_arg_t a[1];
+
+    if(!view_set_language("ru")) {
+        printf("case forms: ru is not in this build, skipped\n");
+        return;
+    }
+    a[0] = (vs_arg_t)VS_ARG_T("spool", "Катушка 3");
+    vs_format(VS_EDIT_RESET_TITLE, out, sizeof out, a, 1);
+    assert(strcmp(out, "Сбросить Катушку 3?") == 0);
+    a[0] = (vs_arg_t)VS_ARG_T("spool", "Катушка 2 в AMS 2 Pro");
+    vs_format(VS_GP_FOR, out, sizeof out, a, 1);
+    assert(strcmp(out, "Группа для Катушки 2 в AMS 2 Pro") == 0);
+    a[0] = (vs_arg_t)VS_ARG_T("spool", "Мой PLA");
+    vs_format(VS_EDIT_RESET_TITLE, out, sizeof out, a, 1);
+    assert(strcmp(out, "Сбросить Мой PLA?") == 0);
+
+    assert(view_set_language("en"));
+    a[0] = (vs_arg_t)VS_ARG_T("spool", "Spool 3");
+    vs_format(VS_EDIT_RESET_TITLE, out, sizeof out, a, 1);
+    assert(strcmp(out, "Reset Spool 3?") == 0);
+}
+
 int main(void)
 {
     printf("languages: %s\n", WANTED);
     test_count_and_codes();
     test_every_listed_code_selects();
     test_a_missing_code_stays_english();
+    test_case_forms();
     printf("LANGUAGES OK\n");
     return 0;
 }

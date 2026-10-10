@@ -13,7 +13,7 @@
 // through the same character-boundary writer the C does (cut, span by span),
 // so a long language is cut in the same place in both cores.
 
-import { LANG_CODES, LANG_NAMES, STR_en, TABLES } from './strings.gen.ts';
+import { FORMS, LANG_CODES, LANG_NAMES, STR_en, TABLES } from './strings.gen.ts';
 import type { StrId } from './strings.gen.ts';
 import { fmtFixed, utf8Len } from './cstr.ts';
 
@@ -86,6 +86,75 @@ class Writer {
   }
 }
 
+/* ------------------------------------------------------------ case forms */
+
+/* The C's vs_match()/vs_write_form()/vs_write_case() (strings.c): a template's
+ * "{name@case}" asks for the argument's text in a case, rebuilt from the
+ * current language's case form whose base template the text matches. The
+ * writes go span by span, as in the C, so a cut lands in the same place. */
+
+const MAX_CAPS = 4;
+
+/** The parts of `text` per placeholder of `tpl`, or null when `text` is not
+ *  `tpl` filled in. */
+function matchTemplate(tpl: string, text: string): Map<string, string> | null {
+  const caps = new Map<string, string>();
+  let t = 0;
+  let x = 0;
+  while (t < tpl.length) {
+    if (tpl[t] !== '{') {
+      if (text[x] !== tpl[t]) return null;
+      t++;
+      x++;
+      continue;
+    }
+    const close = tpl.indexOf('}', t);
+    if (close < 0 || caps.size >= MAX_CAPS) return null;
+    const litEnd = tpl.indexOf('{', close + 1);
+    const lit = tpl.slice(close + 1, litEnd < 0 ? tpl.length : litEnd);
+    let at: number;
+    if (lit.length === 0) {
+      if (litEnd >= 0) return null;          // two placeholders back to back
+      at = text.length;
+    } else {
+      at = text.indexOf(lit, x);
+      if (at < 0) return null;
+    }
+    if (at === x) return null;               // a placeholder is never empty
+    caps.set(tpl.slice(t + 1, close), text.slice(x, at));
+    x = at;
+    t = close + 1;
+  }
+  return x === text.length ? caps : null;
+}
+
+/** Write case form `tpl`, its placeholders taken from `caps`. */
+function writeForm(w: Writer, tpl: string, caps: Map<string, string>): void {
+  let lit = 0;
+  let t = 0;
+  while (t < tpl.length) {
+    if (tpl[t] !== '{') { t++; continue; }
+    const close = tpl.indexOf('}', t);
+    if (close < 0) break;
+    w.span(tpl.slice(lit, t));
+    const v = caps.get(tpl.slice(t + 1, close));
+    w.span(v !== undefined ? v : tpl.slice(t, close + 1));
+    t = close + 1;
+    lit = t;
+  }
+  w.span(tpl.slice(lit));
+}
+
+/** `text` in case `kase`, or `text` as it is when no form's base matches. */
+function writeCase(w: Writer, text: string, kase: string): void {
+  for (const [base, k, form] of FORMS[current] ?? []) {
+    if (k !== kase) continue;
+    const caps = matchTemplate(str(base), text);
+    if (caps) { writeForm(w, form, caps); return; }
+  }
+  w.span(text);
+}
+
 /** The current language's `id` with every {placeholder} filled from `args`,
  *  written into a buffer of `n` bytes like vs_format() (strings.c). A
  *  placeholder no argument names is left standing as "{name}"; a '{' with no
@@ -103,9 +172,12 @@ export function format(id: StrId, args: Record<string, Arg>, n: number): string 
       w.span(t.slice(lit));
       return w.toString();
     }
-    const name = t.slice(i + 1, close);
+    const token = t.slice(i + 1, close);
+    const at = token.indexOf('@');           // "{name@case}": `name`, in that case
+    const name = at < 0 ? token : token.slice(0, at);
     const a = Object.prototype.hasOwnProperty.call(args, name) ? args[name] : undefined;
     if (a === undefined) w.span(t.slice(i, close + 1));
+    else if (typeof a === 'string' && at >= 0) writeCase(w, a, token.slice(at + 1));
     else if (typeof a === 'string') w.span(a);
     else if (typeof a === 'number') w.span(String(Math.trunc(a)));
     else w.span(fmtFixed(a.value, a.decimals));

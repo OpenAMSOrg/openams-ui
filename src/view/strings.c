@@ -193,12 +193,126 @@ static const vs_arg_t *vs_arg(const vs_arg_t *args, size_t nargs, const char *na
     return NULL;
 }
 
+/* ------------------------------------------------------------ case forms */
+
+/* A language whose nouns change with their role asks for a placeholder in a
+ * case ("Сбросить {spool@acc}?") and lists the case forms of the placeholder's
+ * own text ("SPOOL_LABEL@acc": "Катушку {n}", strings_table.gen.h). The text
+ * arrives finished ("Катушка 3"), so it is matched against the form's base
+ * template ("Катушка {n}") and rebuilt from the parts the match recovers. Text
+ * no base matches (a spool's own name) goes in as it is. The same functions
+ * in web/logic/strings.ts are the other half of the pair. */
+
+#define VS_MAX_CAPS 4
+
+/* One placeholder's part of the text, recovered by vs_match(). */
+typedef struct {
+    const char *name;
+    size_t name_len;
+    const char *val;
+    size_t val_len;
+} vs_cap_t;
+
+/* The first place @p s holds the @p n bytes at @p lit, or NULL. */
+static const char *vs_find(const char *s, const char *lit, size_t n)
+{
+    for(; *s; s++)
+        if(strncmp(s, lit, n) == 0) return s;
+    return NULL;
+}
+
+/* Whether @p text is template @p tpl filled in: its literal parts must be there
+ * exactly, and each placeholder takes the text up to the next literal part (to
+ * the end, when it is the last thing). Fills @p caps on a match. */
+static bool vs_match(const char *tpl, const char *text, vs_cap_t *caps, int *ncaps)
+{
+    const char *t = tpl;
+    const char *x = text;
+
+    *ncaps = 0;
+    while(*t) {
+        const char *close, *lit, *lit_end, *at;
+        size_t lit_len;
+
+        if(*t != '{') {
+            if(*x != *t) return false;
+            t++;
+            x++;
+            continue;
+        }
+        close = strchr(t, '}');
+        if(!close || *ncaps >= VS_MAX_CAPS) return false;
+        lit = close + 1;
+        lit_end = strchr(lit, '{');
+        lit_len = lit_end ? (size_t)(lit_end - lit) : strlen(lit);
+        if(lit_len == 0) {
+            if(lit_end) return false;          /* two placeholders back to back */
+            at = x + strlen(x);
+        }
+        else {
+            at = vs_find(x, lit, lit_len);
+            if(!at) return false;
+        }
+        if(at == x) return false;              /* a placeholder is never empty */
+        caps[*ncaps].name = t + 1;
+        caps[*ncaps].name_len = (size_t)(close - t - 1);
+        caps[*ncaps].val = x;
+        caps[*ncaps].val_len = (size_t)(at - x);
+        (*ncaps)++;
+        x = at;
+        t = close + 1;
+    }
+    return *x == '\0';
+}
+
+/* Write case form @p tpl, its placeholders taken from @p caps. */
+static void vs_write_form(vs_writer_t *w, const char *tpl, const vs_cap_t *caps, int ncaps)
+{
+    const char *t = tpl;
+    const char *lit = tpl;
+
+    while(*t) {
+        const char *close;
+        int i;
+
+        if(*t != '{') { t++; continue; }
+        close = strchr(t, '}');
+        if(!close) break;
+        vs_write_span(w, lit, (size_t)(t - lit));
+        for(i = 0; i < ncaps; i++)
+            if(caps[i].name_len == (size_t)(close - t - 1)
+               && strncmp(caps[i].name, t + 1, caps[i].name_len) == 0) break;
+        if(i < ncaps) vs_write_span(w, caps[i].val, caps[i].val_len);
+        else vs_write_span(w, t, (size_t)(close + 1 - t));
+        t = close + 1;
+        lit = t;
+    }
+    vs_write_span(w, lit, strlen(lit));
+}
+
+/* @p text in case @p kase: rebuilt from the current language's first form in
+ * that case whose base @p text matches; @p text as it is when none does. */
+static void vs_write_case(vs_writer_t *w, const char *text, const char *kase, size_t kase_len)
+{
+    const vs_form_t *f = k_forms[s_lang];
+    vs_cap_t caps[VS_MAX_CAPS];
+    int ncaps;
+
+    for(; f && f->id >= 0; f++) {
+        if(strlen(f->kase) != kase_len || strncmp(f->kase, kase, kase_len) != 0) continue;
+        if(vs_match(view_str((view_str_id_t)f->id), text, caps, &ncaps)) {
+            vs_write_form(w, f->text, caps, ncaps);
+            return;
+        }
+    }
+    vs_write(w, text);
+}
+
 void vs_format(view_str_id_t id, char *out, size_t n, const vs_arg_t *args, size_t nargs)
 {
     vs_writer_t w;
     const char *t = view_str(id);
     const char *lit = t;
-
 
     vs_begin(&w, out, n);
     while(*t) {
@@ -213,21 +327,29 @@ void vs_format(view_str_id_t id, char *out, size_t n, const vs_arg_t *args, size
             vs_write_span(&w, lit, strlen(lit));
             return;
         }
-        a = vs_arg(args, nargs, open, (size_t)(close - open));
-        if(!a) {
-            vs_write_span(&w, t, (size_t)(close + 1 - t));   /* leave "{name}" standing */
-        }
-        else if(a->text) {
-            vs_write(&w, a->text);
-        }
-        else if(a->decimals == 2) {
-            vs_printf(&w, "%.2f", (double)a->value);
-        }
-        else if(a->decimals == 3) {
-            vs_printf(&w, "%.3f", (double)a->value);
-        }
-        else {
-            vs_printf(&w, "%d", a->value);
+        {
+            /* "{name@case}": the argument `name`, in that case (see above). */
+            const char *at = memchr(open, '@', (size_t)(close - open));
+
+            a = vs_arg(args, nargs, open, at ? (size_t)(at - open) : (size_t)(close - open));
+            if(!a) {
+                vs_write_span(&w, t, (size_t)(close + 1 - t));   /* leave "{name}" standing */
+            }
+            else if(a->text && at) {
+                vs_write_case(&w, a->text, at + 1, (size_t)(close - at - 1));
+            }
+            else if(a->text) {
+                vs_write(&w, a->text);
+            }
+            else if(a->decimals == 2) {
+                vs_printf(&w, "%.2f", (double)a->value);
+            }
+            else if(a->decimals == 3) {
+                vs_printf(&w, "%.3f", (double)a->value);
+            }
+            else {
+                vs_printf(&w, "%d", a->value);
+            }
         }
         t = close + 1;
         lit = t;

@@ -34,6 +34,29 @@ leaves out shows in English.
 - Where a box is small (a tile tag, a chip), the glossary's short form exists
   for it; keep to the English length there.
 
+## Nouns that change with their role (case forms)
+
+`{spool}` arrives as the finished spool label, `Spool 3` in English and
+`Катушка 3` in Russian. In a language whose nouns change with their role in
+the sentence, ask for the case the sentence needs, and give the label's forms
+in that case once:
+
+```json
+{"id": "SPOOL_LABEL@acc", "text": "Катушку {n}"},
+{"id": "UNIT_SPOOL@acc", "text": "Катушку {n} в {unit}"},
+{"id": "EDIT_RESET_TITLE", "text": "Сбросить {spool@acc}?"}
+```
+
+`Сбросить {spool@acc}?` then shows `Сбросить Катушку 3?`. A case is any
+lowercase name (`acc`, `gen`, `prep`, ...), used the same way in the forms and
+the templates. `SPOOL_LABEL` is the plain label and `UNIT_SPOOL` the label
+with its unit; give the forms of both. A spool that carries its own name
+instead of a label is shown as it is, and a language without forms is not
+affected. `ru.json` has the Russian forms, as an example.
+
+Units are the language's own: `г`, `ч`, `мин`, `с` in Russian, not `g`, `h`,
+`min`, `s`.
+
 ## Check a change
 
 From the repository root:
