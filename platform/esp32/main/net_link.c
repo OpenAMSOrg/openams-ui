@@ -26,6 +26,8 @@
 #include "backend/moonraker_client.h"
 #include "backend/status_map.h"
 #include "core/core.h"
+#include "app/platform.h"
+#include "net_wifi.h"
 
 #include "esp_event.h"
 #include "esp_heap_caps.h"
@@ -97,6 +99,11 @@ static QueueHandle_t s_txq;
 static char *s_rx;
 static size_t s_rx_len;
 static bool s_rx_drop; /* the message does not fit; ignore it to its end */
+
+/* What the home screen names while there is no printer data (see
+ * platform_link_status): the network and the URL this link was started with. */
+static char s_ssid[33];
+static char s_url[128];
 
 static uint32_t now_ms(void)
 {
@@ -191,7 +198,32 @@ static void on_link_cb(void *ctx, mc_link_t state)
     int i;
 
     (void)ctx;
-    ESP_LOGI(TAG, "Moonraker link %s", link_state_name(state));
+    if(state == MC_LINK_KLIPPY_WAIT) {
+        char detail[48];
+
+        switch(mc_wait_reason(detail, sizeof detail)) {
+        case MC_WAIT_KLIPPY:
+            ESP_LOGI(TAG, "Moonraker link klippy-wait: Klipper is not ready (%s)", detail);
+            break;
+        case MC_WAIT_NO_OPENAMS:
+            ESP_LOGW(TAG, "Moonraker link klippy-wait: the printer has no openams_ui object "
+                          "(is OpenAMS installed and up to date?)");
+            break;
+        case MC_WAIT_NO_UNIT:
+            ESP_LOGW(TAG, "Moonraker link klippy-wait: no \"openams_ui %s\" object "
+                          "(the unit this display is bound to)", detail);
+            break;
+        default:
+            ESP_LOGI(TAG, "Moonraker link klippy-wait");
+            break;
+        }
+    }
+    else {
+        ESP_LOGI(TAG, "Moonraker link %s", link_state_name(state));
+    }
+    /* Every change: while there is no printer data the home screen says
+     * where the link is, so it has to be redrawn. */
+    s_dirty = true;
 
     if(state == MC_LINK_DOWN) {
         for(i = 0; i < (int)s_shadow->unit_count; i++) s_shadow->units[i].connected = false;
@@ -354,6 +386,8 @@ void net_link_start(const net_config_t *cfg)
     esp_websocket_client_config_t ws_cfg;
 
     if(!cfg || cfg->moonraker_url[0] == '\0') return;
+    snprintf(s_ssid, sizeof s_ssid, "%s", cfg->ssid);
+    snprintf(s_url, sizeof s_url, "%s", cfg->moonraker_url);
 
     /* MALLOC_CAP_8BIT as well: internal memory alone can be IRAM, which only
      * takes 32-bit accesses, and the model is filled byte by byte (memset,
@@ -469,4 +503,37 @@ bool net_link_send_rpc(const char *method, cJSON *params, int tag)
     xSemaphoreGive(s_lock);
 
     return ok;
+}
+
+platform_link_t platform_link_status(char *detail, size_t n)
+{
+    platform_link_t status = PLATFORM_LINK_READY;
+    char wait[48];
+
+    if(detail && n) detail[0] = '\0';
+    if(!s_lock || !s_url[0]) return PLATFORM_LINK_READY;   /* demo mode */
+    if(!net_wifi_is_up()) {
+        if(detail && n) snprintf(detail, n, "%s", s_ssid);
+        return PLATFORM_LINK_WIFI;
+    }
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    switch(mc_link()) {
+    case MC_LINK_DOWN:
+    case MC_LINK_CONNECTING:
+        status = PLATFORM_LINK_PRINTER;
+        if(detail && n) snprintf(detail, n, "%s", s_url);
+        break;
+    case MC_LINK_KLIPPY_WAIT:
+        switch(mc_wait_reason(wait, sizeof wait)) {
+        case MC_WAIT_NO_OPENAMS: status = PLATFORM_LINK_NO_OPENAMS; break;
+        case MC_WAIT_NO_UNIT: status = PLATFORM_LINK_NO_UNIT; break;
+        default: status = PLATFORM_LINK_KLIPPER; break;
+        }
+        if(detail && n) snprintf(detail, n, "%s", wait);
+        break;
+    case MC_LINK_READY:
+        break;
+    }
+    xSemaphoreGive(s_lock);
+    return status;
 }

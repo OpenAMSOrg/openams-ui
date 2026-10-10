@@ -44,4 +44,19 @@ void platform_display_set(const platform_display_cfg_t *cfg); /* applies and per
 void platform_language_get(char *out, size_t n);
 void platform_language_set(const char *code);
 
+/** Why the home screen has no printer data to draw yet, so it can say so
+ * instead of staying empty. @p detail gets the part the sentence names: the
+ * Wi-Fi network, the Moonraker URL, Klipper's state or the unit ("" when the
+ * status names nothing). Platforms without a live link report READY. */
+typedef enum {
+    PLATFORM_LINK_READY,       /**< linked, or no live link at all (demo) */
+    PLATFORM_LINK_WIFI,        /**< joining Wi-Fi; detail = the network */
+    PLATFORM_LINK_PRINTER,     /**< reaching Moonraker; detail = the URL */
+    PLATFORM_LINK_KLIPPER,     /**< Klipper is not ready; detail = its state */
+    PLATFORM_LINK_NO_OPENAMS,  /**< the printer publishes no OpenAMS UI object */
+    PLATFORM_LINK_NO_UNIT      /**< no OpenAMS UI object for the bound unit; detail = the unit */
+} platform_link_t;
+
+platform_link_t platform_link_status(char *detail, size_t n);
+
 #endif /* PLATFORM_H */

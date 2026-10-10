@@ -142,6 +142,35 @@ void platform_touch_calibrate(void)
  * whether a live link is around before it turns a UI line into G-code. */
 static const char *s_moonraker_url;
 
+/* What the home screen says while there is no printer data (platform.h). The
+ * simulator has no Wi-Fi of its own: it is reaching Moonraker or waiting. */
+platform_link_t platform_link_status(char *detail, size_t n)
+{
+    char wait[48];
+
+    if(detail && n) detail[0] = '\0';
+    if(!s_moonraker_url) return PLATFORM_LINK_READY;
+    switch(mc_link()) {
+    case MC_LINK_DOWN:
+    case MC_LINK_CONNECTING:
+        if(detail && n) snprintf(detail, n, "%s", s_moonraker_url);
+        return PLATFORM_LINK_PRINTER;
+    case MC_LINK_KLIPPY_WAIT:
+        switch(mc_wait_reason(wait, sizeof wait)) {
+        case MC_WAIT_NO_OPENAMS: return PLATFORM_LINK_NO_OPENAMS;
+        case MC_WAIT_NO_UNIT:
+            if(detail && n) snprintf(detail, n, "%s", wait);
+            return PLATFORM_LINK_NO_UNIT;
+        default:
+            if(detail && n) snprintf(detail, n, "%s", wait);
+            return PLATFORM_LINK_KLIPPER;
+        }
+    case MC_LINK_READY:
+        break;
+    }
+    return PLATFORM_LINK_READY;
+}
+
 /* --action: UI lines to inject through platform_action() once the link is
  * ready, so a test can drive host actions without a mouse. */
 #define SIM_MAX_ACTIONS 8

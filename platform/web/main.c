@@ -27,6 +27,13 @@
 #include <stdio.h>
 #include <string.h>
 
+/* The browser build shows the demo model; it has no live link to wait on. */
+platform_link_t platform_link_status(char *detail, size_t n)
+{
+    if(detail && n) detail[0] = '\0';
+    return PLATFORM_LINK_READY;
+}
+
 /* No physical touchscreen to calibrate here: the browser has none either. */
 void platform_touch_calibrate(void)
 {

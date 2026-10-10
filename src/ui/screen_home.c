@@ -19,6 +19,7 @@
 #include "ui/ui_screens.h"
 
 #include "app/actions.h"
+#include "app/platform.h"
 #include "model/mmu_model.h"
 #include "ui/ui_chevron.h"
 #include "ui/ui_display.h"
@@ -1048,6 +1049,50 @@ static bool same_tile_shape(const view_tile_t *t, int i)
         && t->has_tag == (p->tag != NULL);
 }
 
+/* No unit and no toolhead to draw: the printer's data has not arrived. Say
+ * where the link is (Wi-Fi, Moonraker, Klipper, OpenAMS) instead of leaving
+ * the screen empty; the link marks the model dirty on every change, so this
+ * is redrawn as it moves. */
+static void build_link_status(lv_obj_t *scr)
+{
+    char detail[128];
+    char note[192];
+    vs_arg_t arg;
+    view_str_id_t id = VS_PANEL_NOT_READY;
+    lv_obj_t *col;
+
+    note[0] = '\0';
+    switch(platform_link_status(detail, sizeof detail)) {
+    case PLATFORM_LINK_WIFI:
+        id = VS_HOME_LINK_WIFI;
+        arg = (vs_arg_t)VS_ARG_T("network", detail);   /* lit-ok: placeholder name */
+        break;
+    case PLATFORM_LINK_PRINTER:
+        id = VS_HOME_LINK_PRINTER;
+        arg = (vs_arg_t)VS_ARG_T("url", detail);   /* lit-ok: placeholder name */
+        break;
+    case PLATFORM_LINK_KLIPPER:
+        id = VS_HOME_LINK_KLIPPER;
+        arg = (vs_arg_t)VS_ARG_T("state", detail);   /* lit-ok: placeholder name */
+        break;
+    case PLATFORM_LINK_NO_OPENAMS:
+        id = VS_HOME_LINK_NO_OPENAMS;
+        arg = (vs_arg_t)VS_ARG_T("unit", detail);   /* lit-ok: placeholder name */
+        break;
+    case PLATFORM_LINK_NO_UNIT:
+        id = VS_HOME_LINK_NO_UNIT;
+        arg = (vs_arg_t)VS_ARG_T("unit", detail);   /* lit-ok: placeholder name */
+        break;
+    case PLATFORM_LINK_READY:
+        break;
+    }
+    if(id != VS_PANEL_NOT_READY) vs_format(id, note, sizeof note, &arg, 1);
+
+    col = ui_kit_column(scr, 96, 180);
+    (void)ui_kit_text_row(col, view_str(VS_PANEL_NOT_READY), note[0] ? note : NULL,
+                          UI_ICON_REFRESH, UI_TOK_TEXT_FAINT, NULL, NULL);
+}
+
 static lv_obj_t *build(void)
 {
     lv_obj_t *scr = lv_obj_create(NULL);
@@ -1097,6 +1142,7 @@ static lv_obj_t *build(void)
         ui_chevron_pair(strip, page, pages, on_chevron);
         s_live.have_th = true;
     }
+    if(!s_live.have_unit && !have_th) build_link_status(scr);
 
     /* The tiles, in the order build_tiles() made them, so the header's last
      * child is where the first one starts. A loaded tile brings its accent ring

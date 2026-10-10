@@ -11,6 +11,7 @@
 
 #include "backend/moonraker_client.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -77,6 +78,8 @@ typedef struct {
     int next_id;
 
     /* Klippy-wait retry and the reconnect clock. */
+    mc_wait_t wait_why;
+    char wait_detail[MC_UNIT_NAME_MAX];
     uint32_t next_info_retry_ms;
     bool reconnect_pending;
     uint32_t reconnect_at_ms;
@@ -101,6 +104,12 @@ static void mc_set_link(mc_link_t state)
 mc_link_t mc_link(void)
 {
     return g_mc.link;
+}
+
+mc_wait_t mc_wait_reason(char *detail, size_t n)
+{
+    if(detail && n) snprintf(detail, n, "%s", g_mc.wait_detail);
+    return g_mc.wait_why;
 }
 
 bool mc_reconnect_due(uint32_t now_ms)
@@ -228,8 +237,11 @@ static void mc_start_handshake(uint32_t now_ms)
     mc_send_request("server.info", NULL, MC_REQ_SERVER_INFO);
 }
 
-static void mc_enter_klippy_wait(uint32_t now_ms)
+static void mc_enter_klippy_wait(uint32_t now_ms, mc_wait_t why, const char *detail)
 {
+    /* Set before the link callback, so it can say why. */
+    g_mc.wait_why = why;
+    snprintf(g_mc.wait_detail, sizeof g_mc.wait_detail, "%s", detail ? detail : "");
     mc_set_link(MC_LINK_KLIPPY_WAIT);
     g_mc.next_info_retry_ms = now_ms + MC_INFO_RETRY_MS;
 }
@@ -441,7 +453,8 @@ static void mc_list_finish(const mc_list_t *l, uint32_t now_ms)
 
     if(!l->found || unit[0] == '\0' || strlen(unit) >= sizeof g_mc.unit) {
         /* No projection yet; the retry loop will look again. */
-        mc_enter_klippy_wait(now_ms);
+        if(g_mc.bound) mc_enter_klippy_wait(now_ms, MC_WAIT_NO_UNIT, g_mc.bound_unit);
+        else mc_enter_klippy_wait(now_ms, MC_WAIT_NO_OPENAMS, NULL);
         return;
     }
     memcpy(g_mc.object_name, l->ui_name, strlen(l->ui_name) + 1);
@@ -461,7 +474,8 @@ static void mc_handle_server_info(const cJSON *result, uint32_t now_ms)
         return;
     }
     /* Klippy is connected but not ready (or the reply was odd): wait it out. */
-    mc_enter_klippy_wait(now_ms);
+    mc_enter_klippy_wait(now_ms, MC_WAIT_KLIPPY,
+                         cJSON_IsString(state) ? state->valuestring : "unknown");
 }
 
 /* The cJSON route: only reached when the raw scan declined the reply (an
@@ -473,7 +487,7 @@ static void mc_handle_objects_list(const cJSON *result, uint32_t now_ms)
     mc_list_t l;
 
     if(!cJSON_IsArray(objects)) {
-        mc_enter_klippy_wait(now_ms);
+        mc_enter_klippy_wait(now_ms, MC_WAIT_NO_OPENAMS, NULL);
         return;
     }
     mc_list_begin(&l);
@@ -499,6 +513,8 @@ static void mc_handle_subscribe(const cJSON *result, uint32_t now_ms)
     /* READY fires first (a no-op the very first time; on a reconnect it is
      * the consumer's cue - see on_link's contract - to drop whatever it owns
      * before this fresh result repopulates it), then the fresh objects. */
+    g_mc.wait_why = MC_WAIT_NONE;
+    g_mc.wait_detail[0] = '\0';
     mc_set_link(MC_LINK_READY);
     g_mc.backoff_ms = MC_BACKOFF_MIN_MS;
 
@@ -558,7 +574,7 @@ static void mc_handle_error(mc_req_kind_t kind, int id, int tag, const char *mes
         return;
     }
     if(kind == MC_REQ_SERVER_INFO) {
-        mc_enter_klippy_wait(now_ms);
+        mc_enter_klippy_wait(now_ms, MC_WAIT_KLIPPY, "unknown");
         return;
     }
     if(kind == MC_REQ_COMPONENT_STATUS) {

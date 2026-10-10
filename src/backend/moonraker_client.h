@@ -138,6 +138,18 @@ int mc_send_rpc(const char *method, cJSON *params, int tag);
 /** The current link state. */
 mc_link_t mc_link(void);
 
+/** Why the link is in MC_LINK_KLIPPY_WAIT (the last reason, until READY). */
+typedef enum {
+    MC_WAIT_NONE,
+    MC_WAIT_KLIPPY,      /**< Klipper is not ready; detail = its state */
+    MC_WAIT_NO_OPENAMS,  /**< ready, but no `openams_ui <unit>` object at all */
+    MC_WAIT_NO_UNIT      /**< ready, but no `openams_ui <bound unit>`; detail = the unit */
+} mc_wait_t;
+
+/** The reason, with its detail (Klipper's state or the bound unit) copied
+ *  into @p detail ("" when there is none). */
+mc_wait_t mc_wait_reason(char *detail, size_t n);
+
 /** True once the backoff after a disconnect has elapsed, so the transport may
  *  open a new socket. The delay is 1 s, 2 s, 4 s … capped at 30 s and resets
  *  when the link reaches READY. */

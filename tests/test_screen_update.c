@@ -16,6 +16,7 @@
  * screens under test here never send an action.
  */
 
+#include "app/platform.h"
 #include "lvgl.h"
 
 #include "model/mmu_model.h"
@@ -36,6 +37,12 @@
 void platform_action(const char *line)
 {
     (void)line;
+}
+
+platform_link_t platform_link_status(char *detail, size_t n)
+{
+    if(detail && n) detail[0] = '\0';
+    return PLATFORM_LINK_READY;
 }
 
 void platform_touch_calibrate(void)

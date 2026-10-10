@@ -17,6 +17,7 @@
  * composed.
  */
 
+#include "app/platform.h"
 #include "lvgl.h"
 
 #include "app/actions.h"
@@ -49,6 +50,12 @@ void platform_action(const char *line)
 
 /** The one platform hook the screens' settings page also wants; this test never
  *  opens that page, so touching the calibration is a no-op. */
+platform_link_t platform_link_status(char *detail, size_t n)
+{
+    if(detail && n) detail[0] = '\0';
+    return PLATFORM_LINK_READY;
+}
+
 void platform_touch_calibrate(void)
 {
 }
