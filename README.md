@@ -187,5 +187,5 @@ Superseded runs on the same branch are canceled automatically via the
 
 ## Translations
 
-German: wick69.
-Russian: [Slick](https://github.com/SlickTorpedo).
+- German: wick69
+- Russian: [Slick](https://github.com/SlickTorpedo)
