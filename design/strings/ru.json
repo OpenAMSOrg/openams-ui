@@ -332,7 +332,7 @@
   {"id": "ACTION_CONFIRM_SPOOL", "text": "Подтвердить катушку"},
   {"id": "REASON_POSITIONING", "text": "Катушка ещё позиционируется"},
   {"id": "REASON_NOT_GROUPED", "text": "Сначала назначьте эту катушку инструменту"},
-  {"id": "REASON_NO_HOST_ID", "text": "Принтер ещё не видел эту катушку"},
+  {"id": "REASON_NO_HOST_ID", "text": "Принтер ещё не сообщил об этом отсеке"},
   {"id": "REASON_NOTHING_BUSY", "text": "Ничего не загружается и не выгружается"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "Принтер ещё не сообщил об этом модуле"},
   {"id": "REASON_NO_TARGET", "text": "Цель не задана"},

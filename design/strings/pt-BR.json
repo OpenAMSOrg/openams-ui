@@ -326,7 +326,7 @@
   {"id": "ACTION_CONFIRM_SPOOL", "text": "Confirmar bobina"},
   {"id": "REASON_POSITIONING", "text": "A bobina ainda está sendo posicionada"},
   {"id": "REASON_NOT_GROUPED", "text": "Primeiro atribua esta bobina a uma ferramenta"},
-  {"id": "REASON_NO_HOST_ID", "text": "A impressora ainda não viu esta bobina"},
+  {"id": "REASON_NO_HOST_ID", "text": "A impressora ainda não informou este slot"},
   {"id": "REASON_NOTHING_BUSY", "text": "Nada está sendo carregado nem descarregado"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "A impressora ainda não reportou esta unidade"},
   {"id": "REASON_NO_TARGET", "text": "Nenhum destino definido"},

@@ -326,7 +326,7 @@
   {"id": "ACTION_CONFIRM_SPOOL", "text": "Potwierdź szpulę"},
   {"id": "REASON_POSITIONING", "text": "Szpula jest jeszcze ustawiana"},
   {"id": "REASON_NOT_GROUPED", "text": "Najpierw przypisz tę szpulę do narzędzia"},
-  {"id": "REASON_NO_HOST_ID", "text": "Drukarka jeszcze nie widziała tej szpuli"},
+  {"id": "REASON_NO_HOST_ID", "text": "Drukarka jeszcze nie zgłosiła tego gniazda"},
   {"id": "REASON_NOTHING_BUSY", "text": "Nic nie jest ładowane ani rozładowywane"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "Drukarka jeszcze nie zgłosiła tego modułu"},
   {"id": "REASON_NO_TARGET", "text": "Nie ustawiono celu"},

@@ -326,7 +326,7 @@
   {"id": "ACTION_CONFIRM_SPOOL", "text": "スプールを確認"},
   {"id": "REASON_POSITIONING", "text": "スプールはまだ位置調整中です"},
   {"id": "REASON_NOT_GROUPED", "text": "先にこのスプールをツールに割り当ててください"},
-  {"id": "REASON_NO_HOST_ID", "text": "プリンタはまだこのスプールを認識していません"},
+  {"id": "REASON_NO_HOST_ID", "text": "プリンタはまだこのスロットを報告していません"},
   {"id": "REASON_NOTHING_BUSY", "text": "ロードもアンロードも行われていません"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "プリンタはまだこのユニットを報告していません"},
   {"id": "REASON_NO_TARGET", "text": "対象が設定されていません"},

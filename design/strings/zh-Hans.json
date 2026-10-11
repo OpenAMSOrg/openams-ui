@@ -326,7 +326,7 @@
   {"id": "ACTION_CONFIRM_SPOOL", "text": "确认料盘"},
   {"id": "REASON_POSITIONING", "text": "料盘仍在定位中"},
   {"id": "REASON_NOT_GROUPED", "text": "请先把该料盘分配给一个工具"},
-  {"id": "REASON_NO_HOST_ID", "text": "打印机还没有识别到该料盘"},
+  {"id": "REASON_NO_HOST_ID", "text": "打印机尚未报告该槽位"},
   {"id": "REASON_NOTHING_BUSY", "text": "当前没有进料或退料"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "打印机还没有上报该单元"},
   {"id": "REASON_NO_TARGET", "text": "没有设置目标"},

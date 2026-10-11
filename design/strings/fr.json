@@ -326,7 +326,7 @@
   {"id": "ACTION_CONFIRM_SPOOL", "text": "Confirmer la bobine"},
   {"id": "REASON_POSITIONING", "text": "La bobine est encore en cours de positionnement"},
   {"id": "REASON_NOT_GROUPED", "text": "Assignez d'abord cette bobine à un outil"},
-  {"id": "REASON_NO_HOST_ID", "text": "L'imprimante n'a pas encore vu cette bobine"},
+  {"id": "REASON_NO_HOST_ID", "text": "L'imprimante n'a pas encore signalé cet emplacement"},
   {"id": "REASON_NOTHING_BUSY", "text": "Rien n'est en cours de chargement ni de déchargement"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "L'imprimante n'a pas encore signalé cette unité"},
   {"id": "REASON_NO_TARGET", "text": "Aucune cible définie"},

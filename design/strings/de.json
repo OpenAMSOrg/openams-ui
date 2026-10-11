@@ -327,7 +327,7 @@
   {"id": "ACTION_CONFIRM_SPOOL", "text": "Spule bestätigen"},
   {"id": "REASON_POSITIONING", "text": "Spule wird noch positioniert"},
   {"id": "REASON_NOT_GROUPED", "text": "Weisen Sie die Spule zuerst einem Druckkopf zu"},
-  {"id": "REASON_NO_HOST_ID", "text": "unbekannte Spule"},
+  {"id": "REASON_NO_HOST_ID", "text": "Der Drucker hat diesen Steckplatz noch nicht gemeldet"},
   {"id": "REASON_NOTHING_BUSY", "text": "Nichts wird geladen oder entladen"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "Unbekannte Einheit"},
   {"id": "REASON_NO_TARGET", "text": "Kein Ziel gesetzt"},

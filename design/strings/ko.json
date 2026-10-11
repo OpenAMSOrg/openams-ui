@@ -326,7 +326,7 @@
   {"id": "ACTION_CONFIRM_SPOOL", "text": "스풀 확인"},
   {"id": "REASON_POSITIONING", "text": "스풀을 아직 위치 조정하고 있습니다"},
   {"id": "REASON_NOT_GROUPED", "text": "먼저 이 스풀을 툴에 할당하십시오"},
-  {"id": "REASON_NO_HOST_ID", "text": "프린터가 아직 이 스풀을 인식하지 못했습니다"},
+  {"id": "REASON_NO_HOST_ID", "text": "프린터가 아직 이 슬롯을 보고하지 않았습니다"},
   {"id": "REASON_NOTHING_BUSY", "text": "로드하거나 언로드 중인 것이 없습니다"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "프린터가 아직 이 유닛을 보고하지 않았습니다"},
   {"id": "REASON_NO_TARGET", "text": "대상이 설정되지 않았습니다"},

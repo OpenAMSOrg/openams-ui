@@ -340,7 +340,7 @@
   {"group": "disabled reasons"},
   {"id": "REASON_POSITIONING", "text": "The spool is still being positioned"},
   {"id": "REASON_NOT_GROUPED", "text": "Assign this spool to a tool first"},
-  {"id": "REASON_NO_HOST_ID", "text": "The printer has not seen this spool yet"},
+  {"id": "REASON_NO_HOST_ID", "text": "The printer has not reported this bay yet"},
   {"id": "REASON_NOTHING_BUSY", "text": "Nothing is loading or unloading"},
   {"id": "REASON_UNIT_UNKNOWN", "text": "The printer has not reported this unit yet"},
   {"id": "REASON_NO_TARGET", "text": "No target is set"},
