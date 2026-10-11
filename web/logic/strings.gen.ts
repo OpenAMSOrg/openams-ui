@@ -413,6 +413,7 @@ export const STR_de: Partial<Record<StrId, string>> = {
   TAG_ERROR: "Fehler",
   TAG_LOADING: "Lade",
   TAG_UNLOADING: "Entlade",
+  TILE_LOW: "Wenig",
   TAG_CONFIRM: "Bestätigen",
   TAGD_NOT_INSERTED: "Keine Spule eingesetzt.",
   TAGD_ERROR: "Spule hat einen Fehler gemeldet.",

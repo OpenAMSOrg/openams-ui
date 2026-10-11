@@ -436,6 +436,7 @@ static const char *const k_table_de[VS_COUNT] = {
     [VS_TAG_ERROR] = "Fehler",
     [VS_TAG_LOADING] = "Lade",
     [VS_TAG_UNLOADING] = "Entlade",
+    [VS_TILE_LOW] = "Wenig",
     [VS_TAG_CONFIRM] = "Best\303\244tigen",
     [VS_TAGD_NOT_INSERTED] = "Keine Spule eingesetzt.",
     [VS_TAGD_ERROR] = "Spule hat einen Fehler gemeldet.",

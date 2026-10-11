@@ -1,5 +1,5 @@
 {
- "$comment": "Deutsch. Die Wortwahl folgt design/strings/glossary.json: jeder Begriff hat genau eine Form, in jeder Anzeige. Tasten sind der Infinitiv im impersonalen Register; Sätze, die eine Handlung verlangen, sprechen die Person mit \"Sie\" an.",
+ "$comment": "Deutsch. Die Wortwahl folgt design/strings/glossary.json: jeder Begriff hat genau eine Form, in jeder Anzeige. Tasten sind der Infinitiv im impersonalen Register; Sätze, die eine Handlung verlangen, sprechen die Person mit \"Sie\" an. Übersetzung: wick69.",
  "code": "de",
  "name": "Deutsch",
  "strings": [
@@ -9,6 +9,7 @@
   {"id": "TAG_ERROR", "text": "Fehler"},
   {"id": "TAG_LOADING", "text": "Lade"},
   {"id": "TAG_UNLOADING", "text": "Entlade"},
+  {"id": "TILE_LOW", "text": "Wenig"},
   {"id": "TAG_CONFIRM", "text": "Bestätigen"},
   {"id": "TAGD_NOT_INSERTED", "text": "Keine Spule eingesetzt."},
   {"id": "TAGD_ERROR", "text": "Spule hat einen Fehler gemeldet."},
