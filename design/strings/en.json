@@ -291,7 +291,7 @@
   {"id": "MATERIAL_CHOOSE", "text": "Choose a material"},
   {"id": "REASON_CMD_TOO_LONG", "text": "command too long"},
   {"id": "REASON_FORM_MISSING", "text": "missing form value: {key}"},
-  {"id": "REASON_LINE_TOO_LONG", "text": "action line too long"},
+  {"id": "REASON_LINE_TOO_LONG", "text": "form value too long"},
   {"group": "generic"},
   {"id": "UNKNOWN_MARK", "text": "?"},
   {"id": "INFINITY_MARK", "text": "∞"},

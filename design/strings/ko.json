@@ -283,7 +283,7 @@
   {"id": "MATERIAL_CHOOSE", "text": "재질 선택"},
   {"id": "REASON_CMD_TOO_LONG", "text": "명령이 너무 깁니다"},
   {"id": "REASON_FORM_MISSING", "text": "양식 값이 없습니다: {key}"},
-  {"id": "REASON_LINE_TOO_LONG", "text": "동작 줄이 너무 깁니다"},
+  {"id": "REASON_LINE_TOO_LONG", "text": "입력값이 너무 깁니다"},
   {"id": "UNKNOWN_MARK", "text": "?"},
   {"id": "INFINITY_MARK", "text": "∞"},
   {"id": "STATUS_LOADING", "text": "필라멘트 로드 중"},

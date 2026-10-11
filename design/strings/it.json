@@ -283,7 +283,7 @@
   {"id": "MATERIAL_CHOOSE", "text": "Scegli un materiale"},
   {"id": "REASON_CMD_TOO_LONG", "text": "comando troppo lungo"},
   {"id": "REASON_FORM_MISSING", "text": "valore del modulo mancante: {key}"},
-  {"id": "REASON_LINE_TOO_LONG", "text": "riga di azione troppo lunga"},
+  {"id": "REASON_LINE_TOO_LONG", "text": "valore del modulo troppo lungo"},
   {"id": "UNKNOWN_MARK", "text": "?"},
   {"id": "INFINITY_MARK", "text": "∞"},
   {"id": "STATUS_LOADING", "text": "Caricamento filamento"},

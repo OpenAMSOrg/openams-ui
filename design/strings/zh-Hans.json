@@ -283,7 +283,7 @@
   {"id": "MATERIAL_CHOOSE", "text": "选择材质"},
   {"id": "REASON_CMD_TOO_LONG", "text": "命令过长"},
   {"id": "REASON_FORM_MISSING", "text": "缺少表单值：{key}"},
-  {"id": "REASON_LINE_TOO_LONG", "text": "操作行过长"},
+  {"id": "REASON_LINE_TOO_LONG", "text": "表单值过长"},
   {"id": "UNKNOWN_MARK", "text": "?"},
   {"id": "INFINITY_MARK", "text": "∞"},
   {"id": "STATUS_LOADING", "text": "正在进料耗材"},

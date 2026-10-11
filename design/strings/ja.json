@@ -283,7 +283,7 @@
   {"id": "MATERIAL_CHOOSE", "text": "素材を選択"},
   {"id": "REASON_CMD_TOO_LONG", "text": "コマンドが長すぎます"},
   {"id": "REASON_FORM_MISSING", "text": "フォームの値が不足しています: {key}"},
-  {"id": "REASON_LINE_TOO_LONG", "text": "操作行が長すぎます"},
+  {"id": "REASON_LINE_TOO_LONG", "text": "入力値が長すぎます"},
   {"id": "UNKNOWN_MARK", "text": "?"},
   {"id": "INFINITY_MARK", "text": "∞"},
   {"id": "STATUS_LOADING", "text": "フィラメントをロード中"},

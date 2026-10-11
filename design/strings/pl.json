@@ -283,7 +283,7 @@
   {"id": "MATERIAL_CHOOSE", "text": "Wybierz materiał"},
   {"id": "REASON_CMD_TOO_LONG", "text": "polecenie za długie"},
   {"id": "REASON_FORM_MISSING", "text": "brak wartości formularza: {key}"},
-  {"id": "REASON_LINE_TOO_LONG", "text": "linia akcji za długa"},
+  {"id": "REASON_LINE_TOO_LONG", "text": "wartość w formularzu za długa"},
   {"id": "UNKNOWN_MARK", "text": "?"},
   {"id": "INFINITY_MARK", "text": "∞"},
   {"id": "STATUS_LOADING", "text": "Ładowanie filamentu"},

@@ -283,7 +283,7 @@
   {"id": "MATERIAL_CHOOSE", "text": "Elegir un material"},
   {"id": "REASON_CMD_TOO_LONG", "text": "comando demasiado largo"},
   {"id": "REASON_FORM_MISSING", "text": "falta un valor del formulario: {key}"},
-  {"id": "REASON_LINE_TOO_LONG", "text": "línea de acción demasiado larga"},
+  {"id": "REASON_LINE_TOO_LONG", "text": "valor del formulario demasiado largo"},
   {"id": "UNKNOWN_MARK", "text": "?"},
   {"id": "INFINITY_MARK", "text": "∞"},
   {"id": "STATUS_LOADING", "text": "Cargando filamento"},

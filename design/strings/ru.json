@@ -289,7 +289,7 @@
   {"id": "MATERIAL_CHOOSE", "text": "Выберите материал"},
   {"id": "REASON_CMD_TOO_LONG", "text": "команда слишком длинная"},
   {"id": "REASON_FORM_MISSING", "text": "нет значения поля: {key}"},
-  {"id": "REASON_LINE_TOO_LONG", "text": "строка действия слишком длинная"},
+  {"id": "REASON_LINE_TOO_LONG", "text": "значение в форме слишком длинное"},
   {"id": "UNKNOWN_MARK", "text": "?"},
   {"id": "INFINITY_MARK", "text": "∞"},
   {"id": "STATUS_LOADING", "text": "Загрузка филамента"},
