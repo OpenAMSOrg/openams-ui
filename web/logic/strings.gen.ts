@@ -507,7 +507,7 @@ export const STR_de: Partial<Record<StrId, string>> = {
   BUSY_UNIT_LOADING: "Einheit {unit} lädt",
   BUSY_UNIT_UNLOADING: "Einheit {unit} entlädt",
   PRINT_NO_FILAMENT: "Kein aktives Filament",
-  PRINT_NOT_PRINTING: "Druckt nicht",
+  PRINT_NOT_PRINTING: "Kein aktiver Druck",
   PRINT_CHANGE: "Filamentwechsel {n}",
   PRINT_CHANGE_STEP: "Filamentwechsel {n} · {step}",
   PRINT_STANDBY: "Diese Einheit ist im Standby",

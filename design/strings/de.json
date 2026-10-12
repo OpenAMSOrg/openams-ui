@@ -103,7 +103,7 @@
   {"id": "BUSY_UNIT_LOADING", "text": "Einheit {unit} lädt"},
   {"id": "BUSY_UNIT_UNLOADING", "text": "Einheit {unit} entlädt"},
   {"id": "PRINT_NO_FILAMENT", "text": "Kein aktives Filament"},
-  {"id": "PRINT_NOT_PRINTING", "text": "Druckt nicht"},
+  {"id": "PRINT_NOT_PRINTING", "text": "Kein aktiver Druck"},
   {"id": "PRINT_CHANGE", "text": "Filamentwechsel {n}"},
   {"id": "PRINT_CHANGE_STEP", "text": "Filamentwechsel {n} · {step}"},
   {"id": "PRINT_STANDBY", "text": "Diese Einheit ist im Standby"},
