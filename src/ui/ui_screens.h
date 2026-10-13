@@ -48,6 +48,10 @@ extern const ui_screen_ops_t screen_mapping_ops;
 extern const ui_screen_ops_t screen_order_ops;
 extern const ui_screen_ops_t screen_unitinfo_ops;
 extern const ui_screen_ops_t screen_debug_ops;
+#if defined(MMU_FEATURE_TAG_WRITER)
+/* platform/esp32/main/screen_tag_writer.c */
+extern const ui_screen_ops_t screen_tag_writer_ops;
+#endif
 
 /** Arm the next UI_SCREEN_EDIT build in its save-and-load mode: the material
  *  starts unset, the button reads "Save and load", and the load is sent once

@@ -126,8 +126,23 @@ jobs:
       fail-fast: false
       matrix:
         languages: [latin, ja, ko, zh-Hans]
+        # The default image carries the spool tag writer (PN5180) and its
+        # partition table; the variants keep the other build options honest.
+        variant: [tag-writer]
+        include:
+          - variant: tag-writer
+            cmake_args: ""
+            partitions: partitions_tagwriter.csv
+          - languages: latin
+            variant: tag-writer-mfrc522
+            cmake_args: "-DMMU_TAG_READER=MFRC522"
+            partitions: partitions_tagwriter.csv
+          - languages: latin
+            variant: display-only
+            cmake_args: "-DMMU_SPOOL_TAG_WRITER=OFF"
+            partitions: partitions.csv
 
-    name: esp32 (${{ matrix.languages }})
+    name: esp32 (${{ matrix.languages }}, ${{ matrix.variant }})
     steps:
       - name: Checkout (with LVGL submodule)
         uses: actions/checkout@v4
@@ -146,7 +161,7 @@ jobs:
         shell: bash
         run: |
           . "${IDF_PATH}/export.sh" >/dev/null
-          idf.py -DMMU_LANGUAGES=${{ matrix.languages }} build
+          idf.py -DMMU_LANGUAGES=${{ matrix.languages }} ${{ matrix.cmake_args }} build
 
       - name: Size check (DRAM free floor 20000 bytes)
         working-directory: platform/esp32
@@ -155,7 +170,7 @@ jobs:
           set -o pipefail
           . "${IDF_PATH}/export.sh" >/dev/null
           idf.py size --format json2 \
-            | python3 ../../tools/ci/esp32_size_check.py 20000
+            | python3 ../../tools/ci/esp32_size_check.py 20000 ${{ matrix.partitions }}
 
   # --------------------------------------------------------------------------
   # Core (WebAssembly): build the openams-core module (no LVGL, no SDL), run the

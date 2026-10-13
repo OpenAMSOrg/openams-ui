@@ -58,6 +58,15 @@ static core_t *s_core;
 
 static SemaphoreHandle_t s_lock;
 static esp_websocket_client_handle_t s_client;
+/* Guards the structural operations on s_client (init / start / stop / destroy
+ * and send): net_task and the pause/resume calls all take it, so the client is
+ * never used while another task is tearing it down. The event handler never
+ * takes it. Ranks below s_lock is not required; it is taken on its own. */
+static SemaphoreHandle_t s_client_lock;
+static int s_pause_depth;   /* >0: the link is stopped on purpose (tag writer screen and/or a console command) */
+static bool s_paused;       /* mirrors s_pause_depth>0, for net_task */
+static uint32_t s_recreate_at;   /* net_task may rebuild a missing client at/after this */
+static char s_bind[32];
 
 /* What each outstanding G-code request was, so the answer can name the action
  * it is about. Moonraker's ids are small and go up one at a time, and the
@@ -404,6 +413,8 @@ static void on_ws_event(void *arg, esp_event_base_t base, int32_t id, void *even
 
 /* ----------------------------------------------------------- network task */
 
+static bool client_create(void);
+
 static void net_task(void *arg)
 {
     (void)arg;
@@ -423,7 +434,12 @@ static void net_task(void *arg)
          * order in the file header), and never from its event handler. A
          * stopped client waits for the reconnect backoff; a link down for
          * LINK_STUCK_MS with no connection is restarted as a safety net. */
-        if(down && ((s_ws_stopped && due) ||
+        xSemaphoreTake(s_client_lock, portMAX_DELAY);
+        if(!s_paused && !s_client && now >= s_recreate_at) {
+            s_recreate_at = now + 1000;   /* retry at most once a second */
+            client_create();
+        }
+        if(!s_paused && s_client && down && ((s_ws_stopped && due) ||
                     ((now - s_down_since) >= LINK_STUCK_MS && !esp_websocket_client_is_connected(s_client)))) {
             ESP_LOGW(TAG, "restarting the Moonraker link (%s)",
                      s_ws_stopped ? "the connection was closed" : "down for a minute");
@@ -433,14 +449,16 @@ static void net_task(void *arg)
             esp_websocket_client_start(s_client);
         }
 
-        /* Outside s_lock (see the lock order in the file header). */
+        /* Outside s_lock (see the lock order in the file header). Drained even
+         * while paused (s_client NULL): the queue is dropped on pause. */
         while(xQueueReceive(s_txq, &msg, 0) == pdTRUE) {
-            if(esp_websocket_client_send_text(s_client, msg, (int)strlen(msg),
+            if(s_client && esp_websocket_client_send_text(s_client, msg, (int)strlen(msg),
                                               pdMS_TO_TICKS(1000)) < 0) {
                 ESP_LOGW(TAG, "send failed; the request will time out and retry");
             }
             free(msg);
         }
+        xSemaphoreGive(s_client_lock);
 
         vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -456,6 +474,7 @@ void net_link_start(const net_config_t *cfg)
     if(!cfg || cfg->moonraker_url[0] == '\0') return;
     snprintf(s_ssid, sizeof s_ssid, "%s", cfg->ssid);
     snprintf(s_url, sizeof s_url, "%s", cfg->moonraker_url);
+    snprintf(s_bind, sizeof s_bind, "%s", cfg->bind_unit);
 
     /* MALLOC_CAP_8BIT as well: internal memory alone can be IRAM, which only
      * takes 32-bit accesses, and the model is filled byte by byte (memset,
@@ -464,8 +483,9 @@ void net_link_start(const net_config_t *cfg)
     s_shadow = heap_caps_malloc(sizeof(mmu_model_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     s_rx = heap_caps_malloc(RX_MAX + 1, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     s_lock = xSemaphoreCreateMutex();
+    s_client_lock = xSemaphoreCreateMutex();
     s_txq = xQueueCreate(TXQ_DEPTH, sizeof(char *));
-    if(!s_shadow || !s_rx || !s_lock || !s_txq) {
+    if(!s_shadow || !s_rx || !s_lock || !s_client_lock || !s_txq) {
         ESP_LOGE(TAG, "no memory for the link — staying in demo mode");
         return;
     }
@@ -479,8 +499,30 @@ void net_link_start(const net_config_t *cfg)
         return;
     }
 
+    memset(&cb, 0, sizeof(cb));
+    cb.send_text = send_text_cb;
+    cb.on_object = on_object_cb;
+    cb.on_component_status = on_component_status_cb;
+    cb.on_link = on_link_cb;
+    cb.on_gcode_result = on_gcode_result_cb;
+    cb.on_rpc_result = on_rpc_result_cb;
+    mc_init(&cb, s_bind[0] ? s_bind : NULL);
+
+    if(!client_create()) return;
+
+    xTaskCreate(net_task, "netlink", 4096, NULL, 3, NULL);
+    (void)ws_cfg;
+}
+
+/* Builds the websocket client from s_url and starts it; s_client_lock held or
+ * no task running yet. The client owns the largest transient buffers (its RX
+ * buffer and 6 KB task), so pausing destroys it and resuming builds it again. */
+static bool client_create(void)
+{
+    esp_websocket_client_config_t ws_cfg;
+
     memset(&ws_cfg, 0, sizeof(ws_cfg));
-    ws_cfg.uri = cfg->moonraker_url;
+    ws_cfg.uri = s_url;
     ws_cfg.buffer_size = 2048;
     ws_cfg.task_stack = 6144;
     ws_cfg.reconnect_timeout_ms = 5000;
@@ -489,24 +531,63 @@ void net_link_start(const net_config_t *cfg)
     s_client = esp_websocket_client_init(&ws_cfg);
     if(!s_client) {
         ESP_LOGE(TAG, "esp_websocket_client_init failed");
+        return false;
+    }
+    esp_websocket_register_events(s_client, WEBSOCKET_EVENT_ANY, on_ws_event, NULL);
+    /* The client reconnects by itself; its DISCONNECTED event feeds the state
+     * machine. start() creates a ~6 KB task, which can fail when the heap is
+     * short (e.g. the reader has not freed its own yet right after the tag
+     * writer closed); undo and let the caller retry. */
+    if(esp_websocket_client_start(s_client) != ESP_OK) {
+        ESP_LOGW(TAG, "link start deferred (low heap); will retry");
+        esp_websocket_client_destroy(s_client);
+        s_client = NULL;
+        return false;
+    }
+    return true;
+}
+
+void net_link_pause(void)
+{
+    uint32_t now = now_ms();
+
+    if(!s_client_lock) return;   /* the link was never started */
+    xSemaphoreTake(s_client_lock, portMAX_DELAY);
+    /* Nested: the screen and a console command can both pause; the link stays
+     * down until the last one resumes. */
+    if(s_pause_depth++ > 0) {
+        xSemaphoreGive(s_client_lock);
         return;
     }
+    s_paused = true;
+    if(s_client) {
+        esp_websocket_client_stop(s_client);
+        esp_websocket_client_destroy(s_client);   /* frees its RX buffer and task */
+        s_client = NULL;
+    }
+    xSemaphoreGive(s_client_lock);
 
-    memset(&cb, 0, sizeof(cb));
-    cb.send_text = send_text_cb;
-    cb.on_object = on_object_cb;
-    cb.on_component_status = on_component_status_cb;
-    cb.on_link = on_link_cb;
-    cb.on_gcode_result = on_gcode_result_cb;
-    cb.on_rpc_result = on_rpc_result_cb;
-    mc_init(&cb, cfg->bind_unit[0] ? cfg->bind_unit : NULL);
+    /* Tell the state machine the link is down, as a disconnect would. */
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    s_ws_stopped = true;
+    if(mc_link() != MC_LINK_DOWN) s_down_since = now;
+    mc_on_disconnected(now);
+    txq_drop_all();
+    xSemaphoreGive(s_lock);
+    ESP_LOGI(TAG, "Moonraker link paused");
+}
 
-    esp_websocket_register_events(s_client, WEBSOCKET_EVENT_ANY, on_ws_event, NULL);
-    /* The client reconnects by itself, so mc_reconnect_due() is not consulted
-     * here; the client's DISCONNECTED event feeds the state machine instead. */
-    esp_websocket_client_start(s_client);
-
-    xTaskCreate(net_task, "netlink", 4096, NULL, 3, NULL);
+void net_link_resume(void)
+{
+    if(!s_client_lock) return;
+    xSemaphoreTake(s_client_lock, portMAX_DELAY);
+    if(s_pause_depth > 0 && --s_pause_depth == 0) {
+        s_paused = false;
+        s_down_since = now_ms();
+        s_recreate_at = 0;   /* net_task builds the client as soon as it can */
+        ESP_LOGI(TAG, "Moonraker link resumed");
+    }
+    xSemaphoreGive(s_client_lock);
 }
 
 bool net_link_sync(mmu_model_t *m)

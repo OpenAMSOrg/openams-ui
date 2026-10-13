@@ -21,7 +21,11 @@
 
 #include "net_config.h"
 #include "net_wifi.h"
+#include "net_link.h"
 #include "ota.h"
+#if defined(MMU_FEATURE_TAG_WRITER)
+#include "tag_writer.h"
+#endif
 
 static const char *TAG = "net_console";
 
@@ -44,6 +48,10 @@ static void print_help(void)
     printf("  perf                     timing since the last perf: refreshes, loop, builds, touch latency\n");
     printf("  nav <n>                  go to screen n (0 home, 1 load, 2 alerts, ...), for timing\n");
     printf("  tap <x> <y> [ms]         tap the screen at x,y (held ms, default 60) and print the top layer\n");
+#if defined(MMU_FEATURE_TAG_WRITER)
+    printf("  tag <command>            spool tag writer (%s); \"tag help\" lists its commands\n",
+           tag_writer_reader_name());
+#endif
     printf("  reboot                   restart the display\n");
     printf("  help                     this list\n");
     fflush(stdout);
@@ -165,6 +173,23 @@ static void cmd_ota(int argc, char **argv)
 
 static void run_command(char *line)
 {
+#if defined(MMU_FEATURE_TAG_WRITER)
+    /* "tag <command>": the spool tag writer's commands go on whole, since they
+     * parse their own arguments (and loadimage / libadd read further lines). */
+    {
+        const char *p = line;
+
+        while(*p == ' ' || *p == '\t') p++;
+        if(!strncmp(p, "tag", 3) && (p[3] == ' ' || p[3] == '\t' || p[3] == '\0')) {
+            p += 3;
+            while(*p == ' ' || *p == '\t') p++;
+            net_link_pause();   /* free the link's heap for the reader + command task */
+            tag_writer_console(*p ? p : "help");
+            net_link_resume();
+            return;
+        }
+    }
+#endif
     char *argv[NETCON_ARG_MAX];
     int argc = split_args(line, argv, NETCON_ARG_MAX);
     if(argc == 0) {

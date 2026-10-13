@@ -33,5 +33,37 @@ if(mmu_version_len GREATER 31)   # esp_app_desc_t.version is 32 bytes
                         "the app description holds 31. Shorten MMU_APP_VERSION.")
 endif()
 
+# The spool tag writer (tag_writer/, docs/guide/tag-writer.md): a menu entry
+# that composes a filament spool and writes it to an RFID tag, reads any
+# filament tag, and resets, copies and clones Bambu tags, with a PN5180 or an
+# MFRC522 on the board's VSPI connector. On by default; -DMMU_SPOOL_TAG_WRITER=OFF
+# leaves it out and the image is exactly the display alone.
+option(MMU_SPOOL_TAG_WRITER "Build the spool tag writer into the image" ON)
+set(MMU_TAG_READER "PN5180" CACHE STRING
+    "The tag writer's reader: PN5180 (every tag type and format) or MFRC522 (Bambu MIFARE only)")
+set_property(CACHE MMU_TAG_READER PROPERTY STRINGS PN5180 MFRC522)
+if(NOT MMU_TAG_READER MATCHES "^(PN5180|MFRC522)$")
+    message(FATAL_ERROR "MMU_TAG_READER is \"${MMU_TAG_READER}\"; it takes PN5180 or MFRC522")
+endif()
+if(MMU_SPOOL_TAG_WRITER)
+    list(APPEND EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/tag_writer")
+    # The tag writer needs its tag-library partition (one app slot and no OTA,
+    # partitions_tagwriter.csv) and C++ exceptions, so it keeps its own
+    # generated sdkconfig: switching the option needs no manual delete.
+    if(NOT DEFINED SDKCONFIG)
+        set(SDKCONFIG "${CMAKE_CURRENT_LIST_DIR}/sdkconfig.tagwriter")
+    endif()
+    if(NOT DEFINED SDKCONFIG_DEFAULTS)
+        set(SDKCONFIG_DEFAULTS "sdkconfig.defaults;sdkconfig.defaults.tagwriter")
+    endif()
+endif()
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
+# Every component sees it, LVGL included: lv_conf.h enables the few widgets
+# and the font the tag writer's pages use only in these builds.
+if(MMU_SPOOL_TAG_WRITER)
+    idf_build_set_property(COMPILE_DEFINITIONS "MMU_FEATURE_TAG_WRITER=1" APPEND)
+endif()
+
 project(openams_ui_esp32)

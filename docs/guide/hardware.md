@@ -41,6 +41,11 @@ ST7796S answers `0x007796`.
 These pins are fixed in `display.c` and `touch.c`. Moving them means editing
 the source and rebuilding.
 
+The spool tag writer's reader (a PN5180 or an MFRC522) goes on the other SPI
+bus, VSPI: SCK 18, MOSI 23, MISO 19, CS 21, reset 32, and the PN5180's BUSY
+(or the MFRC522's IRQ) on 35. Those lines also reach the microSD slot, so leave
+it empty. Wiring per connector pin: [tag-writer.md](tag-writer.md#wiring).
+
 ## Panel options
 
 `platform/esp32/main/panel_config.h` holds compile-time overrides for a panel

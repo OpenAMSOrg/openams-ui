@@ -129,7 +129,15 @@
 #define LV_FONT_MONTSERRAT_22 0
 #define LV_FONT_MONTSERRAT_24 0
 #define LV_FONT_MONTSERRAT_26 0
+/* The ESP32 image's spool tag writer (MMU_FEATURE_TAG_WRITER, set for every
+ * component by platform/esp32/CMakeLists.txt) titles its pages in Montserrat
+ * 28 and uses a slider and a spinner: enabled for that image only, so every
+ * other build stays as it was. */
+#if defined(MMU_FEATURE_TAG_WRITER)
+#define LV_FONT_MONTSERRAT_28 1
+#else
 #define LV_FONT_MONTSERRAT_28 0
+#endif
 #define LV_FONT_MONTSERRAT_30 0
 #define LV_FONT_MONTSERRAT_32 0
 #define LV_FONT_MONTSERRAT_34 0
@@ -185,10 +193,18 @@
 #define LV_USE_QRCODE 0
 #define LV_USE_ROLLER 0
 #define LV_USE_SCALE 0
+#if defined(MMU_FEATURE_TAG_WRITER)
+#define LV_USE_SLIDER 1
+#else
 #define LV_USE_SLIDER 0
+#endif
 #define LV_USE_SPAN 0
 #define LV_USE_SPINBOX 0
+#if defined(MMU_FEATURE_TAG_WRITER)
+#define LV_USE_SPINNER 1
+#else
 #define LV_USE_SPINNER 0
+#endif
 #define LV_USE_SWITCH 0
 #define LV_USE_TABLE 0
 #define LV_USE_TABVIEW 0

@@ -1,0 +1,14 @@
+# Added on top of sdkconfig.defaults when the spool tag writer is built in
+# (MMU_SPOOL_TAG_WRITER, the default); generated into sdkconfig.tagwriter.
+
+# One app partition and the tag library (partitions_tagwriter.csv) instead of
+# two OTA slots: a 4 MB flash holds one or the other. Updates go over USB.
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions_tagwriter.csv"
+
+# The tag writer's format codecs report malformed tags by throwing, and a
+# decode/encode that runs out of heap throws std::bad_alloc. Throwing itself
+# needs to allocate the exception object, so the emergency pool must be
+# non-zero: with 0, a throw under low memory calls std::terminate (reboots)
+# instead of being caught and reported. 512 B holds the small exceptions used.
+CONFIG_COMPILER_CXX_EXCEPTIONS=y
+CONFIG_COMPILER_CXX_EXCEPTIONS_EMG_POOL_SIZE=512

@@ -17,6 +17,9 @@
 #include "net_link.h"
 #include "net_wifi.h"
 #include "ota.h"
+#if defined(MMU_FEATURE_TAG_WRITER)
+#include "tag_writer.h"
+#endif
 #include "touch.h"
 #include "touch_calib_store.h"
 #include "touch_calib_ui.h"
@@ -360,6 +363,12 @@ void app_main(void)
      * else) needs to be visible. */
     display_cfg_store_init();
     display_power_init(disp);
+
+#if defined(MMU_FEATURE_TAG_WRITER)
+    /* NVS is up: the spool being edited, the Bambu key and the tag library.
+     * No hardware yet: the reader starts when its screen opens. */
+    tag_writer_init();
+#endif
 
     /* NVS is initialized by display_cfg_store_init() above. The serial setup
      * console is always available; Wi-Fi only starts if an SSID is stored, so

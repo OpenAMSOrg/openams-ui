@@ -26,6 +26,9 @@ static ui_screen_id_t s_async_target;
 static const char *const s_names[UI_SCREEN_COUNT] = {
     "home", "load", "alerts", "edit", "environment", "print", "refill",   /* lit-ok: screen ids, for logs */
     "settings", "mapping", "order", "unitinfo", "debug",   /* lit-ok */
+#if defined(MMU_FEATURE_TAG_WRITER)
+    "tagwriter",   /* lit-ok */
+#endif
 };
 
 /* The screens' titles, in the current language (design/strings). */
@@ -33,6 +36,9 @@ static const view_str_id_t s_titles[UI_SCREEN_COUNT] = {
     VS_SCREEN_HOME, VS_SCREEN_LOAD_FULL, VS_LABEL_ALERTS, VS_SCREEN_EDIT_NONE, VS_SCREEN_ENV,
     VS_SCREEN_PRINT, VS_SCREEN_GROUPS, VS_LABEL_SETTINGS, VS_SCREEN_PRINT_MAPPING,
     VS_SCREEN_ORDER, VS_SCREEN_UNITINFO, VS_SCREEN_DEBUG,
+#if defined(MMU_FEATURE_TAG_WRITER)
+    VS_SCREEN_TAG_WRITER,
+#endif
 };
 
 static lv_obj_t *build_screen(ui_screen_id_t id)

@@ -22,6 +22,9 @@ typedef enum {
     UI_SCREEN_ORDER,       /* 11 unit order and side binding */
     UI_SCREEN_UNIT_INFO,   /* 12 unit info */
     UI_SCREEN_DEBUG,       /* hidden, long-press the title bar */
+#if defined(MMU_FEATURE_TAG_WRITER)
+    UI_SCREEN_TAG_WRITER,  /* the spool tag writer (ESP32 image only) */
+#endif
     UI_SCREEN_COUNT
 } ui_screen_id_t;
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
 Read `idf.py size --format json2` from stdin and check that DRAM free >= floor
-and that the app image leaves at least 5% headroom in one OTA slot
-(platform/esp32/partitions.csv).
+and that the app image leaves at least 5% headroom in its app partition: one
+OTA slot of platform/esp32/partitions.csv by default, or the factory partition
+of the table named as the second argument (partitions_tagwriter.csv for an
+image with the spool tag writer, the default build).
 
 Usage:
-    idf.py size --format json2 | python3 esp32_size_check.py FLOOR_BYTES
+    idf.py size --format json2 | python3 esp32_size_check.py FLOOR_BYTES [PARTITIONS_CSV]
 
 Exits 0 when both checks pass, 1 when either fails, 2 on usage error.
 """
@@ -56,6 +58,7 @@ def main():
         sys.exit(2)
 
     floor = int(sys.argv[1])
+    table = sys.argv[2] if len(sys.argv) > 2 else "partitions.csv"
     text = sys.stdin.read()
 
     # idf.py size --format json2 may emit status lines before the JSON object.
@@ -93,7 +96,7 @@ def main():
         ok = False
 
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    partitions_csv = os.path.join(root, "platform", "esp32", "partitions.csv")
+    partitions_csv = os.path.join(root, "platform", "esp32", table)
     slot_size = ota_slot_size(partitions_csv)
     if slot_size is None:
         print(
@@ -106,12 +109,12 @@ def main():
         max_image = int(slot_size * SLOT_HEADROOM_FRACTION)
         headroom = slot_size - image_size
         print(
-            "OTA slot %d bytes, image %d bytes (%.2f%%), headroom %d bytes"
-            % (slot_size, image_size, 100.0 * image_size / slot_size, headroom)
+            "app partition (%s) %d bytes, image %d bytes (%.2f%%), headroom %d bytes"
+            % (table, slot_size, image_size, 100.0 * image_size / slot_size, headroom)
         )
         if image_size > max_image:
             print(
-                "esp32_size_check: FAIL — image %d bytes > %.0f%% of the %d-byte OTA slot"
+                "esp32_size_check: FAIL — image %d bytes > %.0f%% of the %d-byte app partition"
                 % (image_size, SLOT_HEADROOM_FRACTION * 100.0, slot_size),
                 file=sys.stderr,
             )

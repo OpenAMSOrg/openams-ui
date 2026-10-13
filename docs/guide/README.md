@@ -38,6 +38,7 @@ state of its own, so unplugging it costs you nothing but the view.
 | [troubleshooting.md](troubleshooting.md) | fix a dead screen, a lost connection or a crooked touch |
 | [development.md](development.md) | run the simulator and the tests |
 | [translating.md](translating.md) | translate the display and the panel, or fix a translation |
+| [tag-writer.md](tag-writer.md) | wire a tag reader, then write, read and clone spool tags |
 
 ## Quick path
 

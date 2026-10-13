@@ -173,6 +173,11 @@ Stored Wi-Fi and Moonraker settings survive an update. A board flashed with the
 old single-app layout needs one USB flash of the new partition table first
 (`idf.py flash`).
 
+An image with the spool tag writer (the default build) has no second app slot:
+it keeps its tag library there instead, so update it over USB with
+`idf.py flash` ([tag-writer.md](tag-writer.md)). Build with
+`-DMMU_SPOOL_TAG_WRITER=OFF` for a display that updates over the air.
+
 There is nothing to uninstall on the printer. Reflash the board, or erase it
 with `idf.py erase-flash`, which also clears the stored settings.
 

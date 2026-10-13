@@ -54,6 +54,9 @@ static bool rebuild_is_safe(void)
     case UI_SCREEN_SETTINGS:
     case UI_SCREEN_ORDER:
     case UI_SCREEN_DEBUG:
+#if defined(MMU_FEATURE_TAG_WRITER)
+    case UI_SCREEN_TAG_WRITER:   /* a foreign UI with its own state: never rebuilt */
+#endif
         return false;
     default:
         break;

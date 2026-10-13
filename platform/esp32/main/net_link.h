@@ -38,5 +38,13 @@ bool net_link_send_gcode(const char *script, mmu_action_kind_t kind, int *reques
  * when the link was never started or is not READY. */
 bool net_link_send_rpc(const char *method, cJSON *params, int tag);
 
+/** Stop the Moonraker link and free the websocket client's buffers (its RX
+ * buffer and 6 KB task), so a foreground feature can use the heap; the live
+ * model stops updating until net_link_resume(). No-op if the link was never
+ * started or is already paused. Called from the LVGL task. */
+void net_link_pause(void);
+/** Rebuild the websocket client and reconnect after net_link_pause(). */
+void net_link_resume(void);
+
 /** Print what the link has received and applied (the console's `ui`). */
 void net_link_diag_print(void);

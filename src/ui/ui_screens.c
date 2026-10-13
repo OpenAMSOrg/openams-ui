@@ -20,6 +20,9 @@ static const ui_screen_ops_t *const s_ops[UI_SCREEN_COUNT] = {
     [UI_SCREEN_ORDER] = &screen_order_ops,
     [UI_SCREEN_UNIT_INFO] = &screen_unitinfo_ops,
     [UI_SCREEN_DEBUG] = &screen_debug_ops,
+#if defined(MMU_FEATURE_TAG_WRITER)
+    [UI_SCREEN_TAG_WRITER] = &screen_tag_writer_ops,
+#endif
 };
 
 const ui_screen_ops_t *ui_screen_ops(ui_screen_id_t id)

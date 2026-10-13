@@ -79,6 +79,18 @@ cmake -S . -B build-ja -DCMAKE_BUILD_TYPE=Release -DMMU_LANGUAGES="en;ja"
 cmake --build build-ja -j4 && ctest --test-dir build-ja
 ```
 
+## Spool tag writer
+
+The ESP32 image carries a spool tag writer by default (**Menu → Tag writer**):
+it composes a spool and writes it to an RFID tag, reads any filament tag, and
+resets, copies and clones Bambu tags, with a PN5180 (or `-DMMU_TAG_READER=MFRC522`)
+on the board's VSPI connector. `-DMMU_SPOOL_TAG_WRITER=OFF` builds the display
+alone. An image with the tag writer trades the two OTA slots for an on-device
+tag library (`platform/esp32/partitions_tagwriter.csv`) and is updated over USB.
+The tag writer (`platform/esp32/tag_writer/`) is under the GPLv3, so an image
+built with it is too; the display alone stays MIT. See
+[docs/guide/tag-writer.md](docs/guide/tag-writer.md).
+
 ## Run
 
 ```sh

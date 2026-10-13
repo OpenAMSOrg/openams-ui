@@ -42,6 +42,16 @@ configured — 60 s have passed since the UI started. The decision logic
 (`ota_url_ok`, `ota_decide`) lives in the portable, unit-tested
 `src/app/ota_policy.c`.
 
+## Images with the spool tag writer
+
+An image built with the spool tag writer (the default; see
+[guide/tag-writer.md](guide/tag-writer.md)) uses
+`platform/esp32/partitions_tagwriter.csv`: one `factory` app and the tag
+library instead of the two slots, so it is flashed over USB and `ota <url>`
+says so. Flashing between the two layouts over USB keeps `nvs`, so the stored
+settings survive either way. Build with `-DMMU_SPOOL_TAG_WRITER=OFF` to keep
+over-the-air updates.
+
 ## Moving from the old factory layout
 
 Boards already flashed with the previous single-`factory`-app partition

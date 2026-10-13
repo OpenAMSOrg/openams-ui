@@ -649,13 +649,19 @@ void ui_sheet_menu(void)
         { UI_ICON_COG,               UI_SCREEN_SETTINGS,    VS_MENU_SETUP },
         { UI_ICON_LINK_VARIANT,      UI_SCREEN_ORDER,       VS_MENU_UNIT },
         { UI_ICON_INFORMATION_OUTLINE, UI_SCREEN_UNIT_INFO, VS_MENU_INFO },
+#if defined(MMU_FEATURE_TAG_WRITER)
+        { UI_ICON_NFC_VARIANT,       UI_SCREEN_TAG_WRITER,  VS_MENU_TAG_WRITER },
+#endif
     };
     const int cols = 4;
     const int tw = 104;
     const int th = 64;
     const int gap = 8;
     const int x0 = 20;
-    lv_obj_t *sheet = ui_sheet_open(view_str(VS_SCREEN_MENU), 200);
+    /* Two rows of four; a ninth entry (the ESP32 image's tag writer) opens a
+     * third row, and the sheet grows by one row to hold it. */
+    const int rows = (int)((sizeof entries / sizeof entries[0] + cols - 1) / cols);
+    lv_obj_t *sheet = ui_sheet_open(view_str(VS_SCREEN_MENU), 200 + (rows - 2) * (th + gap));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     lv_obj_t *body = ui_sheet_body(sheet);
     lv_obj_t *grid;
@@ -666,7 +672,7 @@ void ui_sheet_menu(void)
     /* The body is a flex column (it carries rows elsewhere), so the grid of
      * tiles is a plain box inside it: only there do explicit positions hold.
      * y = 4 puts the grid's origin at sheet-local y = 52 (SHEET_BODY_Y + 4). */
-    grid = mk_box(body, 0, 4, x0 + cols * tw + (cols - 1) * gap, 2 * th + gap);
+    grid = mk_box(body, 0, 4, x0 + cols * tw + (cols - 1) * gap, rows * th + (rows - 1) * gap);
 
     for(i = 0; i < sizeof entries / sizeof entries[0]; i++) {
         int col = (int)i % cols;

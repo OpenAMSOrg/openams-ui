@@ -13,6 +13,13 @@ file(GLOB_RECURSE MMU_APP_SOURCES
 )
 mmu_languages_filter_sources(MMU_APP_SOURCES ${MMU_APP_SOURCES})
 
+# The spool tag writer's menu screen (platform/esp32/CMakeLists.txt adds its
+# component when MMU_SPOOL_TAG_WRITER is on; see the optional requirement below).
+set(MMU_TAG_WRITER_SOURCES)
+if(MMU_SPOOL_TAG_WRITER)
+    set(MMU_TAG_WRITER_SOURCES "screen_tag_writer.c")
+endif()
+
 idf_component_register(
     SRCS
         "app_main.c"
@@ -28,6 +35,7 @@ idf_component_register(
         "touch_calib_store.c"
         "touch_calib_ui.c"
         "actions_esp32.c"
+        ${MMU_TAG_WRITER_SOURCES}
         ${MMU_APP_SOURCES}
     INCLUDE_DIRS
         "."
@@ -69,4 +77,24 @@ target_compile_definitions(${COMPONENT_LIB} PRIVATE
 if(NOT CONFIG_ESPTOOLPY_FLASHMODE_QIO OR NOT CONFIG_ESPTOOLPY_FLASHFREQ_80M)
     message(WARNING "sdkconfig predates sdkconfig.defaults' QIO 80 MHz flash "
                     "settings: delete platform/esp32/sdkconfig and build again")
+endif()
+
+# The dependency resolution pass does not see project options, so the tag
+# writer is an optional requirement: linked when its component is in the build.
+idf_component_optional_requires(PRIVATE tag_writer)
+
+# An image with the tag writer needs its partition table (the tag library) and
+# C++ exceptions, one without it the two OTA slots. Each has its own generated
+# sdkconfig (sdkconfig.tagwriter / sdkconfig), so this only trips when a build
+# names an sdkconfig of the other kind with -D SDKCONFIG=...
+if(MMU_SPOOL_TAG_WRITER)
+    if(NOT CONFIG_PARTITION_TABLE_CUSTOM_FILENAME STREQUAL "partitions_tagwriter.csv"
+       OR NOT CONFIG_COMPILER_CXX_EXCEPTIONS)
+        message(FATAL_ERROR "MMU_SPOOL_TAG_WRITER is on but ${SDKCONFIG} was generated "
+                            "without it: delete that file (or pass "
+                            "-DMMU_SPOOL_TAG_WRITER=OFF) and build again")
+    endif()
+elseif(CONFIG_PARTITION_TABLE_CUSTOM_FILENAME STREQUAL "partitions_tagwriter.csv")
+    message(FATAL_ERROR "MMU_SPOOL_TAG_WRITER is off but ${SDKCONFIG} was generated with "
+                        "it: delete that file and build again")
 endif()
