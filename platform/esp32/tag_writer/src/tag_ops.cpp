@@ -626,26 +626,69 @@ static Result clone_gen1a(const uint8_t image[1024], Progress progress) {
 // After block 0 (the UID) is in place, write the rest of the image with the
 // factory key. Block 0 is skipped: it was already written, and a second write
 // would fail on FUID / fuse-on-first-write cards.
+//
+// Opens `sector` with the factory FF key and writes either its data blocks
+// (trailer == false, skipping block 0) or just its trailer (trailer == true).
+// Each attempt does a clean, non-nested auth (reselect first), which is the
+// fix for the sector-boundary flakiness write() documents: a nested auth right
+// after a key change can NAK or drop the card. Writes are idempotent, so a
+// retried block is harmless.
+static Status write_sector_part(Card &card, uint8_t sector, const uint8_t image[1024],
+                                bool trailer) {
+    const int SECTOR_TRIES = 4;
+    Status status = Reader::NO_CARD;
+    for (int attempt = 1; attempt <= SECTOR_TRIES; attempt++) {
+        if (!reselect(card)) {  // halt + fresh select: never a nested auth
+            status = Reader::NO_CARD;
+            vTaskDelay(pdMS_TO_TICKS(5));
+            continue;
+        }
+        KeyChoice key = KEY_DEFAULT;  // a blank magic tag ships with FF keys
+        status = open_sector(card, sector, key);
+        if (status == Reader::OK) {
+            uint8_t lo = trailer ? 3 : 0;
+            uint8_t hi = trailer ? 4 : 3;
+            for (uint8_t i = lo; i < hi; i++) {
+                uint8_t block = sector * 4 + i;
+                if (block == 0)
+                    continue;  // UID block, written by the gen2/gen3/etc. step
+                status = reader->write_block(block, image + block * 16);
+                if (status != Reader::OK)
+                    break;
+            }
+        }
+        if (status == Reader::OK)
+            return Reader::OK;
+        vTaskDelay(pdMS_TO_TICKS(5));
+    }
+    return status;
+}
+
+// Two passes so a dropout never half-locks the tag: every sector's DATA blocks
+// first (all sectors stay on factory FF keys, freely re-openable on retry),
+// then every TRAILER last. A failure during the data pass leaves the tag fully
+// blank and reusable; only the short trailer pass actually locks it. This both
+// stops a mid-clone glitch from bricking a (write-once) tag and avoids the
+// mid-stream key changes that were destabilising the nested auth.
 static Result clone_rest(Card &card, const uint8_t image[1024], Progress progress) {
     reader->set_rx_timeout_ms(100);
     for (uint8_t sector = 0; sector < bambu::SECTORS; sector++) {
-        KeyChoice key = KEY_DEFAULT;  // a blank magic tag ships with FF keys
-        if (open_sector(card, sector, key) != Reader::OK) {
+        Status status = write_sector_part(card, sector, image, false);
+        if (status != Reader::OK) {
             reader->set_rx_timeout_ms(25);
-            return result(false, Reader::AUTH_FAILED, sector, "cannot open magic sector");
+            return result(false, status, sector, "write failed");
         }
-        for (uint8_t i = 0; i < 4; i++) {
-            uint8_t block = sector * 4 + i;
-            if (block == 0)
-                continue;
-            Status status = reader->write_block(block, image + block * 16);
-            if (status != Reader::OK) {
-                reader->set_rx_timeout_ms(25);
-                return result(false, status, sector, "write failed");
-            }
-            if (progress)
-                progress(block + 1, 128);
+        if (progress)
+            progress((sector + 1) * 2, 128);  // 2..32 across the data pass
+    }
+    for (uint8_t sector = 0; sector < bambu::SECTORS; sector++) {
+        Status status = write_sector_part(card, sector, image, true);
+        if (status != Reader::OK) {
+            reader->set_rx_timeout_ms(25);
+            return result(false, status, sector, "trailer write failed");
         }
+        if (progress)
+            progress(32 + (sector + 1) * 2, 128);  // 34..64 across the trailer pass
     }
     reader->set_rx_timeout_ms(25);
     return result(true, Reader::OK, 0xFF, "ok");

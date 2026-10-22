@@ -60,7 +60,7 @@ static const gpio_num_t LED_R = GPIO_NUM_22, LED_G = GPIO_NUM_16, LED_B = GPIO_N
 // ------------------------------------------------------------- state
 
 enum ScreenId { NONE, HOME, MATERIAL, COLOR, DETAILS, JOB, TAG_VIEW, SETTINGS,
-                LIBRARY, LIBRARY_COLORS };
+                LIBRARY, LIBRARY_COLORS, LIBRARY_CONFIRM };
 enum JobUi { J_WAIT, J_RUN, J_DONE, J_REMOVE };
 
 static lv_obj_t *root;            // the display's screen object the pages live in
@@ -71,6 +71,12 @@ static ScreenId current = NONE;
 static ScreenId pending = NONE;
 static bambu::Spool edit;  // the copy an editor screen works on
 static uint32_t shown_seq, shown_spool_version;
+// The home card is a write/compose editor by default, but displays the tag on
+// the reader when a different, decodable one is placed. These track that mode.
+static char home_card_uid[21];  // tag UID now shown on the card ("" = write preset)
+static char home_try_uid[21];   // last UID we auto-decoded, so we decode once per tag
+static bool home_decoding;       // a silent home-card decode job is in flight
+static int lib_pending_color = -1;  // colour chosen, awaiting the write confirm
 static int64_t led_off_at;
 
 static tagsvc::Op job_op;
@@ -243,14 +249,18 @@ static void on_home_button(lv_event_t *e) {
     }
 }
 
-static void refresh_home_spool() {
-    bambu::Spool s;
-    spool::get(s);
-    shown_spool_version = spool::version();
+static void render_card(const bambu::Spool &s) {
     set_swatch(w_swatch, w_hex, s.rgba);
     spool_text(nullptr, 0, s.detail, s.type, s.diameter_x100, s.weight_g,
                bambu::estimate_length_m(s), s.nozzle_min_c, s.nozzle_max_c, s.bed_c, s.dry_c,
                s.dry_hours, s.code);
+}
+
+static void refresh_home_spool() {
+    bambu::Spool s;
+    spool::get(s);
+    shown_spool_version = spool::version();
+    render_card(s);
 }
 
 static uint32_t kind_color(tagops::Kind kind) {
@@ -307,6 +317,10 @@ static void refresh_home_tag(const tagsvc::Snapshot &snap) {
 static void build_home() {
     lv_obj_t *scr = new_screen();
     w_title = nullptr;
+    // Start in write-preset mode; tick() re-decodes any tag already present.
+    home_card_uid[0] = 0;
+    home_try_uid[0] = 0;
+    home_decoding = false;
     lv_obj_t *bar = header(scr, "Spool Tag Writer");
     lv_obj_align(lv_obj_get_child(bar, 0), LV_ALIGN_LEFT_MID, 58, 0);
     button(bar, 6, 6, 44, 36, LV_SYMBOL_LEFT, C_BUTTON, on_home_button, (void *)7);
@@ -1076,8 +1090,11 @@ static void build_library() {
 
 static void start_library_clone(int color_idx);
 
+// Picking a colour no longer writes straight away: a stray tap used to arm a
+// clone that then fired the instant any tag touched the reader. Confirm first.
 static void on_lib_color(lv_event_t *e) {
-    start_library_clone((int)(intptr_t)lv_event_get_user_data(e));
+    lib_pending_color = (int)(intptr_t)lv_event_get_user_data(e);
+    navigate(LIBRARY_CONFIRM);
 }
 
 static void on_lib_colors_back(lv_event_t *e) {
@@ -1120,6 +1137,39 @@ static void build_library_colors() {
         }
     }
     show(scr, LIBRARY_COLORS);
+}
+
+static void on_lib_confirm(lv_event_t *e) {
+    switch ((intptr_t)lv_event_get_user_data(e)) {
+    case 0: navigate(LIBRARY_COLORS); break;  // back, no write
+    case 1:                                   // write now
+        if (lib_pending_color >= 0)
+            start_library_clone(lib_pending_color);
+        break;
+    }
+}
+
+static void build_library_confirm() {
+    lv_obj_t *scr = new_screen();
+    if (!lib || lib_pending_color < 0 || lib_pending_color >= lib->color_n) {
+        navigate(LIBRARY);
+        return;
+    }
+    lv_obj_t *bar = header(scr, "Write clone");
+    button(bar, 384, 6, 88, 36, "Back", C_BUTTON, on_lib_confirm, (void *)0);
+
+    lv_obj_t *panel = box(scr, 12, 64, 456, 96, C_PANEL, 12);
+    lv_obj_t *what = text(panel, &lv_font_montserrat_20, C_TEXT, "");
+    lv_obj_set_pos(what, 16, 14);
+    lv_label_set_text_fmt(what, "%s" BULLET "%s", lib->material, lib->colors[lib_pending_color]);
+    lv_obj_t *note = text(panel, &lv_font_montserrat_16, C_MUTED,
+                          "Place a blank magic tag, then tap Write.\n"
+                          "The tag is locked after writing (write-once).");
+    lv_obj_set_pos(note, 16, 46);
+
+    button(scr, 12, 176, 456, 56, LV_SYMBOL_COPY "  Write to tag", C_ACCENT, on_lib_confirm,
+           (void *)1);
+    show(scr, LIBRARY_CONFIRM);
 }
 
 static void start_library_clone(int color_idx) {
@@ -1193,6 +1243,62 @@ static void build_settings() {
 
 // ------------------------------------------------------------- plumbing
 
+// Drives the home card between write-preset mode and read-display mode. A new,
+// decodable tag on the reader is decoded once (per UID) and shown on the card;
+// removing it, or a blank/unsupported tag, reverts to the editable preset.
+static void update_home_card(const tagsvc::Snapshot &snap) {
+    // Finish a silent decode we started on a previous tick.
+    if (home_decoding) {
+        if (snap.owner == tagsvc::OWNER_UI && snap.op == tagsvc::OP_DECODE &&
+            snap.phase == tagsvc::DONE) {
+            home_decoding = false;
+            tagsvc::acknowledge();
+            DecodeResult dr;
+            char tt[24];
+            bool ok = false;
+            tagsvc::get_decode(dr, tt, &ok);
+            if (ok && dr.recognized) {
+                bambu::Spool s;
+                filament_to_spool(dr.filament, s);  // starts from default_spool()
+                render_card(s);
+                strncpy(home_card_uid, home_try_uid, sizeof(home_card_uid) - 1);
+                home_card_uid[sizeof(home_card_uid) - 1] = 0;
+            } else {
+                home_card_uid[0] = 0;   // nothing to show -> the write preset
+                refresh_home_spool();
+            }
+        }
+        return;
+    }
+
+    // No tag, or a blank/unsupported one: show the write preset.
+    tagops::Kind kind = snap.present ? snap.card.kind : tagops::NONE;
+    bool decodable = kind == tagops::GENUINE || kind == tagops::CUSTOM ||
+                     kind == tagops::LOCKED;
+    if (!snap.present || !decodable) {
+        home_try_uid[0] = 0;
+        if (home_card_uid[0]) {
+            home_card_uid[0] = 0;
+            refresh_home_spool();
+        }
+        return;
+    }
+
+    // A decodable tag is present: decode it once per UID and show it.
+    char uid[21];
+    tagops::format_uid(snap.card.uid, uid);
+    if (strcmp(uid, home_try_uid) != 0) {
+        strncpy(home_try_uid, uid, sizeof(home_try_uid) - 1);
+        home_try_uid[sizeof(home_try_uid) - 1] = 0;
+        bambu::Spool s;
+        spool::get(s);  // the decode ignores it; just needed by the API
+        if (tagsvc::submit(tagsvc::OP_DECODE, tagsvc::OWNER_UI, &s, spool::date(), 60000))
+            home_decoding = true;
+        else
+            home_try_uid[0] = 0;  // reader busy; retry next tick
+    }
+}
+
 static void tick(lv_timer_t *) {
     if (led_off_at && esp_timer_get_time() > led_off_at)
         led(false, false, false, 0);
@@ -1202,7 +1308,9 @@ static void tick(lv_timer_t *) {
     case HOME:
         if (snap.seq != shown_seq)
             refresh_home_tag(snap);
-        if (spool::version() != shown_spool_version)
+        update_home_card(snap);
+        if (home_card_uid[0] == 0 && !home_decoding &&
+            spool::version() != shown_spool_version)
             refresh_home_spool();
         break;
     case JOB:
@@ -1291,6 +1399,7 @@ static void service() {
         case SETTINGS: build_settings(); break;
         case LIBRARY: build_library(); break;
         case LIBRARY_COLORS: build_library_colors(); break;
+        case LIBRARY_CONFIRM: build_library_confirm(); break;
         default: break;
         }
     }
