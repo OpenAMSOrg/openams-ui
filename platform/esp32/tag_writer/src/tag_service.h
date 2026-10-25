@@ -68,11 +68,16 @@ void init(const Reader::Pins &pins, const uint8_t master_key[bambu::MASTER_KEY_S
 bool acquire();
 /** Let go of the reader. When the last holder lets go, a job still waiting
  * for a tag is cancelled and the task powers the field down and exits (its
- * stack goes back to the heap). Never blocks. */
-void release();
+ * stack goes back to the heap). It lingers LINGER_MS first, so back-to-back
+ * console commands share a session; @p linger false (the screen closing)
+ * leaves at once. Never blocks. */
+void release(bool linger = true);
 /** True while the task and its session are up (a holder may still find them
  * missing when the heap was too short to start them). */
 bool ready();
+/** True while the task is alive at all, lingering included: its stack, the
+ * session and the codecs are still on the heap. */
+bool running();
 /** The reader task's least free stack so far, in bytes (0 when it is not running). */
 unsigned stack_left();
 /** After acquire() started the task: wait up to timeout_ms for its first poll,

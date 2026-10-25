@@ -41,6 +41,12 @@ void tag_writer_console(const char *line);
 /** The reader this image drives: "PN5180" or "MFRC522". */
 const char *tag_writer_reader_name(void);
 
+/** True while the reader's task is alive: its stack, session buffers and
+ * format codecs are still on the heap. It goes away soon after the screen
+ * closes or a console command ends; the printer link waits for it before it
+ * rebuilds its own buffers. Any task. */
+bool tag_writer_reader_active(void);
+
 #ifdef __cplusplus
 }
 #endif

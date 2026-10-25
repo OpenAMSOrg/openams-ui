@@ -28,6 +28,9 @@
 #include "core/core.h"
 #include "app/platform.h"
 #include "net_wifi.h"
+#if defined(MMU_FEATURE_TAG_WRITER)
+#include "tag_writer.h"
+#endif
 
 #include "esp_event.h"
 #include "esp_heap_caps.h"
@@ -66,6 +69,7 @@ static SemaphoreHandle_t s_client_lock;
 static int s_pause_depth;   /* >0: the link is stopped on purpose (tag writer screen and/or a console command) */
 static bool s_paused;       /* mirrors s_pause_depth>0, for net_task */
 static uint32_t s_recreate_at;   /* net_task may rebuild a missing client at/after this */
+static uint32_t s_resumed_at;    /* when the last pause ended */
 static char s_bind[32];
 
 /* What each outstanding G-code request was, so the answer can name the action
@@ -415,6 +419,28 @@ static void on_ws_event(void *arg, esp_event_base_t base, int32_t id, void *even
 
 static bool client_create(void);
 
+/* Right after a resume the tag writer's reader may still hold its task, its
+ * session buffers and the format codecs. A client built on top of them got
+ * just enough heap to start and not enough for the handshake, and the link
+ * stayed down. So the client waits until the reader has been gone for a
+ * moment (the idle task frees a deleted task's stack shortly after it ends),
+ * but no longer than READER_WAIT_MS after the resume. */
+#define READER_WAIT_MS 10000
+#define READER_GONE_MS 200
+
+static bool reader_holds_heap(uint32_t now)
+{
+#if defined(MMU_FEATURE_TAG_WRITER)
+    static uint32_t s_reader_seen;   /* when the reader was last seen alive */
+
+    if(tag_writer_reader_active()) s_reader_seen = now;
+    return (now - s_resumed_at) < READER_WAIT_MS && (now - s_reader_seen) < READER_GONE_MS;
+#else
+    (void)now;
+    return false;
+#endif
+}
+
 static void net_task(void *arg)
 {
     (void)arg;
@@ -435,7 +461,7 @@ static void net_task(void *arg)
          * stopped client waits for the reconnect backoff; a link down for
          * LINK_STUCK_MS with no connection is restarted as a safety net. */
         xSemaphoreTake(s_client_lock, portMAX_DELAY);
-        if(!s_paused && !s_client && now >= s_recreate_at) {
+        if(!s_paused && !s_client && now >= s_recreate_at && !reader_holds_heap(now)) {
             s_recreate_at = now + 1000;   /* retry at most once a second */
             client_create();
         }
@@ -533,6 +559,10 @@ static bool client_create(void)
         ESP_LOGE(TAG, "esp_websocket_client_init failed");
         return false;
     }
+    /* A fresh client connects and reconnects by itself: net_task must not
+     * "restart" it because the one it replaces was stopped (a pause sets
+     * s_ws_stopped, and the restart tore down the new client mid-connect). */
+    s_ws_stopped = false;
     esp_websocket_register_events(s_client, WEBSOCKET_EVENT_ANY, on_ws_event, NULL);
     /* The client reconnects by itself; its DISCONNECTED event feeds the state
      * machine. start() creates a ~6 KB task, which can fail when the heap is
@@ -584,6 +614,7 @@ void net_link_resume(void)
     if(s_pause_depth > 0 && --s_pause_depth == 0) {
         s_paused = false;
         s_down_since = now_ms();
+        s_resumed_at = s_down_since;
         s_recreate_at = 0;   /* net_task builds the client as soon as it can */
         ESP_LOGI(TAG, "Moonraker link resumed");
     }

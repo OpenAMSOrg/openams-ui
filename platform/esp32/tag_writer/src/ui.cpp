@@ -1354,7 +1354,9 @@ static void on_root_deleted(lv_event_t *e) {
     exit_wanted = false;
     job_decode = DecodeResult();  // free the decoded tag's strings/maps
     job_decode_ok = false;
-    tagsvc::release();
+    // No linger: the display rebuilds its printer link once the reader's
+    // task and buffers are back on the heap (net_link waits for that).
+    tagsvc::release(false);
 }
 
 void open(lv_obj_t *scr, void (*on_exit)(void)) {

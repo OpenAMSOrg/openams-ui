@@ -120,3 +120,7 @@ extern "C" void tag_writer_console(const char *line) {
 extern "C" const char *tag_writer_reader_name(void) {
     return TW_READER_NAME;
 }
+
+extern "C" bool tag_writer_reader_active(void) {
+    return tagsvc::running();
+}

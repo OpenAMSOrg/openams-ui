@@ -14,6 +14,7 @@
 #if defined(TW_READER_UNIVERSAL)
 #include "tag_reader.h"
 #endif
+#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_task_wdt.h"
 #include "esp_timer.h"
@@ -42,12 +43,16 @@ static bool reader_begun;
 static volatile bool polled;
 static int64_t linger_until;  // after the last release(): when the task leaves
 static bool lingering;
+static bool no_linger;        // the last release() asked to leave at once
 static TaskHandle_t task_handle;
 
 // After the last holder lets go the task waits this long before it leaves, so
 // back-to-back console commands (loadimage, then clone) share one session and
 // its clone image. The field is off while it waits.
 #define LINGER_MS 3000
+
+// The reader task's stack, its largest single allocation.
+#define TASK_STACK 6144
 #if defined(TW_READER_UNIVERSAL)
 static bool codecs_built;
 #endif
@@ -576,7 +581,7 @@ static bool should_exit(bool *idle) {
     xSemaphoreTake(life, portMAX_DELAY);
     if (stop_requested) {
         if (!linger_until) {
-            linger_until = now_ms() + LINGER_MS;
+            linger_until = now_ms() + (no_linger ? 0 : LINGER_MS);
             start_linger = true;
             reader.antenna(false);
         }
@@ -601,6 +606,7 @@ static bool should_exit(bool *idle) {
             task_alive = false;
             task_handle = nullptr;
             stop_requested = false;
+            no_linger = false;
             linger_until = 0;
         }
     } else {
@@ -727,6 +733,7 @@ bool acquire() {
         // Already running (or lingering): keep it. A lingering task must be
         // woken for a fresh poll, so the caller can wait for it.
         stop_requested = false;
+        no_linger = false;
         if (lingering) {
             polled = false;
             started = true;
@@ -738,6 +745,14 @@ bool acquire() {
         // init, bad_alloc); a throw must not escape with `life` still held, or
         // every later acquire/release would deadlock.
         try {
+            // Right after net_link_pause() the websocket client's task has
+            // ended, but its stack goes back to the heap a moment later (the
+            // idle task frees it): wait up to 200 ms for a block the reader
+            // task fits in, rather than fail the session.
+            for (int i = 0; i < 10 && heap_caps_get_largest_free_block(
+                                          MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT) < TASK_STACK + 512;
+                 i++)
+                vTaskDelay(pdMS_TO_TICKS(20));
             if (!reader_begun) {
                 // The SPI bus and the chip come up once and stay up; only the
                 // field and the task come and go.
@@ -767,8 +782,14 @@ bool acquire() {
                 sess = fresh;
                 xSemaphoreGive(lock);
                 task_alive = true;
-                if (xTaskCreatePinnedToCore(task, "rfid", 6144, nullptr, 4, &task_handle, 0) !=
-                    pdPASS) {
+                BaseType_t made = pdFAIL;
+                for (int i = 0; made != pdPASS && i < 5; i++) {
+                    if (i)
+                        vTaskDelay(pdMS_TO_TICKS(20));  // as above: a stack still being freed
+                    made = xTaskCreatePinnedToCore(task, "rfid", TASK_STACK, nullptr, 4,
+                                                   &task_handle, 0);
+                }
+                if (made != pdPASS) {
                     ESP_LOGE(TAG, "no memory for the reader task");
                     task_alive = false;
                     xSemaphoreTake(lock, portMAX_DELAY);
@@ -795,10 +816,11 @@ bool acquire() {
     return started;
 }
 
-void release() {
+void release(bool linger) {
     xSemaphoreTake(life, portMAX_DELAY);
     if (holders > 0 && --holders == 0 && task_alive) {
         stop_requested = true;
+        no_linger = !linger;
         xSemaphoreTake(lock, portMAX_DELAY);
         cancel_requested = true;  // a job still waiting for a tag gives up
         xSemaphoreGive(lock);
@@ -816,6 +838,15 @@ unsigned stack_left() {
 bool ready() {
     xSemaphoreTake(life, portMAX_DELAY);
     bool up = task_alive && !stop_requested;
+    xSemaphoreGive(life);
+    return up;
+}
+
+bool running() {
+    if (!life)
+        return false;  // init() has not run
+    xSemaphoreTake(life, portMAX_DELAY);
+    bool up = task_alive;
     xSemaphoreGive(life);
     return up;
 }
