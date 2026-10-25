@@ -119,7 +119,7 @@ static void build_alert_slot(lv_obj_t *parent, const view_unit_t *u,
 /* The way to the rest of the screens (the menu): the display has no bottom bar
  * on this screen, so the usual hamburger sits at the top left (UNIFIED_UI 4d);
  * the right end stays the unit alert's slot, as on the web. */
-static void build_menu(lv_obj_t *parent, lv_event_cb_t cb, void *user)
+lv_obj_t *ui_unit_header_menu(lv_obj_t *parent, lv_event_cb_t cb, void *user)
 {
     lv_obj_t *b = box(parent, MENU_X, MENU_Y, MENU_W, MENU_H);
     lv_obj_t *l;
@@ -135,6 +135,7 @@ static void build_menu(lv_obj_t *parent, lv_event_cb_t cb, void *user)
                       (MENU_W - text_w(UI_ICON_MENU, UI_HOME_FONT_ICON)) / 2,
                       (MENU_H - lv_font_get_line_height(UI_HOME_FONT_ICON)) / 2);
     lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
+    return b;
 }
 
 lv_obj_t *ui_unit_header(lv_obj_t *parent, const view_unit_t *u,
@@ -155,6 +156,6 @@ lv_obj_t *ui_unit_header(lv_obj_t *parent, const view_unit_t *u,
 
     build_pill(parent, u, env_cb, env_user);
     build_alert_slot(parent, u, alert_cb, alert_user);
-    build_menu(parent, menu_cb, menu_user);
+    ui_unit_header_menu(parent, menu_cb, menu_user);
     return parent;
 }

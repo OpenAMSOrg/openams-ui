@@ -23,4 +23,9 @@ lv_obj_t *ui_unit_header(lv_obj_t *parent, const view_unit_t *u,
                          lv_event_cb_t alert_cb, void *alert_user,
                          lv_event_cb_t menu_cb, void *menu_user);
 
+/** The header's menu glyph alone, in the same place at the top left, for a
+ * home screen with no unit to head (the printer's data has not arrived): the
+ * other screens stay reachable. @p cb fires on a tap. */
+lv_obj_t *ui_unit_header_menu(lv_obj_t *parent, lv_event_cb_t cb, void *user);
+
 #endif /* UI_UNIT_HEADER_H */

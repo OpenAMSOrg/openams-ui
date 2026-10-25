@@ -1101,15 +1101,56 @@ static void link_note(view_toolhead_t *th)
     th->message.tone = VIEW_TONE_INFO;
 }
 
+/* A centred text line of the waiting state: wraps inside @p col's width. */
+static void link_status_line(lv_obj_t *col, const char *text, const lv_font_t *font,
+                             lv_color_t color)
+{
+    lv_obj_t *l = ui_home_label(col, text, font, color, 0, 0);
+
+    lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_WRAP);
+    lv_obj_set_width(l, LV_PCT(100));
+    lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
+}
+
 static void build_link_status(lv_obj_t *scr)
 {
     char note[192];
     lv_obj_t *col;
+    lv_obj_t *badge;
+    lv_obj_t *icon;
 
     if(!link_status_text(note, sizeof note)) note[0] = '\0';
-    col = ui_kit_column(scr, 96, 180);
-    (void)ui_kit_text_row(col, view_str(VS_PANEL_NOT_READY), note[0] ? note : NULL,
-                          UI_ICON_REFRESH, UI_TOK_TEXT_FAINT, NULL, NULL);
+
+    /* The menu keeps its place from the unit header, so Settings and the
+     * other screens stay reachable while there is no printer to show. */
+    (void)ui_unit_header_menu(scr, on_menu, NULL);
+
+    /* The empty state's shape, centred on the screen: an icon on a round
+     * badge, what the display is waiting for, and where the link is. */
+    col = lv_obj_create(scr);
+    lv_obj_remove_style_all(col);
+    lv_obj_set_clickable(col, false);
+    lv_obj_set_scrollable(col, false);
+    lv_obj_set_size(col, UI_HOME_W - 2 * 32, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(col, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_row(col, 8, 0);
+    lv_obj_center(col);
+
+    badge = lv_obj_create(col);
+    lv_obj_remove_style_all(badge);
+    lv_obj_set_clickable(badge, false);
+    lv_obj_set_scrollable(badge, false);
+    lv_obj_set_size(badge, 64, 64);
+    lv_obj_set_style_radius(badge, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_bg_color(badge, UI_TOK_SURFACE_1, 0);
+    lv_obj_set_style_bg_opa(badge, LV_OPA_COVER, 0);
+    lv_obj_set_style_margin_bottom(badge, 6, 0);
+    icon = ui_home_label(badge, UI_ICON_SYNC, UI_FONT_ICON_L, UI_TOK_TEXT_MUTED, 0, 0);
+    lv_obj_center(icon);
+
+    link_status_line(col, view_str(VS_PANEL_NOT_READY), UI_HOME_FONT_TITLE, UI_TOK_TEXT);
+    if(note[0]) link_status_line(col, note, UI_HOME_FONT_BODY, UI_TOK_TEXT_MUTED);
 }
 
 static lv_obj_t *build(void)
