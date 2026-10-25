@@ -1247,6 +1247,10 @@ static void build_settings() {
 // decodable tag on the reader is decoded once (per UID) and shown on the card;
 // removing it, or a blank/unsupported tag, reverts to the editable preset.
 static void update_home_card(const tagsvc::Snapshot &snap) {
+#if !defined(TW_READER_UNIVERSAL)
+    // The MFRC522 image has no universal decode: the card stays the write preset.
+    (void)snap;
+#else
     // Finish a silent decode we started on a previous tick.
     if (home_decoding) {
         if (snap.owner == tagsvc::OWNER_UI && snap.op == tagsvc::OP_DECODE &&
@@ -1297,6 +1301,7 @@ static void update_home_card(const tagsvc::Snapshot &snap) {
         else
             home_try_uid[0] = 0;  // reader busy; retry next tick
     }
+#endif
 }
 
 static void tick(lv_timer_t *) {
