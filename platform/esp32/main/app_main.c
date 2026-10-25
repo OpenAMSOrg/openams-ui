@@ -45,6 +45,10 @@ static const char *TAG = "app_main";
 #define LVGL_TASK_PRIORITY 5
 #define LVGL_TASK_CORE 1
 
+/* The UI task is created before Wi-Fi starts and waits for app_main() to
+ * release it (see lvgl_task). */
+static TaskHandle_t s_lvgl_task;
+
 /* Onboard RGB LED, active low. Left floating it can power up lit; force
  * all three channels off before anything else runs. */
 #define PIN_LED_R 22
@@ -268,6 +272,8 @@ static void ui_diag_print(void)
 static void lvgl_task(void *arg)
 {
     (void)arg;
+    /* Nothing touches LVGL until app_main() has built the first screen. */
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     perf_reset();
     for(;;) {
         int64_t t0 = esp_timer_get_time(), t1, press;
@@ -370,6 +376,20 @@ void app_main(void)
     tag_writer_init();
 #endif
 
+    /* The UI task's 12 KB stack is the largest block the display asks for.
+     * Taken after Wi-Fi starts, it raced the driver's own allocations for a
+     * fragmented heap and could fail, leaving the screen blank with nothing
+     * logged; taken here it comes from a heap nothing else is using yet. The
+     * task waits until app_main() releases it at the end. */
+    if(xTaskCreatePinnedToCore(lvgl_task, "lvgl", LVGL_TASK_STACK_BYTES, NULL, LVGL_TASK_PRIORITY,
+                               &s_lvgl_task, LVGL_TASK_CORE) != pdPASS) {
+        s_lvgl_task = NULL;
+        ESP_LOGE(TAG, "no memory for the UI task (heap free %u, largest block %u) — the screen "
+                      "will stay blank",
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                 (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
+    }
+
     /* NVS is initialized by display_cfg_store_init() above. The serial setup
      * console is always available; Wi-Fi only starts if an SSID is stored, so
      * a factory-fresh display keeps behaving exactly as before (demo mode). */
@@ -415,6 +435,5 @@ void app_main(void)
      * lvgl_task then polls every iteration. */
     ota_rollback_init();
 
-    xTaskCreatePinnedToCore(lvgl_task, "lvgl", LVGL_TASK_STACK_BYTES, NULL, LVGL_TASK_PRIORITY,
-                             NULL, LVGL_TASK_CORE);
+    if(s_lvgl_task) xTaskNotifyGive(s_lvgl_task);
 }

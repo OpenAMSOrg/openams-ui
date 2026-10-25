@@ -27,14 +27,6 @@ namespace openprinttag_data {
         double min_nozzle_diameter = 0.0;
     };
 
-    extern const std::map<int, std::string> MATERIAL_CLASS;
-    extern const std::map<int, std::string> MATERIAL_TYPE;
-    extern const std::map<int, std::string> MATERIAL_TYPE_NAME;
-    extern const std::map<int, MaterialDefaults> MATERIAL_TYPE_DEFAULTS;
-    extern const std::map<int, std::string> TAGS;
-    extern const std::map<int, std::string> CERTIFICATIONS;
-    extern const std::map<int, std::string> WRITE_PROTECTION;
-
     bool lookup_material_defaults(const std::string &material, int &min_temp, int &max_temp);
 }
 

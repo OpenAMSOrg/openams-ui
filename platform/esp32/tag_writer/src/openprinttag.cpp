@@ -15,12 +15,25 @@ namespace openprinttag_data {
 
 const char * const MIME_TYPE = "application/vnd.openprinttag";
 
-const std::map<int, std::string> MATERIAL_CLASS = {
+// The tables are constant arrays, read from flash: a global std::map is built
+// on the heap by a static constructor at boot, whether or not a tag is ever
+// read, and on the display that heap is the printer link's.
+struct EnumName {
+    int key;
+    const char *name;
+};
+
+struct MaterialDefaultsEntry {
+    int type;  // a MATERIAL_TYPE key
+    MaterialDefaults defaults;
+};
+
+const EnumName MATERIAL_CLASS[] = {
     {0, "FFF"},
     {1, "SLA"}
 };
 
-const std::map<int, std::string> MATERIAL_TYPE = {
+const EnumName MATERIAL_TYPE[] = {
     {0, "PLA"},
     {1, "PETG"},
     {2, "TPU"},
@@ -66,7 +79,7 @@ const std::map<int, std::string> MATERIAL_TYPE = {
     {42, "PA612"}
 };
 
-const std::map<int, std::string> MATERIAL_TYPE_NAME = {
+const EnumName MATERIAL_TYPE_NAME[] = {
     {0, "Polylactic Acid"},
     {1, "Polyethylene Terephthalate Glycol"},
     {2, "Thermoplastic Polyurethane"},
@@ -112,7 +125,7 @@ const std::map<int, std::string> MATERIAL_TYPE_NAME = {
     {42, "Polyamide 612"}
 };
 
-const std::map<int, MaterialDefaults> MATERIAL_TYPE_DEFAULTS = {
+const MaterialDefaultsEntry MATERIAL_TYPE_DEFAULTS[] = {
     {0, {180, 220, 0, 60, 25, 15, 35, 45, 240, 160, 45, 1.24, 0.0}},
     {1, {220, 250, 60, 80, 30, 15, 50, 65, 360, 170, 60, 1.27, 0.0}},
     {2, {210, 240, 20, 60, 25, 15, 40, 60, 360, 160, 40, 1.21, 0.4}},
@@ -125,7 +138,7 @@ const std::map<int, MaterialDefaults> MATERIAL_TYPE_DEFAULTS = {
     {19, {200, 225, 60, 75, 25, 15, 45, 55, 360, 160, 50, 1.10, 0.0}}
 };
 
-const std::map<int, std::string> TAGS = {
+const EnumName TAGS[] = {
     {0, "filtration_recommended"},
     {1, "biocompatible"},
     {2, "antibacterial"},
@@ -202,13 +215,13 @@ const std::map<int, std::string> TAGS = {
     {74, "acetone_soluble"}
 };
 
-const std::map<int, std::string> CERTIFICATIONS = {
+const EnumName CERTIFICATIONS[] = {
     {0, "ul_2818"},
     {1, "ul_94_v0"},
     {2, "ul_2904"}
 };
 
-const std::map<int, std::string> WRITE_PROTECTION = {
+const EnumName WRITE_PROTECTION[] = {
     {0, "no"},
     {1, "irreversible"},
     {2, "protect_page_unlockable"}
@@ -217,15 +230,16 @@ const std::map<int, std::string> WRITE_PROTECTION = {
 bool lookup_material_defaults(const std::string &material, int &min_temp, int &max_temp) {
     std::string mat_upper = material;
     for (char &c : mat_upper) c = toupper(static_cast<unsigned char>(c));
-    for (const auto &kv : MATERIAL_TYPE) {
-        std::string name_upper = kv.second;
+    for (const EnumName &type : MATERIAL_TYPE) {
+        std::string name_upper = type.name;
         for (char &c : name_upper) c = toupper(static_cast<unsigned char>(c));
         if (name_upper == mat_upper) {
-            auto it = MATERIAL_TYPE_DEFAULTS.find(kv.first);
-            if (it != MATERIAL_TYPE_DEFAULTS.end()) {
-                min_temp = it->second.min_print_temperature;
-                max_temp = it->second.max_print_temperature;
-                return min_temp > 0 && max_temp > 0;
+            for (const MaterialDefaultsEntry &e : MATERIAL_TYPE_DEFAULTS) {
+                if (e.type == type.key) {
+                    min_temp = e.defaults.min_print_temperature;
+                    max_temp = e.defaults.max_print_temperature;
+                    return min_temp > 0 && max_temp > 0;
+                }
             }
         }
     }
@@ -240,14 +254,26 @@ struct FieldDesc {
     const char *enum_table;
 };
 
-static const std::map<int, FieldDesc> META_FIELDS = {
+struct Field {
+    int key;
+    FieldDesc desc;
+};
+
+template <size_t N>
+static const FieldDesc *find_field(const Field (&table)[N], int key) {
+    for (const Field &f : table)
+        if (f.key == key) return &f.desc;
+    return nullptr;
+}
+
+static const Field META_FIELDS[] = {
     {0, {"main_region_offset", "int", nullptr}},
     {1, {"main_region_size", "int", nullptr}},
     {2, {"aux_region_offset", "int", nullptr}},
     {3, {"aux_region_size", "int", nullptr}}
 };
 
-static const std::map<int, FieldDesc> MAIN_FIELDS = {
+static const Field MAIN_FIELDS[] = {
     {0, {"instance_uuid", "uuid", nullptr}},
     {1, {"package_uuid", "uuid", nullptr}},
     {2, {"material_uuid", "uuid", nullptr}},
@@ -308,7 +334,7 @@ static const std::map<int, FieldDesc> MAIN_FIELDS = {
     {60, {"primary_color_ral", "string", nullptr}}
 };
 
-static const std::map<int, FieldDesc> AUX_FIELDS = {
+static const Field AUX_FIELDS[] = {
     {0, {"consumed_weight", "number", nullptr}},
     {1, {"workgroup", "string", nullptr}},
     {2, {"general_purpose_range_user", "string", nullptr}},
@@ -442,13 +468,22 @@ static cbor::CborValue compact_float(double num) {
     return cbor::CborValue::from_float(num);
 }
 
-static const std::map<int, std::string> *get_enum_table(const char *name) {
-    if (!name) return nullptr;
-    if (std::strcmp(name, "MATERIAL_CLASS") == 0) return &openprinttag_data::MATERIAL_CLASS;
-    if (std::strcmp(name, "MATERIAL_TYPE") == 0) return &openprinttag_data::MATERIAL_TYPE;
-    if (std::strcmp(name, "TAGS") == 0) return &openprinttag_data::TAGS;
-    if (std::strcmp(name, "CERTIFICATIONS") == 0) return &openprinttag_data::CERTIFICATIONS;
-    if (std::strcmp(name, "WRITE_PROTECTION") == 0) return &openprinttag_data::WRITE_PROTECTION;
+template <size_t N>
+static const char *find_name(const openprinttag_data::EnumName (&table)[N], int key) {
+    for (const openprinttag_data::EnumName &e : table)
+        if (e.key == key) return e.name;
+    return nullptr;
+}
+
+// The name of value @p key in the enum table called @p table; nullptr for an
+// unknown table or value.
+static const char *enum_name(const char *table, int key) {
+    if (!table) return nullptr;
+    if (std::strcmp(table, "MATERIAL_CLASS") == 0) return find_name(openprinttag_data::MATERIAL_CLASS, key);
+    if (std::strcmp(table, "MATERIAL_TYPE") == 0) return find_name(openprinttag_data::MATERIAL_TYPE, key);
+    if (std::strcmp(table, "TAGS") == 0) return find_name(openprinttag_data::TAGS, key);
+    if (std::strcmp(table, "CERTIFICATIONS") == 0) return find_name(openprinttag_data::CERTIFICATIONS, key);
+    if (std::strcmp(table, "WRITE_PROTECTION") == 0) return find_name(openprinttag_data::WRITE_PROTECTION, key);
     return nullptr;
 }
 
@@ -476,27 +511,19 @@ static std::string decode_field_val_string(const cbor::CborValue &val, const cha
     }
     if (std::strcmp(type_name, "enum") == 0) {
         int key = static_cast<int>(val.as_int64());
-        const auto *tbl = get_enum_table(enum_table);
-        if (tbl) {
-            auto it = tbl->find(key);
-            if (it != tbl->end()) return it->second;
-        }
+        const char *name = enum_name(enum_table, key);
+        if (name) return name;
         return std::to_string(key);
     }
     if (std::strcmp(type_name, "enum_array") == 0) {
-        const auto *tbl = get_enum_table(enum_table);
         std::string out = "[";
         if (val.is_array()) {
             for (size_t i = 0; i < val.as_array().size(); ++i) {
                 if (i > 0) out += ", ";
                 int key = static_cast<int>(val.as_array()[i].as_int64());
-                if (tbl) {
-                    auto it = tbl->find(key);
-                    if (it != tbl->end()) out += it->second;
-                    else out += std::to_string(key);
-                } else {
-                    out += std::to_string(key);
-                }
+                const char *name = enum_name(enum_table, key);
+                if (name) out += name;
+                else out += std::to_string(key);
             }
         }
         out += "]";
@@ -808,9 +835,9 @@ bool OpenPrintTagCodec::decode(const Tag &tag, DecodeResult &out) {
     for (const auto &kv : main_cbor.as_map()) {
         if (kv.first.is_int()) {
             int k = static_cast<int>(kv.first.as_int64());
-            auto it = MAIN_FIELDS.find(k);
-            if (it != MAIN_FIELDS.end()) {
-                main_dict[it->second.name] = decode_field_val_string(kv.second, it->second.type, it->second.enum_table);
+            const FieldDesc *f = find_field(MAIN_FIELDS, k);
+            if (f) {
+                main_dict[f->name] = decode_field_val_string(kv.second, f->type, f->enum_table);
             }
         }
     }
@@ -823,9 +850,9 @@ bool OpenPrintTagCodec::decode(const Tag &tag, DecodeResult &out) {
             for (const auto &kv : aux_cbor.as_map()) {
                 if (kv.first.is_int()) {
                     int k = static_cast<int>(kv.first.as_int64());
-                    auto it = AUX_FIELDS.find(k);
-                    if (it != AUX_FIELDS.end()) {
-                        aux_dict[it->second.name] = decode_field_val_string(kv.second, it->second.type, it->second.enum_table);
+                    const FieldDesc *f = find_field(AUX_FIELDS, k);
+                    if (f) {
+                        aux_dict[f->name] = decode_field_val_string(kv.second, f->type, f->enum_table);
                     }
                 }
             }
@@ -990,11 +1017,11 @@ bool OpenPrintTagCodec::encode(Tag &tag, const Filament &fields, std::string &er
         std::string mat_upper = fields.material;
         for (char &c : mat_upper) c = toupper(static_cast<unsigned char>(c));
         bool matched = false;
-        for (const auto &kv : openprinttag_data::MATERIAL_TYPE) {
-            std::string abbrev_upper = kv.second;
+        for (const openprinttag_data::EnumName &type : openprinttag_data::MATERIAL_TYPE) {
+            std::string abbrev_upper = type.name;
             for (char &c : abbrev_upper) c = toupper(static_cast<unsigned char>(c));
             if (abbrev_upper == mat_upper) {
-                main_val.set(9, cbor::CborValue::from_int(kv.first)); // material_type enum
+                main_val.set(9, cbor::CborValue::from_int(type.key)); // material_type enum
                 matched = true;
                 break;
             }

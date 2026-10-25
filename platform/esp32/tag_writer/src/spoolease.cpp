@@ -17,7 +17,14 @@ struct SpoolEaseExt {
     int drying_hours;
 };
 
-static const std::map<std::string, SpoolEaseExt> EXTENDED_DATA = {
+struct SpoolEaseMaterial {
+    const char *material;
+    SpoolEaseExt ext;
+};
+
+// A constant array, read from flash: a global std::map would be built on the
+// heap at boot, whether or not a tag is ever read.
+static const SpoolEaseMaterial EXTENDED_DATA[] = {
     {"ABS",      {95,  80,  8}},
     {"ABS-GF",   {95,  80,  8}},
     {"ABS-S",    {95,  80,  8}},
@@ -55,6 +62,12 @@ static const std::map<std::string, SpoolEaseExt> EXTENDED_DATA = {
     {"TPU",      {38,  70,  8}},
     {"TPU-AMS",  {33,  70,  8}},
 };
+
+static const SpoolEaseExt *find_extended(const std::string &material) {
+    for (const SpoolEaseMaterial &m : EXTENDED_DATA)
+        if (material == m.material) return &m.ext;
+    return nullptr;
+}
 
 static std::string get_alias(const std::string &m) {
     if (m == "ABS-S") return "ABS";
@@ -292,15 +305,15 @@ bool SpoolEaseCodec::parse_uri(const std::string &uri, DecodeResult &out) {
     int bed_min = 0, bed_max = 0;
     int drying_temp = 0, drying_time_min = 0;
 
-    auto it_ext = EXTENDED_DATA.find(raw_mat);
-    if (it_ext == EXTENDED_DATA.end()) {
-        it_ext = EXTENDED_DATA.find(material);
+    const SpoolEaseExt *ext = find_extended(raw_mat);
+    if (!ext) {
+        ext = find_extended(material);
     }
-    if (it_ext != EXTENDED_DATA.end()) {
-        bed_min = it_ext->second.bed_temp;
-        bed_max = it_ext->second.bed_temp;
-        drying_temp = it_ext->second.drying_temp;
-        drying_time_min = it_ext->second.drying_hours * 60;
+    if (ext) {
+        bed_min = ext->bed_temp;
+        bed_max = ext->bed_temp;
+        drying_temp = ext->drying_temp;
+        drying_time_min = ext->drying_hours * 60;
     }
 
     Filament fil;

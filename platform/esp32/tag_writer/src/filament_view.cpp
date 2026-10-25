@@ -32,7 +32,12 @@ std::string humanize_key(const std::string &k) {
 }
 
 std::string humanize_format(const std::string &fmt) {
-    static const std::map<std::string, std::string> known = {
+    // A constant array: a function-local static std::map would take heap on
+    // the first call and keep it for good.
+    static const struct {
+        const char *format;
+        const char *name;
+    } known[] = {
         {"openspool", "OpenSpool"},
         {"spoolman", "Spoolman"},
         {"openprinttag", "OpenPrintTag"},
@@ -46,9 +51,10 @@ std::string humanize_format(const std::string &fmt) {
         {"qidi", "QIDI"},
         {"bambu", "Bambu"},
     };
-    auto it = known.find(fmt);
-    if (it != known.end()) {
-        return it->second;
+    for (const auto &k : known) {
+        if (fmt == k.format) {
+            return k.name;
+        }
     }
     if (fmt.empty()) {
         return "";
