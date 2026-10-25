@@ -56,6 +56,7 @@ void actions_log(const char *fmt, ...)
 typedef struct {
     char frames[MAX_FRAMES][FRAME_MAX];
     int sent;
+    int refuse_sends;   /* refuse this many sends, as a transport with no heap */
 
     int link_count;
     mc_link_t links[24];
@@ -109,6 +110,10 @@ static int serialize(const cJSON *item, char *dst, size_t dst_size)
 static bool h_send(void *ctx, const char *text, size_t len)
 {
     (void)ctx;
+    if(h.refuse_sends > 0) {
+        h.refuse_sends--;
+        return false;
+    }
     assert(h.sent < MAX_FRAMES);
     assert(len < FRAME_MAX);
     memcpy(h.frames[h.sent], text, len);
@@ -738,6 +743,44 @@ static void test_internal_timeout_restarts(void)
     mc_deinit();
 }
 
+/* A handshake request the transport refused (on the ESP32, no heap for the
+ * frame right after the tag writer closed) times out like a lost answer and
+ * the handshake starts over, rather than leaving the link CONNECTING with
+ * nothing pending. */
+static void test_unsent_handshake_retries(void)
+{
+    cJSON *info = cJSON_CreateObject();
+
+    printf("unsent_handshake_retries\n");
+    reset();
+    mc_init(&cbs, NULL);
+    h.refuse_sends = 1;
+    mc_on_connected(0);
+    assert(h.sent == 0);
+    assert(mc_link() == MC_LINK_CONNECTING);
+
+    mc_poll(9999);
+    assert(h.sent == 0);
+    mc_poll(10000);
+    assert(h.sent == 1);
+    assert_frame_method(0, "server.info", 2);
+    assert(mc_link() == MC_LINK_CONNECTING);
+
+    /* The same for a later handshake step: printer.objects.list refused. */
+    cJSON_AddBoolToObject(info, "klippy_connected", true);
+    cJSON_AddStringToObject(info, "klippy_state", "ready");
+    h.refuse_sends = 1;
+    reply_result(2, 10000, info);
+    assert(h.sent == 1);
+    mc_poll(19999);
+    assert(h.sent == 1);
+    mc_poll(20000);
+    assert(h.sent == 2);
+    assert_frame_method(1, "server.info", 4);
+
+    mc_deinit();
+}
+
 static void test_disconnect_backoff(void)
 {
     cJSON *ui = fixture_payload("openams_ui");
@@ -1249,6 +1292,7 @@ int main(void)
     test_gcode_timeout();
     test_gcode_run_timeout();
     test_internal_timeout_restarts();
+    test_unsent_handshake_retries();
     test_disconnect_backoff();
     test_klippy_wait();
     test_klippy_restart();

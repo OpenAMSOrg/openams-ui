@@ -187,6 +187,21 @@ static void mc_pending_add(int id, mc_req_kind_t kind, int tag, uint32_t deadlin
 }
 
 /**
+ * A request that could not be built or queued (no heap for its frame, or the
+ * transport refused it). A gcode or RPC caller is told by the -1. A handshake
+ * request has no caller to tell, and with nothing pending nothing would ever
+ * time out: the link stayed CONNECTING for good (on the ESP32, right after
+ * the tag writer handed the heap back). So it waits out its deadline as if
+ * its answer were lost, and mc_poll() then redoes the handshake.
+ */
+static int mc_send_failed(int id, mc_req_kind_t kind, uint32_t timeout_ms)
+{
+    if(kind != MC_REQ_GCODE && kind != MC_REQ_RPC)
+        mc_pending_add(id, kind, 0, g_mc.now_ms + timeout_ms);
+    return -1;
+}
+
+/**
  * Build and send one JSON-RPC request, taking ownership of @p params, and wait
  * @p timeout_ms for its answer. Returns the id sent, or -1 when the frame could
  * not be built or queued.
@@ -203,7 +218,7 @@ static int mc_send_request_within(const char *method, cJSON *params, mc_req_kind
     root = cJSON_CreateObject();
     if(!root) {
         cJSON_Delete(params);
-        return -1;
+        return mc_send_failed(id, kind, timeout_ms);
     }
     cJSON_AddStringToObject(root, "jsonrpc", "2.0");
     cJSON_AddStringToObject(root, "method", method);
@@ -212,12 +227,12 @@ static int mc_send_request_within(const char *method, cJSON *params, mc_req_kind
 
     text = cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
-    if(!text) return -1;
+    if(!text) return mc_send_failed(id, kind, timeout_ms);
 
     len = strlen(text);
     if(!g_mc.cb.send_text || !g_mc.cb.send_text(g_mc.cb.ctx, text, len)) {
         free(text);
-        return -1;
+        return mc_send_failed(id, kind, timeout_ms);
     }
     free(text);
 
@@ -260,6 +275,8 @@ static void mc_send_subscribe(uint32_t now_ms)
     if(!params || !objects) {
         cJSON_Delete(params);
         cJSON_Delete(objects);
+        g_mc.now_ms = now_ms;
+        mc_send_failed(++g_mc.next_id, MC_REQ_SUBSCRIBE, MC_REQUEST_TIMEOUT_MS);
         return;
     }
     cJSON_AddItemToObject(params, "objects", objects);
