@@ -66,16 +66,23 @@ static bool cancel_requested;
 static bool key_pending;
 static uint8_t pending_key[bambu::MASTER_KEY_SIZE];
 
+#define IMAGE_SIZE 1024  // a MIFARE Classic 1K image
+
 // Everything a session needs beyond the snapshot, on the heap while the task
 // runs (acquire() to the task's exit) instead of in static RAM for good: the
 // display needs that heap for its printer link the rest of the time. Guarded
 // by `lock`; nullptr when no session is open.
+//
+// The three tag images are 1 KB blocks of their own, not part of one 3.8 KB
+// struct: right after the printer link pauses, the heap has room for several
+// small blocks but often only one large one, and the reader task's stack
+// needs that one (a console command's reader failed to start that way).
 struct Session {
-    uint8_t image[1024];      // the clone image buffer: a captured or PC-loaded genuine tag
+    uint8_t *image = new (std::nothrow) uint8_t[IMAGE_SIZE]();    // the clone image buffer: a captured or PC-loaded genuine tag
     bool image_valid;
-    uint8_t dump[1024];       // after OP_DUMP
+    uint8_t *dump = new (std::nothrow) uint8_t[IMAGE_SIZE]();     // after OP_DUMP
     bool dump_ok[64];
-    uint8_t scratch[1024];    // a capture's or a clone's working copy (one job at a time)
+    uint8_t *scratch = new (std::nothrow) uint8_t[IMAGE_SIZE]();  // a capture's or a clone's working copy (one job at a time)
 #if defined(TW_READER_UNIVERSAL)
     DecodeResult decode;      // after OP_DECODE
     char decode_type[24];
@@ -86,6 +93,16 @@ struct Session {
     int write_written;
     char write_msg[96];
 #endif
+
+    Session() = default;
+    Session(const Session &) = delete;
+    Session &operator=(const Session &) = delete;
+    ~Session() {
+        delete[] image;
+        delete[] dump;
+        delete[] scratch;
+    }
+    bool complete() const { return image && dump && scratch; }
 };
 static Session *sess;
 
@@ -147,7 +164,7 @@ void acknowledge() {
 void dump_result(uint8_t *image, bool *ok) {
     xSemaphoreTake(lock, portMAX_DELAY);
     if (sess) {
-        memcpy(image, sess->dump, sizeof(sess->dump));
+        memcpy(image, sess->dump, IMAGE_SIZE);
         memcpy(ok, sess->dump_ok, sizeof(sess->dump_ok));
     } else {
         memset(image, 0, 1024);
@@ -167,7 +184,7 @@ bool load_image(const uint8_t image[1024], const char **why) {
             *why = "the reader is not in use";
         return false;
     }
-    memcpy(sess->image, image, sizeof(sess->image));
+    memcpy(sess->image, image, IMAGE_SIZE);
     sess->image_valid = true;
     state.image_valid = true;
     state.image_info = info;
@@ -179,7 +196,7 @@ bool load_image(const uint8_t image[1024], const char **why) {
 void get_image(uint8_t image[1024], bool *valid) {
     xSemaphoreTake(lock, portMAX_DELAY);
     if (sess)
-        memcpy(image, sess->image, sizeof(sess->image));
+        memcpy(image, sess->image, IMAGE_SIZE);
     else
         memset(image, 0, 1024);
     if (valid)
@@ -748,9 +765,10 @@ bool acquire() {
             // Right after net_link_pause() the websocket client's task has
             // ended, but its stack goes back to the heap a moment later (the
             // idle task frees it): wait up to 200 ms for a block the reader
-            // task fits in, rather than fail the session.
+            // task's stack fits in (its TCB is allocated on its own), rather
+            // than fail the session.
             for (int i = 0; i < 10 && heap_caps_get_largest_free_block(
-                                          MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT) < TASK_STACK + 512;
+                                          MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT) < TASK_STACK + 64;
                  i++)
                 vTaskDelay(pdMS_TO_TICKS(20));
             if (!reader_begun) {
@@ -775,6 +793,10 @@ bool acquire() {
             polled = false;
             stop_requested = false;
             Session *fresh = new (std::nothrow) Session();
+            if (fresh && !fresh->complete()) {
+                delete fresh;
+                fresh = nullptr;
+            }
             if (!fresh) {
                 ESP_LOGE(TAG, "no memory for a reader session");
             } else {
@@ -790,7 +812,10 @@ bool acquire() {
                                                    &task_handle, 0);
                 }
                 if (made != pdPASS) {
-                    ESP_LOGE(TAG, "no memory for the reader task");
+                    ESP_LOGE(TAG, "no memory for the reader task (heap free %u, largest block %u)",
+                             (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                             (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL |
+                                                                        MALLOC_CAP_8BIT));
                     task_alive = false;
                     xSemaphoreTake(lock, portMAX_DELAY);
                     delete sess;
