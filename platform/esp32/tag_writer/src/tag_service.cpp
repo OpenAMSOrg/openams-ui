@@ -302,6 +302,17 @@ static void finish_job(const tagops::Card &card, const tagops::Result &r,
 }
 
 #if defined(TW_READER_UNIVERSAL)
+// The tag on the reader after a universal job, under `lock`. The job knows the
+// tag's UID but not its kind (genuine, blank, ...), which the polls found: the
+// same tag keeps the polled kind. Marking it unsupported made the home card
+// drop the decode it had just shown, for the default spool, until the next
+// poll classified the tag again and the card decoded it again.
+static void set_present_after_job(const tagops::Card &card) {
+    if (!state.present || !tagops::same_uid(state.card.uid, card.uid))
+        state.card = card;
+    state.present = true;
+}
+
 // Universal read: poll with the protocol-agnostic reader, then read all of
 // the tag's memory and decode it across every registered format codec.
 static void run_decode() {
@@ -341,8 +352,7 @@ static void run_decode() {
             state.result = {dr.recognized, Reader::OK, 0xFF,
                             dr.recognized ? "recognized" : "unrecognized"};
             state.info_ok = false;
-            state.present = true;
-            state.card = card;
+            set_present_after_job(card);
             state.phase = DONE;
             touch_state();
             xSemaphoreGive(lock);
@@ -424,8 +434,7 @@ static void run_write_universal() {
             state.job_card = card;
             state.result = {ok, Reader::OK, 0xFF, ok ? "written" : "write failed"};
             state.info_ok = false;
-            state.present = true;
-            state.card = card;
+            set_present_after_job(card);  // the next poll classifies what was written
             state.phase = DONE;
             touch_state();
             xSemaphoreGive(lock);
