@@ -1116,12 +1116,9 @@ static void build_library() {
     }
     lib->material_n = taglib::list_materials(lib->materials, LIB_MAX);
     if (lib->material_n == 0) {
-        lv_obj_t *l = text(scr, TW_FONT_20, C_MUTED,
-                           "Library empty");
+        lv_obj_t *l = text(scr, TW_FONT_20, C_MUTED, "Nothing to clone from");
         lv_obj_align(l, LV_ALIGN_CENTER, 0, PX(-20));
-        lv_obj_t *h = text(scr, TW_FONT_14, C_MUTED,
-                           "Upload genuine tags from a PC:\n"
-                           "tools/tagtool.py libflash --lib <dir>");
+        lv_obj_t *h = text(scr, TW_FONT_14, C_MUTED, taglib::status_text());
         lv_obj_set_style_text_align(h, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_align(h, LV_ALIGN_CENTER, 0, PX(30));
         show(scr, LIBRARY);
@@ -1304,11 +1301,16 @@ static void build_settings() {
                           snap.version, snap.reader_ok ? "" : " (not responding)",
                           snap.key_set ? snap.key_fingerprint : "not set", spool::date(),
                           esp_app_get_description()->version);
-    // Cloning (for stock AMS): from the on-device library, or by copying a
-    // physical genuine tag. For OpenAMS bays, Write on the home screen is enough.
+    // Cloning (for stock AMS): from the tag library, or by copying a physical
+    // genuine tag. For OpenAMS bays, Write on the home screen is enough. The
+    // count is the one already known: OpenAMS is asked when the library opens.
     char lib_label[40];
-    snprintf(lib_label, sizeof(lib_label), LV_SYMBOL_COPY "  Clone from library (%d)",
-             taglib::count());
+    int lib_count = taglib::count();
+    if (lib_count >= 0)
+        snprintf(lib_label, sizeof(lib_label), LV_SYMBOL_COPY "  Clone from library (%d)",
+                 lib_count);
+    else
+        snprintf(lib_label, sizeof(lib_label), LV_SYMBOL_COPY "  Clone from library");
     button(scr, 12, 150, 456, 46, lib_label, C_ACCENT, on_settings, (void *)4);
     button(scr, 12, 204, 456, 42, "Copy a physical tag", C_BUTTON, on_settings, (void *)3);
     button(scr, 12, 252, 456, 42, "Reset a tag to blank", C_BUTTON, on_settings, (void *)2);

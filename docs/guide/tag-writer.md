@@ -10,8 +10,8 @@ wired to the board, **Menu → Tag writer** opens a screen that:
 - reads any filament tag the reader can see and shows what it says, with
   "Use these settings" to copy it into the spool you are composing;
 - resets a tag it wrote back to factory keys, copies a genuine Bambu tag and
-  clones it onto a magic tag (for a stock AMS), from the tag itself or from an
-  on-device library of captured tags.
+  clones it onto a magic tag (for a stock AMS), from the tag itself or from a
+  library of genuine tags that OpenAMS serves ([the tag library](#the-tag-library)).
 
 The display keeps running underneath: its link to the printer stays up, and
 the reader only runs while the tag writer screen is open (or a console command
@@ -135,18 +135,20 @@ idf.py build flash monitor
 |---|---|---|
 | `MMU_SPOOL_TAG_WRITER` | `ON` | `OFF` builds the display alone |
 | `MMU_TAG_READER` | `PN5180` | `MFRC522` for the original reader |
+| `MMU_TAG_LIBRARY` | `openams` | `board` keeps the [tag library](#the-tag-library) in the board's own flash (5 inch only) |
 
 `MMU_LANGUAGES` works as for every image (see the [README](../../README.md)).
 `make menuconfig` has the same choices in a menu
 ([flash-and-setup.md](flash-and-setup.md#install)).
 
-An image with the tag writer has its own partition table,
-`platform/esp32/partitions_tagwriter.csv`: one app partition and the tag
-library (1,599 tags), instead of the two OTA slots. A 4 MB flash holds
-one or the other, so **an image with the tag writer is updated over USB**,
-not with `ota`. Its settings live in a separate generated `sdkconfig.tagwriter`,
-so switching the option needs no clean-up. Flashing over USB from one layout to
-the other keeps your Wi-Fi, Moonraker and touch settings (NVS does not move).
+On the 4 inch board an image with the tag writer has its own partition table,
+`platform/esp32/partitions_tagwriter.csv`: one app partition the size of the
+flash instead of the two OTA slots, which the image does not fit. So **a 4
+inch image with the tag writer is updated over USB**, not with `ota`. Its
+settings live in a separate generated `sdkconfig.tagwriter`, so switching the
+option needs no clean-up. Flashing over USB from one layout to the other keeps
+your Wi-Fi, Moonraker and touch settings (NVS does not move). The 5 inch board
+has one layout for every image, with its two OTA slots.
 
 ## First use
 
@@ -171,7 +173,7 @@ The home page shows the spool you are composing and what is on the reader.
 | Material / Color / Details | edit the spool |
 | Read | read the tag on the reader (any type and format with a PN5180) |
 | Write | write the spool to a blank or custom MIFARE Classic 1K tag, then verify it |
-| Clone | clone a tag from the on-device library onto a magic tag; each clone takes a UID of that colour not cloned before, so two spools never share one |
+| Clone | clone a tag from the [tag library](#the-tag-library) onto a magic tag; each clone takes a UID of that colour not cloned before, so two spools never share one |
 | Gear | copy a physical tag, clone from the library, reset a tag to blank |
 | Back arrow | return to the display |
 
@@ -188,30 +190,56 @@ prefix; `tag help` lists them.
 | `tag write` / `tag erase yes` | write the spool (Bambu layout) / reset a tag to factory keys |
 | `tag dump`, `tag magic` | all 64 blocks as hex; identify a magic tag |
 | `tag capture`, `tag loadimage`, `tag image`, `tag clone` | the clone image buffer |
-| `tag libadd`, `tag liblist`, `tag libclear yes` | add one tag to the on-device library, list it, erase it |
+| `tag libadd`, `tag liblist`, `tag libcount` | add one tag to the library, list it, count it |
+| `tag libclear yes` | erase the library, when it is on the board |
 | `tag key <32 hex>` / `tag key clear` | store or forget the Bambu master key |
 
 `tools/tagtool.py` drives these from a PC: `clonefrom` clones one tag from a
 folder of dumps, `cmd` sends any command.
 
-## The on-device library
+## The tag library
 
-The library holds genuine tag dumps to clone from the touchscreen: 1,599 on
-the 4 inch board, 7,475 on the 5 inch one, which holds every dump in the
+The library holds genuine tag dumps to clone from the touchscreen: every dump
+in the
 [Bambu-Lab-RFID-Library](https://github.com/queengooborg/Bambu-Lab-RFID-Library)
-(7,026 distinct tags in 272 colours as of 27 October 2026). Fill it from a
-checkout of that library over USB:
+(7,026 distinct tags in 272 colours as of 27 October 2026).
+
+### From OpenAMS (the default)
+
+OpenAMS serves the library from the printer host, through Moonraker: its
+`openams_taglib` component, which the OpenAMS installer sets up. Nothing is
+stored on the board, so the 4 inch board gets the whole library too.
+
+- The display finds OpenAMS at the Moonraker address it already uses
+  (`moonraker ws://host:port/websocket`).
+- The first time the library is opened, OpenAMS downloads it (about 200 MB);
+  the display says so meanwhile. OpenAMS keeps it there and updates it on
+  request (`POST /server/openams/taglib/update`).
+- OpenAMS remembers which tags were cloned, so every display on the printer
+  offers a UID not cloned before.
+- `tag libadd` (and `tools/tagtool.py libupload`) add a tag to the library on
+  OpenAMS.
+- Each page of the library is one request to the printer: the display waits
+  for it, a few seconds at most when the printer does not answer, and then
+  says why the list is empty.
+
+### On the board (5 inch only)
+
+The 5 inch board can keep the library in its own flash (7,475 tags, enough
+for all of it), to clone without the printer: **Tag library → On the board** in
+`make menuconfig`, or `-DMMU_TAG_LIBRARY=board`. Fill it from a checkout of
+the library over USB:
 
 ```sh
 python tools/tagtool.py libflash --lib ~/Bambu-Lab-RFID-Library
 ```
 
-From `platform/esp32`, `make` can do it for you: turn on **Bambu Lab tag
-library** in `make menuconfig` and say where the checkout is (`make` clones it
-there the first time, about 200 MB). `make flash` then writes the library after
-the firmware, but only when it changed since the last flash, which saves a
-minute. `make libupdate` pulls the newest tags into the checkout, and
-`make libflash` writes the library now.
+From `platform/esp32`, `make` can do it for you: turn on **Write the Bambu Lab
+tag library with make flash** in `make menuconfig` and say where the checkout
+is (`make` clones it there the first time, about 200 MB). `make flash` then
+writes the library after the firmware, but only when it changed since the last
+flash, which saves a minute. `make libupdate` pulls the newest tags into the
+checkout, and `make libflash` writes the library now.
 
 `libflash` reads the display's partition table, builds the whole library and
 flashes it in about a minute (through the bootloader, so the display restarts;

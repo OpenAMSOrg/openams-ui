@@ -50,9 +50,10 @@ into the `-D` options below, so `make` is `idf.py` with the options filled in.
 Each board builds in its own directory, `build-<board>`. A choice on the
 command line overrides the menu (`make BOARD=es3c50p flash`), and `make help`
 lists the rest: `make size`, `make clean`, and `make idf-menuconfig` for
-ESP-IDF's own settings of the chosen board. With **Bambu Lab tag library**
-turned on, `make flash` also writes that library into the board's tag library
-([tag-writer.md](tag-writer.md#the-on-device-library)).
+ESP-IDF's own settings of the chosen board. **Tag library** says where the
+tag writer's library of genuine tags comes from: OpenAMS on the printer host
+(the default), or, on the 5 inch board, the board's own flash, which `make
+flash` can also fill ([tag-writer.md](tag-writer.md#the-tag-library)).
 
 A build directory that another ESP-IDF Python or another checkout set up (after
 reinstalling ESP-IDF, say, or moving the checkout) cannot be reused: `make`
@@ -217,10 +218,11 @@ Stored Wi-Fi and Moonraker settings survive an update. A board flashed with the
 old single-app layout needs one USB flash of the new partition table first
 (`idf.py flash`).
 
-An image with the spool tag writer (the default build) has no second app slot:
-it keeps its tag library there instead, so update it over USB with
+On the 4 inch board an image with the spool tag writer (the default build)
+has no second app slot: it does not fit one, so update it over USB with
 `idf.py flash` ([tag-writer.md](tag-writer.md)). Build with
-`-DMMU_SPOOL_TAG_WRITER=OFF` for a display that updates over the air.
+`-DMMU_SPOOL_TAG_WRITER=OFF` for a 4 inch display that updates over the air.
+The 5 inch board updates over the air with or without it.
 
 There is nothing to uninstall on the printer. Reflash the board, or erase it
 with `idf.py erase-flash`, which also clears the stored settings.

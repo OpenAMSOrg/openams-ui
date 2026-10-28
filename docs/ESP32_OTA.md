@@ -44,11 +44,10 @@ configured — 60 s have passed since the UI started. The decision logic
 
 ## Images with the spool tag writer
 
-An image built with the spool tag writer (the default; see
-[guide/tag-writer.md](guide/tag-writer.md)) uses
-`platform/esp32/partitions_tagwriter.csv`: one `factory` app and the tag
-library instead of the two slots, so it is flashed over USB and `ota <url>`
-says so. Flashing between the two layouts over USB keeps `nvs`, so the stored
+A 4 inch image built with the spool tag writer (the default; see
+[guide/tag-writer.md](guide/tag-writer.md)) is too large for one of the two
+slots, so it uses `platform/esp32/partitions_tagwriter.csv`: one `factory` app
+the size of the flash. It is flashed over USB and `ota <url>` says so. Flashing between the two layouts over USB keeps `nvs`, so the stored
 settings survive either way. Build with `-DMMU_SPOOL_TAG_WRITER=OFF` to keep
 over-the-air updates.
 

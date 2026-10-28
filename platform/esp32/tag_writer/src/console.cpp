@@ -47,9 +47,14 @@ static const char HELP[] =
     "  loadimage              load the image buffer from 64 hex lines (PC lib)\n"
     "  image                  print the image buffer (64 hex lines)\n"
     "  clone                  write the image buffer onto a magic tag\n"
+#if defined(TW_TAGLIB_REMOTE)
+    "  libadd <mat>|<color>   store a genuine tag in the library on OpenAMS\n"
+    "  liblist / libcount     the library on OpenAMS\n"
+#else
     "  libadd <mat>|<color>   store a genuine tag in the on-device library\n"
     "  liblist / libcount     the on-device library\n"
     "  libclear yes           empty (and format) the library\n"
+#endif
     "  scan                   the tag on the reader, if any\n"
     "  read                   decode the tag as JSON (Bambu layout)\n"
 #if defined(TW_READER_UNIVERSAL)
@@ -562,8 +567,15 @@ static void cmd_liblist() {
         printf("ERROR no memory\n");
         return;
     }
-    printf("library: %d of %d entries\n", taglib::count(), taglib::slot_count());
     int nm = taglib::list_materials(l->materials, MAX);
+#if defined(TW_TAGLIB_REMOTE)
+    if (!nm)
+        printf("library on OpenAMS: %s\n", taglib::status_text());
+    else
+        printf("library on OpenAMS: %d entries\n", taglib::count());
+#else
+    printf("library: %d of %d entries\n", taglib::count(), taglib::slot_count());
+#endif
     for (int i = 0; i < nm; i++) {
         int nc = taglib::list_colors(l->materials[i], l->colors, l->counts, l->fresh, MAX);
         for (int j = 0; j < nc; j++)
@@ -603,7 +615,11 @@ static void cmd_libadd(char *args) {
         return;
     }
     if (!taglib::add(material, color, image, &why)) {
+#if defined(TW_TAGLIB_REMOTE)
+        printf("ERROR %s\n", why);
+#else
         printf("ERROR %s (%d of %d entries)\n", why, taglib::count(), taglib::slot_count());
+#endif
         return;
     }
     printf("OK stored %02X%02X%02X%02X %s / %s (%d in library)\n", image[0], image[1], image[2],
@@ -750,8 +766,16 @@ static void execute(char *command) {
     else if (!strcmp(command, "clone")) cmd_clone();
     else if (!strcmp(command, "libadd")) cmd_libadd(args);
     else if (!strcmp(command, "liblist")) cmd_liblist();
-    else if (!strcmp(command, "libcount")) printf("OK %d entries\n", taglib::count());
+    else if (!strcmp(command, "libcount")) {
+        if (taglib::refresh() && taglib::count() >= 0)
+            printf("OK %d entries\n", taglib::count());
+        else
+            printf("ERROR %s\n", taglib::status_text());
+    }
     else if (!strcmp(command, "libclear")) {
+#if defined(TW_TAGLIB_REMOTE)
+        printf("ERROR the library is on OpenAMS: nothing to clear here\n");
+#else
         if (strcmp(args, "yes"))
             printf("ERROR confirm with: libclear yes\n");
         else {
@@ -762,6 +786,7 @@ static void execute(char *command) {
                 printf("ERROR %s\n", taglib::has_partition() ? "erase failed"
                                                              : "this image has no tag library partition");
         }
+#endif
     }
     else if (!strcmp(command, "dump")) cmd_dump();
     else if (!strcmp(command, "write")) cmd_write_or_erase(tagsvc::OP_WRITE);

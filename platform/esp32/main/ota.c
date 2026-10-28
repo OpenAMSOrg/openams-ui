@@ -113,8 +113,8 @@ void ota_cmd_update(const char *url, bool force)
         return;
     }
 
-    /* The layout of an image with the spool tag writer (partitions_tagwriter.csv)
-     * has one app partition and the tag library instead of the second slot. */
+    /* The 4 inch board's layout with the spool tag writer
+     * (partitions_tagwriter.csv) has one app partition instead of two slots. */
     if(!esp_ota_get_next_update_partition(NULL)) {
         printf("error: this display's partition table has no second app slot (the spool "
                "tag writer's layout); flash the new image over USB\n");

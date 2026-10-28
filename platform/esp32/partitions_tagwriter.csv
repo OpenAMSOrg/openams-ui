@@ -1,10 +1,10 @@
 # Name,   Type, SubType, Offset,   Size, Flags
-# The layout of an image with the spool tag writer (MMU_SPOOL_TAG_WRITER, the
-# default): one app partition and the tag library instead of two OTA slots,
-# since a 4 MB flash holds one or the other. nvs keeps its offset and size, so
+# The 4 inch board's layout with the spool tag writer (MMU_SPOOL_TAG_WRITER,
+# the default): one app partition the size of the flash instead of two OTA
+# slots, which the tag-writer image does not fit (an OTA slot is 0x1F0000).
+# The tag library is served by OpenAMS. nvs keeps its offset and size, so
 # Wi-Fi, Moonraker and touch settings survive a switch between the layouts
-# (flashed over USB). The library holds 1,599 tags (taglib.cpp).
+# (flashed over USB).
 nvs,      data, nvs,     0x9000,   0x6000,
 phy_init, data, phy,     0xf000,   0x1000,
-factory,  app,  factory, 0x10000,  0x240000,
-taglib,   data, 0x40,    0x250000, 0x1B0000,
+factory,  app,  factory, 0x10000,  0x3F0000,

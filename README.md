@@ -81,11 +81,13 @@ idf.py -B build-es3c50p -DMMU_BOARD=es3c50p build flash monitor   # 5 inch ES3C5
 | `MMU_LANGUAGES` | `latin` | the languages the image carries ([Language builds](#language-builds)) |
 | `MMU_APP_VERSION` | `1.0.0` | the base of the app version |
 
-| Image | Partition table | App | Tag library |
+| `MMU_TAG_LIBRARY` | `openams` | where the tag writer's library is: served by OpenAMS on the printer host, or `board` (5 inch only) in its own flash |
+
+| Image | Partition table | App | Room for a tag library |
 |---|---|---|---|
-| 4 inch with the tag writer | `partitions_tagwriter.csv` | one 2.25 MB partition, updated over USB | 1,599 tags |
+| 4 inch with the tag writer | `partitions_tagwriter.csv` | one 3.94 MB partition, updated over USB | none: it comes from OpenAMS |
 | 4 inch, display alone | `partitions.csv` | two 1.94 MB OTA slots | none |
-| 5 inch | `partitions_es3c50p.csv` | two 4 MB OTA slots | 7,475 tags |
+| 5 inch | `partitions_es3c50p.csv` | two 4 MB OTA slots | 7,475 tags (with `MMU_TAG_LIBRARY=board`) |
 
 Flashing and first setup: [docs/guide/flash-and-setup.md](docs/guide/flash-and-setup.md).
 
@@ -141,16 +143,18 @@ it goes on the SPI, Expand and UART0 connectors once two resistors change (R16
 off, R12 to 0 Ω; [wiring](docs/guide/tag-writer.md#wiring)).
 `-DMMU_SPOOL_TAG_WRITER=OFF` builds the display alone.
 
-Its on-device library of genuine Bambu tags, cloned from the touchscreen onto
-magic tags, holds 1,599 tags on the 4 inch board and 7,475 on the 5 inch one,
-enough for the whole
+Its library of genuine Bambu tags, cloned from the touchscreen onto magic
+tags, is the whole
 [Bambu-Lab-RFID-Library](https://github.com/queengooborg/Bambu-Lab-RFID-Library)
-(7,026 distinct tags in 272 colours on 27 October 2026). `tools/tagtool.py libflash
---lib <checkout>` writes it over USB in about a minute, or turn on **Bambu Lab
-tag library** in `make menuconfig` and `make flash` writes it with the
-firmware. Each clone takes a UID that has not been cloned before. On the 4
-inch board the library takes the second OTA slot's place, so an image with the
-tag writer is updated over USB; the 5 inch board's 16 MB holds both.
+(7,026 distinct tags in 272 colours on 27 October 2026), served by OpenAMS on
+the printer host: its `openams_taglib` Moonraker component downloads the
+library on first use and keeps track of which tags were cloned, so each clone
+takes a UID that has not been cloned before. Nothing of it is stored on the
+board. The 5 inch board can keep the library in its own flash instead, to
+clone without the printer (**Tag library → On the board** in `make menuconfig`,
+or `-DMMU_TAG_LIBRARY=board`); `make flash` or `tools/tagtool.py libflash`
+writes it over USB. The 4 inch tag-writer image does not fit an OTA slot, so
+it is updated over USB.
 
 The tag writer (`platform/esp32/tag_writer/`) is under the GPLv3, so an image
 built with it is too; the display alone stays MIT. See
@@ -263,7 +267,7 @@ Every push and pull request runs four GitHub Actions jobs defined in
 | Job | What it checks |
 |-----|----------------|
 | **linux** | Builds the SDL simulator on ubuntu-latest; runs all CTest unit tests; runs `--smoke --audit` (fails unless `AUDIT TOTAL issues=0`); builds it again at 800x480 and runs the smoke walk, the audit and the screen tests there; runs `e2e_mock_moonraker.sh`, `e2e_actions.sh`, and `replay_vams_fixtures.sh` against a fresh clone of `OpenAMSOrg/openams` (any `SKIP` output is treated as a failure). |
-| **esp32** | Builds the ESP32 firmware with ESP-IDF v6.0.1 inside the `espressif/idf:v6.0.1` container: with the tag writer once per language set (`latin`, `ja`, `ko`, `zh-Hans`, see [Language builds](#language-builds)), then `latin` with the MFRC522 reader, without the tag writer, and for the 5 inch board. `tools/ci/esp32_size_check.py` checks each for static DRAM free >= 20 000 bytes and 5% of its app partition free. |
+| **esp32** | Builds the ESP32 firmware with ESP-IDF v6.0.1 inside the `espressif/idf:v6.0.1` container: with the tag writer once per language set (`latin`, `ja`, `ko`, `zh-Hans`, see [Language builds](#language-builds)), then `latin` with the MFRC522 reader, without the tag writer, and for the 5 inch board with the tag library from OpenAMS and with its own. `tools/ci/esp32_size_check.py` checks each for static DRAM free >= 20 000 bytes and 5% of its app partition free. |
 | **core-wasm** | Builds the wasm core and runs its node tests; checks that the generated strings, design tokens and action vectors are current, that every language's glyphs are in the device fonts, and that `src/ui` has no user-visible literals outside the strings table. |
 | **web-vue** | Typechecks, builds and tests (Playwright) the Vue 2 web panel. |
 

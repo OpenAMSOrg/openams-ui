@@ -103,15 +103,16 @@ extern "C" void tag_writer_init(void) {
     if (!spool::load_key(key))
         ESP_LOGI(TAG, "no Bambu master key stored (tag key <32 hex>)");
     tagsvc::init(READER_PINS, key);
-    if (!taglib::has_partition())
-        // No taglib partition: this image is running on a display still using
-        // the two-OTA-slot table (an over-the-air update across layouts). The
-        // writer works, but capture/clone from the on-device library do not;
-        // reflash over USB to get the writer's partition table.
-        ESP_LOGW(TAG, "no tag-library partition: flash the tag-writer image over USB "
-                      "(this looks like the display's two-OTA-slot layout)");
+#if defined(TW_TAGLIB_REMOTE)
+    ESP_LOGI(TAG, "spool tag writer ready (" TW_READER_NAME "), library on OpenAMS");
+#else
     ESP_LOGI(TAG, "spool tag writer ready (" TW_READER_NAME "), library %d of %d slots",
              taglib::count(), taglib::slot_count());
+#endif
+}
+
+extern "C" void tag_writer_set_moonraker(const char *ws_url) {
+    taglib::set_service(ws_url);
 }
 
 extern "C" void tag_writer_open(lv_obj_t *root, void (*on_exit)(void)) {

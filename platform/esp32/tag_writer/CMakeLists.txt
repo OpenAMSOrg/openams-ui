@@ -12,7 +12,6 @@ set(tw_sources
     "src/tag_service.cpp"
     "src/tag_ops.cpp"
     "src/spool_store.cpp"
-    "src/taglib.cpp"
     "src/filament_view.cpp"
     "src/bambu_view.cpp"
     "src/bambu_format.cpp"
@@ -53,6 +52,16 @@ else()
     set(tw_reader_define TW_READER_PN5180=1)
 endif()
 
+# The tag library (src/taglib.h): served by OpenAMS on the printer host, or
+# in the board's own flash partition (MMU_TAG_LIBRARY=board, 5 inch only).
+if(MMU_TAG_LIBRARY STREQUAL "board")
+    list(APPEND tw_sources "src/taglib.cpp")
+    set(tw_library_define TW_TAGLIB_BOARD=1)
+else()
+    list(APPEND tw_sources "src/taglib_remote.cpp")
+    set(tw_library_define TW_TAGLIB_REMOTE=1)
+endif()
+
 idf_component_register(
     SRCS ${tw_sources}
     INCLUDE_DIRS "include"
@@ -63,6 +72,7 @@ idf_component_register(
         esp_driver_spi
         esp_driver_gpio
         esp_driver_uart
+        esp_http_client
         esp_app_format
         esp_partition
         esp_system
@@ -71,7 +81,7 @@ idf_component_register(
         log
 )
 
-target_compile_definitions(${COMPONENT_LIB} PRIVATE ${tw_reader_define})
+target_compile_definitions(${COMPONENT_LIB} PRIVATE ${tw_reader_define} ${tw_library_define})
 
 # Nothing here is drawing-bound (the display's -O2 is for LVGL rendering), so
 # this component is built for size.

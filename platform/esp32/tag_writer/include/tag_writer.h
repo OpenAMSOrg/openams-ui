@@ -21,10 +21,16 @@
 extern "C" {
 #endif
 
-/** Loads the spool being edited, the Bambu master key and the tag library
- * index from flash. NVS must be initialised. Touches no hardware: the reader
- * comes up when the screen opens or a console command needs it. */
+/** Loads the spool being edited and the Bambu master key from flash, and the
+ * tag library index when the image keeps its own. NVS must be initialised.
+ * Touches no hardware: the reader comes up when the screen opens or a console
+ * command needs it. */
 void tag_writer_init(void);
+
+/** The display's Moonraker WebSocket URL ("ws://host:port/websocket", or ""
+ * when none is stored): the tag library is served by OpenAMS there, unless the
+ * image keeps its own (MMU_TAG_LIBRARY=board). After tag_writer_init(). */
+void tag_writer_set_moonraker(const char *ws_url);
 
 /** Builds the tag writer into @p root, a screen object the display creates and
  * loads. @p on_exit runs, on the LVGL task, when the user leaves; the display

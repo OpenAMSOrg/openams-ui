@@ -103,9 +103,8 @@ void init() {
     }
 #if CONFIG_SPIRAM
     // The 5" board's table (7,475 headers) is mapped: a few MMU pages and a
-    // few bytes of heap for good, which the 4" board (no PSRAM, no boot-time
-    // heap for the tag writer, 1,599 headers) does without. The flash write
-    // and erase calls flush the cache over what they change.
+    // few bytes of heap for good. The flash write and erase calls flush the
+    // cache over what they change.
     const void *table;
     esp_partition_mmap_handle_t handle;
     if (esp_partition_mmap(part, 0, SUPER_SIZE + capacity_for(part->size) * sizeof(Header),
@@ -130,9 +129,19 @@ void init() {
                  (unsigned)(part->size / 1024));
 }
 
+void set_service(const char *) {}
 bool has_partition() { return part != nullptr; }
 int slot_count() { return capacity; }
 int count() { return live; }
+bool refresh() { return part != nullptr; }
+
+const char *status_text() {
+    if (!part)
+        return "This image has no tag library partition";
+    if (!capacity)
+        return "Library not formatted:\ntag libclear yes";
+    return "Upload genuine tags from a PC:\ntools/tagtool.py libflash --lib <dir>";
+}
 
 static bool same_image(int slot, const uint8_t image[1024]) {
     uint8_t chunk[128];

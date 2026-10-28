@@ -158,10 +158,15 @@ jobs:
             variant: display-only
             cmake_args: "-DMMU_SPOOL_TAG_WRITER=OFF"
             partitions: partitions.csv
-          # The 5 inch ESP32-S3 board: its own chip, settings and 800x480 UI.
+          # The 5 inch ESP32-S3 board: its own chip, settings and 800x480 UI,
+          # with the tag library from OpenAMS and with its own.
           - languages: latin
             variant: es3c50p
             cmake_args: "-DMMU_BOARD=es3c50p"
+            partitions: partitions_es3c50p.csv
+          - languages: latin
+            variant: es3c50p-board-library
+            cmake_args: "-DMMU_BOARD=es3c50p -DMMU_TAG_LIBRARY=board"
             partitions: partitions_es3c50p.csv
 
     name: esp32 (${{ matrix.languages }}, ${{ matrix.variant }})

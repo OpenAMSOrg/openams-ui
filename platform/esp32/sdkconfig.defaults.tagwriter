@@ -1,8 +1,9 @@
 # Added on top of sdkconfig.defaults when the spool tag writer is built in
 # (MMU_SPOOL_TAG_WRITER, the default); generated into sdkconfig.tagwriter.
 
-# One app partition and the tag library (partitions_tagwriter.csv) instead of
-# two OTA slots: a 4 MB flash holds one or the other. Updates go over USB.
+# One app partition the size of the flash (partitions_tagwriter.csv) instead
+# of two OTA slots, which the tag-writer image does not fit. Updates go over
+# USB. The tag library is served by OpenAMS.
 CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions_tagwriter.csv"
 
 # The tag writer's format codecs report malformed tags by throwing, and a

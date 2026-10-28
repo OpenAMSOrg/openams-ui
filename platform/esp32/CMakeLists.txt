@@ -73,6 +73,20 @@ if(MMU_SPOOL_TAG_WRITER)
     list(APPEND EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/tag_writer")
 endif()
 
+# Where the tag writer's library of genuine tags lives: on OpenAMS, which
+# serves it from the printer host (the default), or on the board, in a flash
+# partition of its own, which only the 5 inch board has room for.
+set(MMU_TAG_LIBRARY "openams" CACHE STRING
+    "The tag writer's tag library: openams (served by the printer host) or board (5 inch only)")
+set_property(CACHE MMU_TAG_LIBRARY PROPERTY STRINGS openams board)
+if(NOT MMU_TAG_LIBRARY MATCHES "^(openams|board)$")
+    message(FATAL_ERROR "MMU_TAG_LIBRARY is \"${MMU_TAG_LIBRARY}\"; it takes openams or board")
+endif()
+if(MMU_TAG_LIBRARY STREQUAL "board" AND NOT MMU_BOARD STREQUAL "es3c50p")
+    message(FATAL_ERROR "Only the 5 inch board has room for the tag library; the ${MMU_BOARD} "
+        "takes it from OpenAMS (-DMMU_TAG_LIBRARY=openams).")
+endif()
+
 # The UI's resolution follows the panel (cmake/resolution.cmake).
 if(MMU_BOARD STREQUAL "es3c50p")
     set(MMU_UI_RESOLUTION "800x480" CACHE STRING "The UI's resolution: 480x320 or 800x480" FORCE)
@@ -94,8 +108,8 @@ if(MMU_BOARD STREQUAL "es3c50p")
         set(SDKCONFIG_DEFAULTS "sdkconfig.defaults;sdkconfig.defaults.es3c50p")
     endif()
 elseif(MMU_SPOOL_TAG_WRITER)
-    # The tag writer needs its tag-library partition (one app slot and no OTA,
-    # partitions_tagwriter.csv) and C++ exceptions, so it keeps its own
+    # The tag writer is too large for an OTA slot (one app slot, no OTA,
+    # partitions_tagwriter.csv) and needs C++ exceptions, so it keeps its own
     # generated sdkconfig: switching the option needs no manual delete.
     if(NOT DEFINED SDKCONFIG)
         set(SDKCONFIG "${CMAKE_CURRENT_LIST_DIR}/sdkconfig.tagwriter")

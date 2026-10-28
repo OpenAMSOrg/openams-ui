@@ -93,7 +93,8 @@ endif()
 # writer is an optional requirement: linked when its component is in the build.
 idf_component_optional_requires(PRIVATE tag_writer)
 
-# The ES3C50P's one layout carries the OTA slots and the tag library, and its
+# The ES3C50P's one layout carries the OTA slots and room for the tag library
+# (MMU_TAG_LIBRARY=board), and its
 # sdkconfig always has C++ exceptions (sdkconfig.defaults.es3c50p).
 if(MMU_BOARD STREQUAL "es3c50p")
     if(NOT CONFIG_IDF_TARGET_ESP32S3
@@ -105,8 +106,8 @@ if(MMU_BOARD STREQUAL "es3c50p")
 elseif(CONFIG_PARTITION_TABLE_CUSTOM_FILENAME STREQUAL "partitions_es3c50p.csv")
     message(FATAL_ERROR "MMU_BOARD is ${MMU_BOARD} but ${SDKCONFIG} was generated for the "
                         "ES3C50P: delete that file and build again")
-# An image with the tag writer needs its partition table (the tag library) and
-# C++ exceptions, one without it the two OTA slots. Each has its own generated
+# An image with the tag writer needs its partition table (one app partition
+# the size of the flash) and C++ exceptions, one without it the two OTA slots. Each has its own generated
 # sdkconfig (sdkconfig.tagwriter / sdkconfig), so this only trips when a build
 # names an sdkconfig of the other kind with -D SDKCONFIG=...
 elseif(MMU_SPOOL_TAG_WRITER)

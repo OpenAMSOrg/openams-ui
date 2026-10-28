@@ -382,7 +382,8 @@ void app_main(void)
     display_power_init(disp);
 
 #if defined(MMU_FEATURE_TAG_WRITER)
-    /* NVS is up: the spool being edited, the Bambu key and the tag library.
+    /* NVS is up: the spool being edited, the Bambu key and, in an image that
+     * keeps its own, the tag library.
      * No hardware yet: the reader starts when its screen opens. */
     tag_writer_init();
 #endif
@@ -420,6 +421,10 @@ void app_main(void)
     else {
         ESP_LOGI(TAG, "no Wi-Fi credentials stored — demo mode");
     }
+#if defined(MMU_FEATURE_TAG_WRITER)
+    /* The tag library is served by OpenAMS, beside the Moonraker it talks to. */
+    tag_writer_set_moonraker(s_wifi_configured ? net_cfg.moonraker_url : "");
+#endif
 
 #if BOARD_TOUCH_NEEDS_CALIBRATION
     touch_calib_store_init();

@@ -38,22 +38,44 @@ choice TAG_READER
         bool "MFRC522 (Bambu MIFARE Classic tags only)"
 endchoice
 
-config TAG_LIBRARY
-    bool "Bambu Lab tag library"
+choice TAG_LIBRARY_SOURCE
+    prompt "Tag library"
     depends on TAG_WRITER
+    default TAG_LIBRARY_OPENAMS
+    help
+        Where the genuine Bambu tags to clone from the touchscreen come from.
+
+    config TAG_LIBRARY_OPENAMS
+        bool "From OpenAMS on the printer host"
+        help
+            OpenAMS serves the Bambu-Lab-RFID-Library from the printer host
+            (its openams_taglib Moonraker component, which downloads it on
+            first use) to the display, over the printer link. Nothing is
+            stored on the board.
+    config TAG_LIBRARY_BOARD
+        bool "On the board (5 inch only)"
+        depends on BOARD_ES3C50P
+        help
+            The library lives in the board's own flash, so it works without
+            the printer. It is filled over USB (make libflash, or the option
+            below).
+endchoice
+
+config TAG_LIBRARY
+    bool "Write the Bambu Lab tag library with make flash"
+    depends on TAG_LIBRARY_BOARD
     default n
     help
         make flash also writes the Bambu-Lab-RFID-Library
         (github.com/queengooborg/Bambu-Lab-RFID-Library) into the board's tag
-        library, to clone from the touchscreen: every tag on the 5 inch board,
-        every colour and as many UIDs as fit on the 4 inch one. It replaces
-        what the library held. make clones the library the first time (about
-        200 MB) and writes it only when it changed since the last flash;
-        make libupdate pulls the newest tags, make libflash writes it anyway.
+        library, every tag of it. It replaces what the library held. make
+        clones the library the first time (about 200 MB) and writes it only
+        when it changed since the last flash; make libupdate pulls the newest
+        tags, make libflash writes it anyway.
 
 config TAG_LIBRARY_DIR
     string "Where the library is (cloned there if it is not)"
-    depends on TAG_LIBRARY
+    depends on TAG_LIBRARY_BOARD
     default "../../third_party/Bambu-Lab-RFID-Library"
     help
         A Bambu-Lab-RFID-Library checkout: a path from platform/esp32, an

@@ -1,12 +1,18 @@
 // Copyright (C) 2026 JR Lomas <lomas.jr@gmail.com>
 // This file may be distributed under the terms of the GNU GPLv3 license.
 
-// On-device library of genuine tag images, for cloning from the touchscreen
-// without a PC or a physical source tag. Stored in the `taglib` flash
-// partition: a superblock sector, one 80-byte header per entry (the spool's
-// material/colour names, for browsing), then one 1024-byte MIFARE image per
-// entry: 1,599 entries on the 4" board, 7,475 on the 5" one.
-// tools/tagtool.py libflash builds the same layout on a PC.
+// The library of genuine tag images, for cloning from the touchscreen without
+// a PC or a physical source tag. One of two implementations is built
+// (MMU_TAG_LIBRARY):
+// - taglib_remote.cpp (TW_TAGLIB_REMOTE, the default): served by OpenAMS on
+//   the printer host, its openams_taglib Moonraker component, over HTTP.
+// - taglib.cpp: the on-device `taglib` flash partition (5" board only): a
+//   superblock sector, one 80-byte header per entry (the spool's
+//   material/colour names, for browsing), then one 1024-byte MIFARE image per
+//   entry, 7,475 of them. tools/tagtool.py libflash builds the same layout on
+//   a PC.
+// The remote one blocks for a network round trip, at most a few seconds when
+// the printer does not answer.
 #pragma once
 
 #include <stdint.h>
@@ -17,10 +23,19 @@ const uint8_t NAME_LEN = 32;
 
 // Finds the partition and checks its superblock. Call once at boot.
 void init();
+// The display's Moonraker WebSocket URL ("ws://host:port/websocket"), which
+// says where OpenAMS is; empty when none is stored. Ignored on the device.
+void set_service(const char *ws_url);
 
 bool has_partition();
 int slot_count();   // entries the library holds; 0 until it is formatted
-int count();        // stored entries
+// Stored entries; remote: as OpenAMS last said, -1 before it was first asked.
+int count();
+// Asks the library how it is (remote: one request), so count() and
+// status_text() are current. False when it could not be asked.
+bool refresh();
+// Why the library came back empty or a call failed, for the screen.
+const char *status_text();
 
 // Stores `image` (a validated Bambu image) under material/color. A UID already
 // stored is replaced (or kept as it is when nothing changed); a new one takes
