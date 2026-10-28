@@ -5,24 +5,29 @@
 // Moonraker component, /server/openams/taglib/...), with the interface of the
 // on-device one (taglib.h): each call is one HTTP request to the Moonraker the
 // display already talks to. The replies are small, flat JSON, read in place
-// with no parse tree: the 4" board has a few KB of heap to spare.
+// with no parse tree: the 4" board has about 10 KB of heap with the tag writer
+// open, so a reply is held only as large as it is, a picked tag's 2 KB of hex
+// is decoded as it arrives, and no closed connection is left in TIME_WAIT.
 #include "taglib.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "esp_heap_caps.h"
 #include "esp_http_client.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "lwip/sockets.h"
 
 namespace taglib {
 
 static const char *TAG = "taglib";
 
 static const int TIMEOUT_MS = 2500;
-static const size_t REPLY_MAX = 3072;  // a pick: 2,048 hex digits and a few names
+static const size_t REPLY_MAX = 3072;  // the largest list reply held whole
 static const size_t IMAGE_SIZE = 1024;
 
 static char base[64];     // "http://host:port", from the Moonraker URL
@@ -212,13 +217,51 @@ static void url_encode_into(char *&out, const char *end, const char *text) {
     }
 }
 
-// One request to Moonraker: GET `path`, or POST it with the JSON `body`. The
-// reply, NUL-terminated, goes in a heap buffer the caller frees. Returns the
-// HTTP status, or -1 (with `why` set) when there was no answer.
-static int request(const char *path, const char *body, char **reply) {
-    *reply = nullptr;
+// One request to Moonraker in flight: GET `path`, or POST it with the JSON
+// `body`, sent and its headers read.
+struct Call {
+    esp_http_client_handle_t client = nullptr;
+    int status = -1;
+    int64_t length = -1;  // the reply's Content-Length; -1 when it has none
+    size_t bytes = 0;     // read so far
+    int64_t start = 0;
+    unsigned heap = 0, block = 0;  // free when it began: the 4" board's scarce resource
+};
+
+// Ends a call. Moonraker closes the connection first (the request says
+// Connection: close), and the board waits for that before it closes too: the
+// side that closes first keeps the connection in TIME_WAIT for two minutes,
+// about 200 bytes of heap per request, which the printer host can spare and
+// the 4" board cannot.
+static void end_call(Call &call, const char *path) {
+    if (!call.client)
+        return;
+    if (call.status >= 0) {
+        int fd = esp_http_client_get_socket(call.client);
+        if (fd >= 0) {
+            struct timeval wait = {0, 300 * 1000};
+            setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &wait, sizeof(wait));
+            char c;
+            while (recv(fd, &c, 1, 0) > 0) {
+            }
+        }
+        ESP_LOGI(TAG, "%s: HTTP %d, %u bytes in %u ms (heap free %u, largest block %u)", path,
+                 call.status, (unsigned)call.bytes,
+                 (unsigned)((esp_timer_get_time() - call.start) / 1000), call.heap, call.block);
+    }
+    esp_http_client_close(call.client);
+    esp_http_client_cleanup(call.client);
+    call.client = nullptr;
+}
+
+// Begins a call. False, with `why` set and the call ended, when there was no
+// answer.
+static bool begin_call(Call &call, const char *path, const char *body) {
+    call.start = esp_timer_get_time();
+    call.heap = (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    call.block = (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     if (!base[0])
-        return -1;
+        return false;  // set_service() said why
     char url[320];
     snprintf(url, sizeof(url), "%s%s", base, path);
     esp_http_client_config_t cfg = {};
@@ -228,38 +271,80 @@ static int request(const char *path, const char *body, char **reply) {
     cfg.buffer_size = 512;
     cfg.buffer_size_tx = 512;
     cfg.disable_auto_redirect = true;
-    esp_http_client_handle_t client = esp_http_client_init(&cfg);
-    char *buf = client ? static_cast<char *>(malloc(REPLY_MAX)) : nullptr;
-    int status = -1;
+    call.client = esp_http_client_init(&cfg);
     size_t length = body ? strlen(body) : 0;
-    if (buf && body)
-        esp_http_client_set_header(client, "Content-Type", "application/json");
-    if (buf && esp_http_client_open(client, length) == ESP_OK) {
-        if (!length || esp_http_client_write(client, body, length) == (int)length) {
-            esp_http_client_fetch_headers(client);
-            status = esp_http_client_get_status_code(client);
-            size_t n = 0;
-            int got;
-            while (n < REPLY_MAX - 1 &&
-                   (got = esp_http_client_read(client, buf + n, REPLY_MAX - 1 - n)) > 0)
-                n += got;
-            buf[n] = 0;
+    if (call.client) {
+        esp_http_client_set_header(call.client, "Connection", "close");
+        if (body)
+            esp_http_client_set_header(call.client, "Content-Type", "application/json");
+        if (esp_http_client_open(call.client, length) == ESP_OK &&
+            (!length || esp_http_client_write(call.client, body, length) == (int)length)) {
+            call.length = esp_http_client_fetch_headers(call.client);
+            call.status = esp_http_client_get_status_code(call.client);
         }
-        esp_http_client_close(client);
     }
-    if (client)
-        esp_http_client_cleanup(client);
-    if (status < 0) {
-        free(buf);
-        if (!client || !buf)
-            snprintf(why, sizeof(why), "Not enough memory to ask the printer");
-        else
-            snprintf(why, sizeof(why), "The printer did not answer\n(%.56s)", base + 7);
-        ESP_LOGW(TAG, "%s%s: no answer", base, path);
+    if (call.status >= 0)
+        return true;
+    if (call.client)
+        snprintf(why, sizeof(why), "The printer did not answer\n(%.56s)", base + 7);
+    else
+        snprintf(why, sizeof(why), "Not enough memory to ask the printer");
+    ESP_LOGW(TAG, "%s%s: %s after %u ms (heap free %u, largest block %u)", base, path,
+             call.client ? "no answer" : "no memory",
+             (unsigned)((esp_timer_get_time() - call.start) / 1000), call.heap, call.block);
+    end_call(call, path);
+    return false;
+}
+
+// Reads up to `n` bytes of the reply; 0 at its end.
+static int read_reply(Call &call, char *buf, size_t n) {
+    int got = esp_http_client_read(call.client, buf, (int)n);
+    if (got > 0)
+        call.bytes += (size_t)got;
+    return got;
+}
+
+// Reads the rest of the reply into `buf` (NUL-terminated, cut at `size`).
+static void read_all(Call &call, char *buf, size_t size) {
+    size_t n = 0;
+    int got;
+    while (n < size - 1 && (got = read_reply(call, buf + n, size - 1 - n)) > 0)
+        n += (size_t)got;
+    buf[n] = 0;
+}
+
+// One whole request: its reply, NUL-terminated, in a heap buffer as large as
+// the reply, which the caller frees. Returns the HTTP status, or -1 (with
+// `why` set) when there was no answer.
+static int request(const char *path, const char *body, char **reply) {
+    *reply = nullptr;
+    Call call;
+    if (!begin_call(call, path, body))
+        return -1;
+    size_t size = call.length >= 0 && call.length < (int64_t)REPLY_MAX
+                      ? (size_t)call.length + 1 : REPLY_MAX;
+    char *buf = static_cast<char *>(malloc(size));
+    if (!buf) {
+        snprintf(why, sizeof(why), "Not enough memory to ask the printer");
+        end_call(call, path);
         return -1;
     }
+    read_all(call, buf, size);
+    int status = call.status;
+    end_call(call, path);
     *reply = buf;
     return status;
+}
+
+// Moonraker's error reply, into `why`.
+static void refused(const char *path, int status, const char *reply) {
+    const char *message = value_of(reply, "message");
+    if (!message || !read_string(message, why, sizeof(why)))
+        snprintf(why, sizeof(why), "The printer refused (HTTP %d)", status);
+    // Moonraker's answer for an endpoint nobody registered.
+    if (status == 404 && (!message || !strcmp(why, "Not Found")))
+        snprintf(why, sizeof(why), "This OpenAMS has no tag library:\nupdate OpenAMS");
+    ESP_LOGW(TAG, "%s: HTTP %d: %s", path, status, why);
 }
 
 // A request whose reply is a success: its "result", else null with `why` set
@@ -271,13 +356,7 @@ static const char *ask(const char *path, const char *body, char **reply) {
     const char *result = value_of(*reply, "result");
     if (status == 200 && result)
         return result;
-    const char *message = value_of(*reply, "message");
-    if (!message || !read_string(message, why, sizeof(why)))
-        snprintf(why, sizeof(why), "The printer refused (HTTP %d)", status);
-    // Moonraker's answer for an endpoint nobody registered.
-    if (status == 404 && (!message || !strcmp(why, "Not Found")))
-        snprintf(why, sizeof(why), "This OpenAMS has no tag library:\nupdate OpenAMS");
-    ESP_LOGW(TAG, "%s: HTTP %d: %s", path, status, why);
+    refused(path, status, *reply);
     free(*reply);
     *reply = nullptr;
     return nullptr;
@@ -325,8 +404,15 @@ bool refresh() {
     return true;
 }
 
+// A list is asked for when the confirm page was left: its pick goes.
+static void drop_pick() {
+    free(picked);
+    picked = nullptr;
+}
+
 int list_materials(char out[][NAME_LEN], int max) {
     Hold hold;
+    drop_pick();
     char *reply;
     const char *result = ask("/server/openams/taglib/materials", nullptr, &reply);
     if (!result)
@@ -348,6 +434,7 @@ int list_materials(char out[][NAME_LEN], int max) {
 int list_colors(const char *material, char out[][NAME_LEN], uint16_t *counts, uint16_t *fresh,
                 int max) {
     Hold hold;
+    drop_pick();
     char path[160] = "/server/openams/taglib/colors?material=";
     char *at = path + strlen(path);
     url_encode_into(at, path + sizeof(path), material);
@@ -398,36 +485,73 @@ int pick(const char *material, const char *color, char uid_out[9], bool *fresh) 
     }
     url_encode_into(at, end, color);
     *at = 0;
-    char *reply;
-    const char *result = ask(path, nullptr, &reply);
-    if (!result)
+    Call call;
+    if (!begin_call(call, path, nullptr))
         return -1;
-    free(picked);
-    picked = static_cast<uint8_t *>(malloc(IMAGE_SIZE));
-    char uid[9] = "";
-    const char *u = value_of(result, "uid");
-    const char *hex = value_of(result, "image");
-    const char *f = value_of(result, "fresh");
-    bool never_cloned = f && !strncmp(f, "true", 4);
-    bool ok = picked && u && read_string(u, uid, sizeof(uid)) && strlen(uid) == 8 && hex &&
-              *hex == '"';
-    for (size_t i = 0; ok && i < IMAGE_SIZE; i++) {
-        int hi = hex_digit(hex[1 + 2 * i]), lo = hi < 0 ? -1 : hex_digit(hex[2 + 2 * i]);
-        ok = lo >= 0;
-        if (ok)
-            picked[i] = (uint8_t)(hi << 4 | lo);
+    if (call.status != 200) {
+        char reply[256];
+        read_all(call, reply, sizeof(reply));
+        end_call(call, path);
+        refused(path, call.status, reply);
+        return -1;
     }
-    free(reply);
+    drop_pick();
+    picked = static_cast<uint8_t *>(malloc(IMAGE_SIZE));
+    // {"result": {"uid": "07F0DB02", "fresh": true, "image": "07F0..."}}: what
+    // comes before the image is kept, to read the uid and fresh from, and the
+    // image's 2,048 hex digits go into it as they arrive, never held whole.
+    char head[160] = "";
+    char chunk[128];
+    size_t head_n = 0, got = 0;
+    int high = -1, n;
+    bool in_image = false, closed = false, bad = !picked;
+    while ((n = read_reply(call, chunk, sizeof(chunk))) > 0) {
+        for (int i = 0; i < n && !bad && !closed; i++) {
+            char c = chunk[i];
+            if (in_image) {
+                int d = hex_digit(c);
+                if (c == '"')
+                    closed = true;
+                else if (d < 0 || got == IMAGE_SIZE)
+                    bad = true;
+                else if (high < 0)
+                    high = d;
+                else {
+                    picked[got++] = (uint8_t)(high << 4 | d);
+                    high = -1;
+                }
+                continue;
+            }
+            if (head_n == sizeof(head) - 1) {
+                bad = true;
+                break;
+            }
+            head[head_n++] = c;
+            head[head_n] = 0;
+            if (c == '"') {  // the image's opening quote, after "image":
+                const char *key = strstr(head, "\"image\"");
+                const char *q = key ? skip(key + 7) : nullptr;
+                if (q && *q == ':')
+                    q = skip(q + 1);
+                in_image = q == head + head_n - 1;
+            }
+        }
+    }
+    end_call(call, path);
+    char uid[9] = "";
+    const char *u = value_of(head, "uid");
+    const char *f = value_of(head, "fresh");
+    bool ok = !bad && closed && got == IMAGE_SIZE && u && read_string(u, uid, sizeof(uid)) &&
+              strlen(uid) == 8;
     if (!ok) {
-        free(picked);
-        picked = nullptr;
+        drop_pick();
         snprintf(why, sizeof(why), "OpenAMS sent a tag that could not be read");
         return -1;
     }
     memcpy(picked_uid, uid, sizeof(picked_uid));
     memcpy(uid_out, uid, 9);
     if (fresh)
-        *fresh = never_cloned;
+        *fresh = f && !strncmp(f, "true", 4);
     return 0;
 }
 
