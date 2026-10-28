@@ -152,14 +152,26 @@ has one layout for every image, with its two OTA slots.
 
 ## First use
 
-1. Store the Bambu master key over the serial console. It is never compiled
-   in; the display keeps it in its own flash:
+1. Store the Bambu master key over the board's USB cable. It is never
+   compiled in; the display keeps it in its own flash, through every reflash.
+   Do it from the display's home screen, not with the tag writer open: there
+   the 4 inch board has no memory for a console command (`ERROR no memory for
+   the command`). In the serial console (`make monitor`, or `python make.py monitor` on
+   Windows):
 
    ```
    tag key <32 hex digits>
    ```
 
-   `tag status` shows its fingerprint. Without the key the tag writer still
+   Or from the `openams-ui` checkout, with nothing else using the port
+   (Windows: `--port COM3`, the board's CH340 port):
+
+   ```sh
+   python tools/tagtool.py --port /dev/ttyUSB0 cmd "key <32 hex digits>"
+   ```
+
+   `tag status` shows its fingerprint, and so does the tag writer's
+   **Settings** page. Without the key the tag writer still
    reads and writes every other format, but cannot write or read the Bambu
    layout.
 2. Tap **Menu → Tag writer**.

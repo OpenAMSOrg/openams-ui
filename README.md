@@ -65,20 +65,30 @@ make menuconfig       # the board, the tag writer, its reader and tag library, t
 make flash monitor    # build, flash, then the console
 ```
 
-On Windows there is no `make`: run `make.py` with Python instead, which does
-the same. Open the **ESP-IDF PowerShell** from the Start menu (or run
-`.\export.ps1` in the ESP-IDF folder; `export.sh` is for Linux and macOS
-shells, and PowerShell does not run it), then:
+### On Windows
 
-```powershell
-cd C:\openams-ui\platform\esp32
-python make.py menuconfig       # the same menu
-python make.py flash monitor    # build, flash, then the console
-```
+There is no `make` on Windows: `make.py` does the same, with Python.
 
-Leave **Serial port** at its default and `idf.py` finds the board's COM port,
-or set it (`COM3`) in the menu
-([flash-and-setup.md](docs/guide/flash-and-setup.md#install)).
+1. Open the **ESP-IDF PowerShell** from the Start menu, or, in PowerShell,
+   run `.\export.ps1` in the ESP-IDF folder. (`export.sh` is for Linux and
+   macOS shells; PowerShell does not run it.) If the activation stops on a
+   missing tool, run `.\install.ps1 esp32,esp32s3` in the ESP-IDF folder once.
+2. Build and flash:
+
+   ```powershell
+   cd C:\openams-ui\platform\esp32
+   python make.py menuconfig       # the same menu
+   python make.py flash monitor    # build, flash, then the console (Ctrl+] leaves it)
+   ```
+
+   Leave **Serial port** at its default and `idf.py` finds the board's COM
+   port, or set it in the menu. `python -m serial.tools.list_ports` lists the
+   ports: the board is the `USB-SERIAL CH340`. Only one program at a time can
+   use a COM port, so close the monitor before anything else needs the board.
+3. For the tag writer, store the Bambu master key
+   ([below](#the-bambu-master-key)).
+
+More in [flash-and-setup.md](docs/guide/flash-and-setup.md#install).
 
 `make` turns the menu's choices into the `-D` options of `idf.py`, which also
 work by hand:
@@ -95,7 +105,6 @@ idf.py -B build-es3c50p -DMMU_BOARD=es3c50p build flash monitor   # 5 inch ES3C5
 | `MMU_TAG_READER` | `PN5180` | `MFRC522` for the original reader |
 | `MMU_LANGUAGES` | `latin` | the languages the image carries ([Language builds](#language-builds)) |
 | `MMU_APP_VERSION` | `1.0.0` | the base of the app version |
-
 | `MMU_TAG_LIBRARY` | `openams` | where the tag writer's library is: served by OpenAMS on the printer host, or `board` (5 inch only) in its own flash |
 
 | Image | Partition table | App | Room for a tag library |
@@ -167,11 +176,42 @@ installer sets up, downloads the library, adds it to Moonraker's update
 manager and keeps track of which tags were cloned, so each clone takes a UID
 that has not been cloned before. Nothing of it is stored on the board. On a
 printer that already has OpenAMS, update it and run `./install.sh` again
-([OpenAMS: the RFID tag library](https://github.com/OpenAMSOrg/openams#the-rfid-tag-library)). The 5 inch board can keep the library in its own flash instead, to
-clone without the printer (**Tag library → On the board** in `make menuconfig`,
-or `-DMMU_TAG_LIBRARY=board`); `make flash` or `tools/tagtool.py libflash`
-writes it over USB. The 4 inch tag-writer image does not fit an OTA slot, so
-it is updated over USB.
+([OpenAMS: the RFID tag library](https://github.com/OpenAMSOrg/openams#the-rfid-tag-library)),
+then restart Moonraker (Mainsail's power menu): the library service runs
+inside Moonraker, and Mainsail's OpenAMS update restarts only Klipper. That
+happens on the printer, whatever the PC that flashes the display runs.
+
+The 5 inch board can keep the library in its own flash instead, to clone
+without the printer (**Tag library → On the board** in `make menuconfig`, or
+`-DMMU_TAG_LIBRARY=board`); `make flash` or `tools/tagtool.py libflash` writes
+it over USB. The 4 inch tag-writer image does not fit an OTA slot, so it is
+updated over USB.
+
+### The Bambu master key
+
+Reading genuine Bambu tags, copying them and writing spools in the Bambu
+layout need the Bambu master key. It is never compiled in: store it once over
+the board's USB cable, and the board keeps it through every reflash (only an
+`erase-flash` clears it). Leave the display on its home screen, not in the
+tag writer: with the tag writer open the 4 inch board has no memory to spare
+for a console command, which then answers `ERROR no memory for the command`.
+From the `openams-ui` checkout, in the ESP-IDF shell (which has the serial
+library), with nothing else using the board's port:
+
+```sh
+python tools/tagtool.py --port /dev/ttyUSB0 cmd "key <32 hex digits>"   # Linux, macOS
+python tools/tagtool.py --port /dev/ttyUSB0 cmd status                  # shows the key's fingerprint
+```
+
+```powershell
+python tools\tagtool.py --port COM3 cmd "key <32 hex digits>"           # Windows: the CH340's COM port
+python tools\tagtool.py --port COM3 cmd status
+```
+
+Or type `tag key <32 hex digits>` in the serial console (`make monitor`, or
+`python make.py monitor` on Windows). The tag writer's **Settings** page then
+shows the key's fingerprint instead of "not set". Without the key it still
+reads and writes every other tag format.
 
 The tag writer (`platform/esp32/tag_writer/`) is under the GPLv3, so an image
 built with it is too; the display alone stays MIT. See
