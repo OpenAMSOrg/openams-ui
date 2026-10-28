@@ -15,10 +15,17 @@ screens on an ESP32 display, a desktop simulator and a Vue 2 web panel.
 > The display and the Mainsail panel read the `openams_ui <unit>` objects that only the current OpenAMS publishes. With `klipper_openams` the display connects but shows nothing about your units ("The printer shows no OpenAMS unit"), and the panel stays empty.
 > Moving over is one installer run, keeps your `oams.cfg`, and every G-code command keeps working: [Moving from klipper_openams](https://github.com/OpenAMSOrg/openams/blob/main/docs/guide/install.md#moving-from-klipper_openams).
 
-Target hardware is LCDWiki's 4.0 inch ESP32-32E display (E32R40T:
-ESP32-WROOM-32E, 520 KB SRAM, no PSRAM, 4 MB flash): a 480x320 ST7796S panel
-over SPI with an XPT2046 resistive touch controller. Pins and
-panel options are in [the hardware page](docs/guide/hardware.md).
+The display firmware runs on two boards, chosen when you build it (see
+[ESP32 firmware](#esp32-firmware)):
+
+| Board | Chip and memory | Panel and touch |
+|---|---|---|
+| LCDWiki 4.0 inch ESP32-32E (E32R40T), the default | ESP32-WROOM-32E: 520 KB SRAM, no PSRAM, 4 MB flash | 480x320 ST7796S over SPI, XPT2046 resistive touch |
+| LCDWiki / Hosyond 5.0 inch ESP32-S3 (ES3C50P), capacitive version | ESP32-S3 N16R8: 512 KB SRAM, 8 MB PSRAM, 16 MB flash | 800x480 ST7282E over 16-bit RGB, GT911 capacitive touch |
+
+Both show the same screens: the 5 inch board draws the 480x320 layout at 1.5x
+([VISUAL_SPEC_800.md](docs/VISUAL_SPEC_800.md)). Pins and panel options are
+in [the hardware page](docs/guide/hardware.md).
 
 **Start with the [user guide](docs/guide/README.md).** It covers hardware,
 flashing, first setup, daily use, the web panel, troubleshooting and
@@ -40,6 +47,48 @@ checkout:
 git submodule update --init --recursive
 ```
 
+The 5 inch board's 800x480 UI builds the same way, in its own directory (its
+window is 3200x1920 at the default 4x zoom; `--zoom 2` halves it):
+
+```sh
+cmake -S . -B build-800 -DCMAKE_BUILD_TYPE=Release -DMMU_UI_RESOLUTION=800x480
+cmake --build build-800 -j4
+./build-800/openams-ui-sim --zoom 2
+```
+
+## ESP32 firmware
+
+From an ESP-IDF v6.0.1 shell, in `platform/esp32`:
+
+```sh
+make menuconfig       # the board, the tag writer and its reader, the languages, the serial port
+make flash monitor    # build, flash, then the console
+```
+
+`make` turns the menu's choices into the `-D` options of `idf.py`, which also
+work by hand:
+
+```sh
+idf.py build flash monitor                                        # 4 inch E32R40T
+idf.py -B build-es3c50p -DMMU_BOARD=es3c50p build flash monitor   # 5 inch ES3C50P
+```
+
+| Option | Default | Effect |
+|---|---|---|
+| `MMU_BOARD` | `e32r40t` | `es3c50p` for the 5 inch board: the chip (ESP32-S3), its settings (`sdkconfig.defaults.es3c50p`), its partition table and the 800x480 UI. Give it its own build directory. |
+| `MMU_SPOOL_TAG_WRITER` | `ON` | `OFF` builds the display alone |
+| `MMU_TAG_READER` | `PN5180` | `MFRC522` for the original reader |
+| `MMU_LANGUAGES` | `latin` | the languages the image carries ([Language builds](#language-builds)) |
+| `MMU_APP_VERSION` | `1.0.0` | the base of the app version |
+
+| Image | Partition table | App | Tag library |
+|---|---|---|---|
+| 4 inch with the tag writer | `partitions_tagwriter.csv` | one 2.25 MB partition, updated over USB | 1,599 tags |
+| 4 inch, display alone | `partitions.csv` | two 1.94 MB OTA slots | none |
+| 5 inch | `partitions_es3c50p.csv` | two 4 MB OTA slots | 7,475 tags |
+
+Flashing and first setup: [docs/guide/flash-and-setup.md](docs/guide/flash-and-setup.md).
+
 ## Language builds
 
 A device needs only its user's language, so a build takes the set it carries:
@@ -50,7 +99,7 @@ to fit two OTA slots). `MMU_LANGUAGES` is the one list, read by
 
 | `MMU_LANGUAGES` | Languages |
 |-----------------|-----------|
-| `all` | every language, the pseudo-locale included: the default for the simulator, the browser build, the wasm core and the tests |
+| `all` | every language, the pseudo-locale included: the default for the simulator, the browser build, the wasm core and the tests; of the boards, only the 5 inch one has room for it |
 | `latin` | `en de es fr it pl pt-BR ru` — the **ESP32 default** |
 | `ja`, `ko`, `zh-Hans` | that language plus `en` |
 | `en;ja` | any `;`-separated list of codes; `en` is always added, since it is the fallback |
@@ -86,11 +135,22 @@ cmake --build build-ja -j4 && ctest --test-dir build-ja
 
 The ESP32 image carries a spool tag writer by default (**Menu → Tag writer**):
 it composes a spool and writes it to an RFID tag, reads any filament tag, and
-resets, copies and clones Bambu tags, with a PN5180 (or `-DMMU_TAG_READER=MFRC522`)
-on the board's VSPI connector. `-DMMU_SPOOL_TAG_WRITER=OFF` builds the display
-alone. An image with the tag writer trades the two OTA slots for an on-device
-tag library (`platform/esp32/partitions_tagwriter.csv`) and is updated over USB;
-the 5 inch board's 16 MB holds both.
+resets, copies and clones Bambu tags, with a PN5180 (or `-DMMU_TAG_READER=MFRC522`).
+On the 4 inch board the reader goes on the VSPI connector; on the 5 inch one
+it shares the microSD slot's SPI bus, a wiring not yet tried on hardware
+([hardware.md](docs/guide/hardware.md)). `-DMMU_SPOOL_TAG_WRITER=OFF` builds
+the display alone.
+
+Its on-device library of genuine Bambu tags, cloned from the touchscreen onto
+magic tags, holds 1,599 tags on the 4 inch board and 7,475 on the 5 inch one,
+enough for the whole
+[Bambu-Lab-RFID-Library](https://github.com/queengooborg/Bambu-Lab-RFID-Library)
+(6,550 distinct tags in 269 colours). `tools/tagtool.py libflash --lib <checkout>`
+writes it over USB in about a minute, and each clone takes a UID that has not
+been cloned before. On the 4 inch board the library takes the second OTA
+slot's place, so an image with the tag writer is updated over USB; the 5 inch
+board's 16 MB holds both.
+
 The tag writer (`platform/esp32/tag_writer/`) is under the GPLv3, so an image
 built with it is too; the display alone stays MIT. See
 [docs/guide/tag-writer.md](docs/guide/tag-writer.md).
@@ -98,7 +158,7 @@ built with it is too; the display alone stays MIT. See
 ## Run
 
 ```sh
-./build/openams-ui-sim                       # interactive: 480x320 window, zoomed 4x by default (`--zoom N`)
+./build/openams-ui-sim                       # interactive: 480x320 window (800x480 from build-800), zoomed 4x by default (`--zoom N`)
 ./build/openams-ui-sim --scenario drying      # start on a specific scenario
 ```
 
@@ -159,11 +219,17 @@ lib/lvgl/                LVGL v9.6.0 (submodule, not modified)
 lv_conf.h                ONE config shared by the simulator and the ESP32 build
 src/model/               mmu_model.h/.c   — dummy data + scenarios (pure C, no LVGL)
 src/ui/                  one .c/.h pair per screen, plus ui_theme, ui_nav, ui_widgets
+src/ui/fonts/            the UI's fonts; 800x480/ holds the same faces at 1.5x
+cmake/                   languages.cmake, resolution.cmake: shared by every build
 src/app/                 app.h/.c (start-up, scenario switch), actions.h/.c (action log)
 platform/sim/main.c      SDL window + mouse, CLI flags, the --smoke/--screenshots walk
 platform/sim/gallery*.c  the component gallery: one page per family, rendered by --gallery
 platform/web/            Emscripten/WebAssembly build: main.c + the demo page (see Browser build)
 platform/esp32/          ESP-IDF firmware for the display (see docs/guide/flash-and-setup.md)
+platform/esp32/main/     board.h and each board's panel and touch drivers
+platform/esp32/make/     the menu of `make menuconfig` (platform/esp32/Makefile)
+platform/esp32/tag_writer/  the spool tag writer (GPLv3)
+tools/tagtool.py         the tag writer from a PC: console commands, library upload
 CMakeLists.txt           simulator build
 ```
 
@@ -177,10 +243,10 @@ CMakeLists.txt           simulator build
   `platform/`, which has no such restriction: `platform/sim/main.c` links
   SDL2 directly and uses plain C file I/O for the BMP encoder and static
   buffers for snapshot capture.
-- **Memory budget = the CYD's.** `lv_conf.h` caps LVGL's own heap
-  (`LV_MEM_SIZE`) at 64 KB — comfortably enough for objects, styles and
-  strings, but far too small for a full 480x320 snapshot buffer (RGB888 alone
-  is 461 KB). `--screenshots` therefore hands `lv_snapshot_take_to_draw_buf()`
+- **Memory budget = the 4 inch board's.** `lv_conf.h` caps LVGL's own heap
+  (`LV_MEM_SIZE`) at 96 KB at either resolution — enough for objects, styles
+  and strings, but far too small for a full 480x320 snapshot buffer (RGB888
+  alone is 461 KB). `--screenshots` therefore hands `lv_snapshot_take_to_draw_buf()`
   its own statically-allocated buffers instead of using `lv_snapshot_take()`,
   which would try to allocate through that 64 KB pool and fail. This is
   simulator-only tooling and never reaches the ESP32 build.
@@ -190,13 +256,15 @@ CMakeLists.txt           simulator build
 
 ## CI
 
-Every push and pull request runs two GitHub Actions jobs defined in
+Every push and pull request runs four GitHub Actions jobs defined in
 `.github/workflows/ci.yml`:
 
 | Job | What it checks |
 |-----|----------------|
-| **linux** | Builds the SDL simulator on ubuntu-latest; runs all CTest unit tests; runs `--smoke --audit` (fails unless `AUDIT TOTAL issues=0`); runs `e2e_mock_moonraker.sh`, `e2e_actions.sh`, and `replay_vams_fixtures.sh` against a fresh clone of `OpenAMSOrg/openams` (any `SKIP` output is treated as a failure). |
-| **esp32** | Builds the ESP32 firmware with ESP-IDF v6.0.1 inside the `espressif/idf:v6.0.1` container, once per language set (`latin`, `ja`, `ko`, `zh-Hans`, see [Language builds](#language-builds)); checks that static DRAM free >= 20 000 bytes via `tools/ci/esp32_size_check.py` on each. |
+| **linux** | Builds the SDL simulator on ubuntu-latest; runs all CTest unit tests; runs `--smoke --audit` (fails unless `AUDIT TOTAL issues=0`); builds it again at 800x480 and runs the smoke walk, the audit and the screen tests there; runs `e2e_mock_moonraker.sh`, `e2e_actions.sh`, and `replay_vams_fixtures.sh` against a fresh clone of `OpenAMSOrg/openams` (any `SKIP` output is treated as a failure). |
+| **esp32** | Builds the ESP32 firmware with ESP-IDF v6.0.1 inside the `espressif/idf:v6.0.1` container: with the tag writer once per language set (`latin`, `ja`, `ko`, `zh-Hans`, see [Language builds](#language-builds)), then `latin` with the MFRC522 reader, without the tag writer, and for the 5 inch board. `tools/ci/esp32_size_check.py` checks each for static DRAM free >= 20 000 bytes and 5% of its app partition free. |
+| **core-wasm** | Builds the wasm core and runs its node tests; checks that the generated strings, design tokens and action vectors are current, that every language's glyphs are in the device fonts, and that `src/ui` has no user-visible literals outside the strings table. |
+| **web-vue** | Typechecks, builds and tests (Playwright) the Vue 2 web panel. |
 
 Superseded runs on the same branch are canceled automatically via the
 `concurrency` key.
