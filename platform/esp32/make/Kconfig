@@ -1,0 +1,78 @@
+mainmenu "OpenAMS display: what to build"
+
+# The menu of `make menuconfig` (platform/esp32/Makefile). These are the build
+# options the -D flags of idf.py set; ESP-IDF's own settings stay in
+# `make idf-menuconfig`. The choices are kept in make/config.
+
+choice BOARD
+    prompt "Display board"
+    default BOARD_E32R40T
+    help
+        The board picks the chip, its ESP-IDF settings, its partition table
+        and the UI's resolution (docs/guide/hardware.md). Each board builds in
+        its own directory, build-<board>.
+
+    config BOARD_E32R40T
+        bool "4 inch E32R40T (ESP32, 480x320 SPI panel, resistive touch)"
+    config BOARD_ES3C50P
+        bool "5 inch ES3C50P (ESP32-S3, 800x480 RGB panel, capacitive touch)"
+endchoice
+
+config TAG_WRITER
+    bool "Spool tag writer"
+    default y
+    help
+        Menu -> Tag writer: writes, reads, resets and clones filament tags with
+        a reader wired to the board (docs/guide/tag-writer.md). An image with
+        it is GPLv3; without it, the display alone is MIT. On the 4 inch board
+        an image with it has no second OTA slot, so it is updated over USB.
+
+choice TAG_READER
+    prompt "Tag reader"
+    depends on TAG_WRITER
+    default TAG_READER_PN5180
+
+    config TAG_READER_PN5180
+        bool "PN5180 (every tag type and format)"
+    config TAG_READER_MFRC522
+        bool "MFRC522 (Bambu MIFARE Classic tags only)"
+endchoice
+
+choice LANGUAGES
+    prompt "Languages"
+    default LANGUAGES_LATIN
+    help
+        The languages the image carries. English is always one of them: it is
+        the fallback for anything a translation leaves out.
+
+    config LANGUAGES_LATIN
+        bool "Latin and Cyrillic: en de es fr it pl pt-BR ru"
+    config LANGUAGES_JA
+        bool "Japanese and English"
+    config LANGUAGES_KO
+        bool "Korean and English"
+    config LANGUAGES_ZH_HANS
+        bool "Simplified Chinese and English"
+    config LANGUAGES_ALL
+        bool "Every language (5 inch board only)"
+        depends on BOARD_ES3C50P
+        help
+            Every language's strings and fonts: too large for the 4 inch
+            board's app partition.
+    config LANGUAGES_CUSTOM
+        bool "A list of your own"
+endchoice
+
+config LANGUAGES_LIST
+    string "Language codes, separated by ';'"
+    depends on LANGUAGES_CUSTOM
+    default "en;ja"
+    help
+        Codes from design/strings, for example "de;fr" or "ja;ko".
+
+config PORT
+    string "Serial port"
+    default "/dev/ttyUSB0"
+    help
+        Where make flash, make monitor and make libflash find the board.
+        PORT=... on the make command line overrides it.

@@ -16,3 +16,6 @@ platform/esp32/sdkconfig.tagwriter.old
 platform/esp32/sdkconfig.es3c50p
 platform/esp32/sdkconfig.es3c50p.old
 platform/esp32/build-*/
+platform/esp32/make/config
+platform/esp32/make/config.old
+platform/esp32/make/sdkconfig.defaults

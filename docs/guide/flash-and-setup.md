@@ -31,7 +31,23 @@ serial console. Later updates can go over the air.
 
 ## Install
 
-Build and flash from the ESP32 project directory:
+Build and flash from the ESP32 project directory, in an ESP-IDF shell. The
+easiest way is the menu:
+
+```sh
+cd platform/esp32
+make menuconfig       # the board, the tag writer and its reader, the languages, the port
+make flash monitor    # build, flash, then watch it start
+```
+
+The menu keeps your choices in `platform/esp32/make/config` and turns them
+into the `-D` options below, so `make` is `idf.py` with the options filled in.
+Each board builds in its own directory, `build-<board>`. A choice on the
+command line overrides the menu (`make BOARD=es3c50p flash`), and `make help`
+lists the rest: `make size`, `make clean`, and `make idf-menuconfig` for
+ESP-IDF's own settings of the chosen board.
+
+Or run `idf.py` yourself:
 
 ```sh
 cd platform/esp32
@@ -46,8 +62,9 @@ carries the board settings (4 MB flash, no PSRAM, 240 MHz).
 
 The ES3C50P ([hardware.md](hardware.md#the-5-inch-board-es3c50p)) is its own
 build: the board picks the chip (ESP32-S3), its settings
-(`sdkconfig.defaults.es3c50p`), its partition table and the 800x480 UI. Give it
-its own build directory:
+(`sdkconfig.defaults.es3c50p`), its partition table and the 800x480 UI. With
+`make`, choose it in `make menuconfig` (or `make BOARD=es3c50p flash monitor`).
+With `idf.py`, give it its own build directory:
 
 ```sh
 cd platform/esp32
@@ -55,7 +72,8 @@ idf.py -B build-es3c50p -DMMU_BOARD=es3c50p build
 idf.py -B build-es3c50p -DMMU_BOARD=es3c50p flash monitor
 ```
 
-After a `git pull`, or after a build that failed, start clean:
+After a `git pull`, or after a build that failed, start clean (`make clean`
+with make):
 
 ```sh
 idf.py fullclean

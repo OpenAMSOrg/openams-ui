@@ -67,6 +67,9 @@ idf.py -DMMU_LANGUAGES=ja build          # -> build/openams-ui_1.0.0-ja.bin
 idf.py -DMMU_LANGUAGES=zh-Hans flash monitor
 ```
 
+`make menuconfig` in `platform/esp32` offers the same sets in a menu, beside
+the board and the tag writer ([flash-and-setup.md](docs/guide/flash-and-setup.md#install)).
+
 The app version carries the set (`1.0.0-latin`, `1.0.0-ja`, ...), so an image
 can be told apart from another in the OTA console and by
 `esp_ota_get_partition_description()`. The base version is `MMU_APP_VERSION`

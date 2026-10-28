@@ -75,6 +75,8 @@ idf.py build flash monitor
 | `MMU_TAG_READER` | `PN5180` | `MFRC522` for the original reader |
 
 `MMU_LANGUAGES` works as for every image (see the [README](../../README.md)).
+`make menuconfig` has the same choices in a menu
+([flash-and-setup.md](flash-and-setup.md#install)).
 
 An image with the tag writer has its own partition table,
 `platform/esp32/partitions_tagwriter.csv`: one app partition and the tag
@@ -141,6 +143,9 @@ checkout of that library over USB:
 ```sh
 python tools/tagtool.py libflash --lib ~/Bambu-Lab-RFID-Library
 ```
+
+(or `make libflash LIB=~/Bambu-Lab-RFID-Library` in `platform/esp32`, which
+uses the menu's serial port)
 
 `libflash` reads the display's partition table, builds the whole library and
 flashes it in about a minute (through the bootloader, so the display restarts;
