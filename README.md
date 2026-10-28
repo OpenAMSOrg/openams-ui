@@ -65,6 +65,10 @@ make menuconfig       # the board, the tag writer, its reader and tag library, t
 make flash monitor    # build, flash, then the console
 ```
 
+On Windows, where there is no `make`, the same is `python make.py menuconfig`
+and `python make.py flash monitor`, from the ESP-IDF PowerShell
+([flash-and-setup.md](docs/guide/flash-and-setup.md#install)).
+
 `make` turns the menu's choices into the `-D` options of `idf.py`, which also
 work by hand:
 

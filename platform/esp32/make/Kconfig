@@ -1,8 +1,8 @@
 mainmenu "OpenAMS display: what to build"
 
-# The menu of `make menuconfig` (platform/esp32/Makefile). These are the build
-# options the -D flags of idf.py set; ESP-IDF's own settings stay in
-# `make idf-menuconfig`. The choices are kept in make/config.
+# The menu of `make menuconfig`, or `python make.py menuconfig` (make.py).
+# These are the build options the -D flags of idf.py set; ESP-IDF's own
+# settings stay in `make idf-menuconfig`. The choices are kept in make/config.
 
 choice BOARD
     prompt "Display board"
@@ -118,5 +118,6 @@ config PORT
     string "Serial port"
     default "/dev/ttyUSB0"
     help
-        Where make flash, make monitor and make libflash find the board.
-        PORT=... on the make command line overrides it.
+        Where flash, monitor and libflash find the board: /dev/ttyUSB0 on
+        Linux, COM3 on Windows. Empty lets idf.py look for it, and so does
+        this default on Windows. PORT=... on the command line overrides it.
