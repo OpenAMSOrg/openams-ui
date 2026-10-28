@@ -44,7 +44,7 @@ the source and rebuilding.
 The spool tag writer's reader (a PN5180 or an MFRC522) goes on the other SPI
 bus, VSPI: SCK 18, MOSI 23, MISO 19, CS 21, reset 32, and the PN5180's BUSY
 (or the MFRC522's IRQ) on 35. Those lines also reach the microSD slot, so leave
-it empty. Wiring per connector pin: [tag-writer.md](tag-writer.md#wiring).
+it empty. Wiring per connector pin: [tag-writer.md](tag-writer.md#the-4-inch-board-e32r40t).
 
 ## Panel options
 
@@ -75,7 +75,7 @@ board has. The UI is the same, drawn at 800x480 ([VISUAL_SPEC_800.md](../VISUAL_
 | Memory | 512 KB SRAM, 8 MB octal PSRAM (the frame buffer, LVGL's pool, the program) |
 | Flash | 16 MB, quad I/O, 80 MHz: two 4 MB OTA slots and a 7.9 MB tag library of 7,475 tags (`partitions_es3c50p.csv`) |
 | Panel | ST7282E, 800x480, 16-bit RGB, no command interface |
-| Touch | GT911 capacitive controller on I2C, address 0x5D: no calibration |
+| Touch | GT911 capacitive controller on I2C, address 0x5D (or 0x14 with the tag writer): no calibration |
 | Backlight | PWM on GPIO2 (an SY7200 boost driver) |
 | USB | CH340 serial (`/dev/ttyUSB*`), auto reset into the bootloader |
 
@@ -85,18 +85,30 @@ board has. The UI is the same, drawn at 800x480 ([VISUAL_SPEC_800.md](../VISUAL_
 | R0-R4 | 45, 48, 47, 21, 14 |
 | G0-G5 | 5, 6, 7, 15, 16, 4 |
 | B0-B4 | 8, 3, 46, 9, 1 |
-| Touch SDA, SCL, INT, RST | 19, 20, 18, 38 |
+| Touch SDA, SCL, INT, RST | 19, 20, 18 (through R16, a 0 Ω link), 38 |
 | microSD CS, MOSI, MISO, SCK | 10, 11, 13, 12 |
 | Speaker I2S LRCLK, DATA, BCLK | 18, 17, 0 (not used) |
+| UART0 TX, RX (the CH340: flashing and the console) | 43, 44 |
+
+The connectors on the back (1.25 mm, 4 pins; pin 1 is the leftmost with the
+connectors along the bottom edge):
+
+| Connector | Pins 1-4 |
+|-----------|----------|
+| SPI (P3) | IO19, IO11, IO12, IO13 |
+| UART1 & USB (P4) | IO17, IO18, IO19, IO20 |
+| Expand (P5, and P6 the same) | GND, 3.3V, IO17, IO18 |
+| UART0 (P1) | 5V (through R12, 10 kΩ), TX, RX, GND |
 
 The image is turned 180 degrees from the panel's own scan order
 (`BOARD_ROTATED_180`); the display settings' flip turns it from there.
 
-The board has two free GPIOs, 17 and 18, and 18 is the touch controller's
-interrupt. So the tag writer's reader shares the microSD slot's SPI bus (SCK 12,
-MOSI 11, MISO 13, CS 10; leave the slot empty), and GPIO17, on the "Expand"
-connector, is the PN5180's BUSY or the MFRC522's reset. The PN5180's reset is
-tied high. This wiring is not yet tried on hardware.
+The tag writer's reader takes the only two free GPIOs, 17 and 18, as its chip
+select and the PN5180's BUSY (or the MFRC522's reset), on the SPI connector's
+bus. IO18 is also the touch controller's interrupt, so R16 comes off first, and
+a tag writer image leaves IO18 alone when it resets the touch controller. The
+PN5180 takes its 5 V from UART0 pin 1, with R12 replaced by 0 Ω. Wiring and the
+rework: [tag-writer.md](tag-writer.md#the-5-inch-board-es3c50p).
 
 ## Requirements
 

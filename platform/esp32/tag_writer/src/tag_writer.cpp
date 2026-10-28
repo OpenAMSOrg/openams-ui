@@ -28,20 +28,23 @@
 static const char *TAG = "tag_writer";
 
 #if defined(MMU_BOARD_ES3C50P)
-// The ES3C50P (5" ESP32-S3) has two free GPIOs, 17 and 18, and 18 is the touch
-// controller's interrupt. So the reader shares the microSD slot's SPI bus
-// (SCK IO12, MOSI IO11, MISO IO13, CS IO10; the slot must stay empty), and
-// IO17, on the "Expand" connector, is the PN5180's BUSY or the MFRC522's
-// reset. The PN5180's reset is tied high (it starts on power-up) and the
-// MFRC522's IRQ is not used.
+// The ES3C50P (5" ESP32-S3) has two free GPIOs, 17 and 18, on its "Expand"
+// connectors, and 18 also reaches the touch controller's interrupt through
+// R16, a 0R link removed for the reader (docs/guide/tag-writer.md, which also
+// has R12 to 0R for the PN5180's 5 V; main/touch_gt911.c leaves IO18 alone). The bus is the one on the "SPI"
+// connector, shared with the microSD slot (SCK IO12, MOSI IO11, MISO IO13; the
+// slot must stay empty), whose own chip select, IO19, is the touch
+// controller's I2C data. So IO17 is the reader's chip select and IO18 the
+// PN5180's BUSY or the MFRC522's reset. The PN5180's reset is tied high (it
+// starts on power-up) and the MFRC522's IRQ is not used.
 #if defined(TW_READER_MFRC522)
 static const Reader::Pins READER_PINS = {
-    SPI3_HOST, /*sck*/ 12, /*mosi*/ 11, /*miso*/ 13, /*cs*/ 10, /*rst*/ 17, /*irq*/ -1,
+    SPI3_HOST, /*sck*/ 12, /*mosi*/ 11, /*miso*/ 13, /*cs*/ 17, /*rst*/ 18, /*irq*/ -1,
     /*clock_hz*/ 4 * 1000 * 1000,
 };
 #else
 static const Reader::Pins READER_PINS = {
-    SPI3_HOST, /*sck*/ 12, /*mosi*/ 11, /*miso*/ 13, /*cs*/ 10, /*busy*/ 17, /*rst*/ -1,
+    SPI3_HOST, /*sck*/ 12, /*mosi*/ 11, /*miso*/ 13, /*cs*/ 17, /*busy*/ 18, /*rst*/ -1,
     /*clock_hz*/ 4 * 1000 * 1000,
 };
 #endif

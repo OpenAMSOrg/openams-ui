@@ -137,9 +137,9 @@ The ESP32 image carries a spool tag writer by default (**Menu → Tag writer**):
 it composes a spool and writes it to an RFID tag, reads any filament tag, and
 resets, copies and clones Bambu tags, with a PN5180 (or `-DMMU_TAG_READER=MFRC522`).
 On the 4 inch board the reader goes on the VSPI connector; on the 5 inch one
-it shares the microSD slot's SPI bus, a wiring not yet tried on hardware
-([hardware.md](docs/guide/hardware.md)). `-DMMU_SPOOL_TAG_WRITER=OFF` builds
-the display alone.
+it goes on the SPI, Expand and UART0 connectors once two resistors change (R16
+off, R12 to 0 Ω; [wiring](docs/guide/tag-writer.md#wiring)).
+`-DMMU_SPOOL_TAG_WRITER=OFF` builds the display alone.
 
 Its on-device library of genuine Bambu tags, cloned from the touchscreen onto
 magic tags, holds 1,599 tags on the 4 inch board and 7,475 on the 5 inch one,

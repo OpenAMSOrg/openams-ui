@@ -39,6 +39,8 @@ build does not set, so those two read as unrecognised.
 
 ## Wiring
 
+### The 4 inch board (E32R40T)
+
 The reader goes on the board's SPI connector (the VSPI bus), with reset and
 one status line on the other connectors. The panel and touch use the other SPI
 bus, so nothing else on the board shares these pins.
@@ -59,6 +61,66 @@ bus, so nothing else on the board shares these pins.
 - Most PN5180 breakout boards also need 5 V for their RF driver (a pin marked
   `5V`). Check your module's silkscreen.
 - The pins are fixed in `platform/esp32/tag_writer/src/tag_writer.cpp`.
+
+### The 5 inch board (ES3C50P)
+
+Every GPIO of this board but two goes to the panel, the PSRAM, touch or USB.
+The two, IO17 and IO18, are on the "Expand" connectors, and IO18 also reaches
+the touch controller's interrupt through **R16, a 0 Ω link that has to come
+off** first. Touch does not need it: the firmware reads touches by polling and
+finds the touch controller at either of its addresses. The SPI bus is the one
+on the "SPI" connector, but that connector's chip select, IO19, is the touch
+controller's I2C data, so the chip select is IO17.
+
+The PN5180's RF driver also needs 5 V, and the only 5 V on a connector, UART0
+pin 1, comes through **R12, 10 kΩ, which has to become 0 Ω**. Through 10 kΩ the
+PN5180 answers on SPI and reports its field on, but no tag answers it.
+
+Two resistors change, both on the back:
+
+1. Unplug the board. R16 is just left of the touch panel's flex connector
+   (P2), next to R15. Leave R15 (a 10 kΩ pull-up) in place. With a meter, R16
+   reads about 0 Ω across its ends.
+2. Heat both ends of R16 at once (a blob of solder across it, or tweezers) and
+   lift it off. A solder bridge across its pads puts it back.
+3. R12 is next to the UART0 connector (P1), with R10 and R11, and reads about
+   10 kΩ. Replace it with a 0 Ω resistor of the same size (R16 fits) or bridge
+   its pads.
+4. Power the board before wiring the reader: touch still works, and the log
+   says `touch ready: GT911 at 0x14` (or `0x5D`, whichever the controller
+   picks). UART0 pin 1 now reads close to 5 V (the USB 5 V less a diode).
+
+With R12 bridged, UART0 pin 1 is the USB 5 V with nothing to limit it: wire it
+with care, and do not connect a USB-to-serial adapter's 5V to that connector
+while the board is powered over USB-C.
+
+All four connectors are 1.25 mm, 4 pins. Pin 1 is the leftmost, looking at
+the back with the connectors along the bottom edge, and the silkscreen names
+each pin.
+
+| Reader pin | Board connector | GPIO |
+|---|---|---|
+| NSS / SDA (CS) | Expand (P5) pin 3 | IO17 |
+| SCK | SPI (P3) pin 3 | IO12 |
+| MOSI | SPI (P3) pin 2 | IO11 |
+| MISO | SPI (P3) pin 4 | IO13 |
+| PN5180: BUSY / MFRC522: RST | Expand (P5) pin 4 | IO18 |
+| 3.3V | Expand (P5) pin 2 | 3V3 |
+| GND | Expand (P5) pin 1 | GND |
+| PN5180: 5V | UART0 (P1) pin 1, with R12 at 0 Ω | 5V |
+| PN5180: RST | tied to 3.3V on the module | |
+| IRQ (and the PN5180's GPIO, AUX, REQ) | not connected | |
+
+- Leave the SPI connector's pin 1 (IO19, touch) unconnected, and the microSD
+  slot empty: a card would answer on the same lines.
+- Tie the PN5180's RST to its own 3.3V pin (a solder bridge or a short wire),
+  not to 5 V. The chip starts on power-up; with no reset line the firmware
+  cannot restart it, so a reader that ever stops answering needs a power
+  cycle, not just the board's RESET button.
+- The second Expand connector (P6) carries the same GND, 3.3V, IO17 and IO18.
+- `tag status` says `reader PN5180 version=0x04` (or 0x03) when the SPI lines
+  are right. `version=0x00 (not responding)` with the PN5180 powered is most
+  often SCK and MISO swapped.
 
 ## Build and flash
 

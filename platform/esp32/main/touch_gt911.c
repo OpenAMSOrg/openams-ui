@@ -8,6 +8,9 @@
  *
  * The GT911 picks its I2C address from INT's level as RST is released: low
  * gives 0x5D. INT is then only an output of the chip, unused: the indev polls.
+ * With the tag writer IO18 is the reader's (tag_writer/src/tag_writer.cpp):
+ * R16, the 0R link to INT, is removed and the reset leaves IO18 alone, so the
+ * chip picks either address, and init looks for both.
  */
 #include "touch.h"
 #include "board.h"
@@ -26,6 +29,12 @@
 #define PIN_SCL 20
 #define PIN_INT 18
 #define PIN_RST 38
+/* Driving IO18 in a tag writer image would fight the PN5180's BUSY. */
+#if defined(MMU_FEATURE_TAG_WRITER)
+#define INT_IS_OURS 0
+#else
+#define INT_IS_OURS 1
+#endif
 
 #define GT911_ADDR      0x5D
 #define GT911_ADDR_ALT  0x14
@@ -75,20 +84,20 @@ static esp_err_t reg_write8(uint16_t reg, uint8_t v)
     return i2c_master_transmit(s_dev, frame, sizeof frame, I2C_TIMEOUT_MS);
 }
 
-/* Resets the chip with INT held low, which selects address 0x5D. */
+/* Resets the chip, with INT held low (address 0x5D) when INT is ours. */
 static void gt911_reset(void)
 {
     gpio_config_t out = {
-        .pin_bit_mask = (1ULL << PIN_RST) | (1ULL << PIN_INT),
+        .pin_bit_mask = (1ULL << PIN_RST) | (INT_IS_OURS ? 1ULL << PIN_INT : 0),
         .mode = GPIO_MODE_OUTPUT,
     };
     gpio_config(&out);
-    gpio_set_level(PIN_INT, 0);
+    if(INT_IS_OURS) gpio_set_level(PIN_INT, 0);
     gpio_set_level(PIN_RST, 0);
     vTaskDelay(pdMS_TO_TICKS(10));
     gpio_set_level(PIN_RST, 1);
     vTaskDelay(pdMS_TO_TICKS(10));
-    gpio_set_direction(PIN_INT, GPIO_MODE_INPUT); /* the chip drives it from here on */
+    if(INT_IS_OURS) gpio_set_direction(PIN_INT, GPIO_MODE_INPUT); /* the chip drives it from here on */
     vTaskDelay(pdMS_TO_TICKS(50));
 }
 
