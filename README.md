@@ -61,7 +61,7 @@ cmake --build build-800 -j4
 From an ESP-IDF v6.0.1 shell, in `platform/esp32`:
 
 ```sh
-make menuconfig       # the board, the tag writer and its reader, the languages, the serial port
+make menuconfig       # the board, the tag writer, its reader and tag library, the languages, the port
 make flash monitor    # build, flash, then the console
 ```
 
@@ -145,9 +145,10 @@ Its on-device library of genuine Bambu tags, cloned from the touchscreen onto
 magic tags, holds 1,599 tags on the 4 inch board and 7,475 on the 5 inch one,
 enough for the whole
 [Bambu-Lab-RFID-Library](https://github.com/queengooborg/Bambu-Lab-RFID-Library)
-(6,550 distinct tags in 269 colours). `tools/tagtool.py libflash --lib <checkout>`
-writes it over USB in about a minute, and each clone takes a UID that has not
-been cloned before. On the 4 inch board the library takes the second OTA
+(6,550 distinct tags in 269 colours in October 2026). `tools/tagtool.py libflash
+--lib <checkout>` writes it over USB in about a minute, or turn on **Bambu Lab
+tag library** in `make menuconfig` and `make flash` writes it with the
+firmware. Each clone takes a UID that has not been cloned before. On the 4 inch board the library takes the second OTA
 slot's place, so an image with the tag writer is updated over USB; the 5 inch
 board's 16 MB holds both.
 

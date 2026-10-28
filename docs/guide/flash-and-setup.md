@@ -41,7 +41,7 @@ easiest way is the menu:
 
 ```sh
 cd platform/esp32
-make menuconfig       # the board, the tag writer and its reader, the languages, the port
+make menuconfig       # the board, the tag writer, its reader and tag library, the languages, the port
 make flash monitor    # build, flash, then watch it start
 ```
 
@@ -50,7 +50,9 @@ into the `-D` options below, so `make` is `idf.py` with the options filled in.
 Each board builds in its own directory, `build-<board>`. A choice on the
 command line overrides the menu (`make BOARD=es3c50p flash`), and `make help`
 lists the rest: `make size`, `make clean`, and `make idf-menuconfig` for
-ESP-IDF's own settings of the chosen board.
+ESP-IDF's own settings of the chosen board. With **Bambu Lab tag library**
+turned on, `make flash` also writes that library into the board's tag library
+([tag-writer.md](tag-writer.md#the-on-device-library)).
 
 A build directory that another ESP-IDF Python or another checkout set up (after
 reinstalling ESP-IDF, say, or moving the checkout) cannot be reused: `make`

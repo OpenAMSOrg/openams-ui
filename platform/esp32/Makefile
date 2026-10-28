@@ -1,7 +1,8 @@
 # The display firmware, by menu:
 #
 #   make menuconfig    pick the board, the tag writer and its reader, the
-#                      languages and the serial port (make/Kconfig)
+#                      Bambu Lab tag library, the languages and the serial
+#                      port (make/Kconfig)
 #   make               build it          make flash / make monitor
 #   make help          everything else
 #
@@ -49,8 +50,18 @@ DEFS := -DMMU_BOARD=$(BOARD) -DMMU_SPOOL_TAG_WRITER=$(TAG_WRITER) -DMMU_TAG_READ
 	'-DMMU_LANGUAGES=$(LANGUAGES)' $(CMAKE_DEFS)
 IDF := $(IDF_PY) -B $(BUILD_DIR) $(DEFS)
 
+# The Bambu Lab tag library, written by make flash when the menu says so
+# (LIB=<dir> on the command line overrides where it is).
+TAG_LIBRARY := $(if $(and $(filter ON,$(TAG_WRITER)),$(CONFIG_TAG_LIBRARY)),ON,OFF)
+LIBRARY_DIR := $(patsubst ~/%,$(HOME)/%,$(or $(LIB),$(call unquote,$(CONFIG_TAG_LIBRARY_DIR)),\
+	../../third_party/Bambu-Lab-RFID-Library))
+LIBRARY_URL := https://github.com/queengooborg/Bambu-Lab-RFID-Library.git
+PARTITIONS := $(if $(filter es3c50p,$(BOARD)),partitions_es3c50p.csv,partitions_tagwriter.csv)
+TAGTOOL := $(PYTHON) ../../tools/tagtool.py --port $(PORT) libflash --lib "$(LIBRARY_DIR)" \
+	--stamp $(BUILD_DIR)/taglib-flashed
+
 .PHONY: build flash monitor size idf-menuconfig clean idf menuconfig show help \
-	e32r40t es3c50p libflash
+	e32r40t es3c50p libflash libupdate library
 
 # idf.py will not use a build directory that another Python (another ESP-IDF
 # install or environment) or another checkout set up, and its advice, idf.py
@@ -73,8 +84,13 @@ idf:
 build: idf
 	$(IDF) build
 
+# The firmware, then the tag library: after the partition table it goes in.
 flash: idf
 	$(IDF) -p $(PORT) -b $(BAUD) flash
+ifeq ($(TAG_LIBRARY),ON)
+	@$(MAKE) --no-print-directory library
+	$(TAGTOOL) --partitions $(PARTITIONS)
+endif
 
 monitor: idf
 	$(IDF) -p $(PORT) monitor
@@ -96,6 +112,7 @@ menuconfig:
 show:
 	@echo "board       $(BOARD)"
 	@echo "tag writer  $(TAG_WRITER)$(if $(filter ON,$(TAG_WRITER)), ($(TAG_READER)))"
+	@echo "tag library $(if $(filter ON,$(TAG_LIBRARY)),$(LIBRARY_DIR),no)"
 	@echo "languages   $(LANGUAGES)"
 	@echo "port        $(PORT)"
 	@echo "builds in   $(BUILD_DIR)"
@@ -104,10 +121,19 @@ show:
 e32r40t es3c50p:
 	@$(MAKE) --no-print-directory BOARD=$@ build
 
-# The whole tag library into the board's library partition (tools/tagtool.py).
-libflash:
-	@[ -n "$(LIB)" ] || { echo "make: give the library checkout: make libflash LIB=<dir>"; exit 1; }
-	$(PYTHON) ../../tools/tagtool.py --port $(PORT) libflash --lib $(LIB)
+# The library checkout, cloned the first time it is needed.
+library:
+	@[ -d "$(LIBRARY_DIR)" ] || { echo "make: cloning the Bambu Lab tag library into \
+	$(LIBRARY_DIR) (about 200 MB)"; git clone --depth 1 $(LIBRARY_URL) "$(LIBRARY_DIR)"; }
+
+# The library into the board's tag library now, changed or not; its partition
+# comes from the board's own table (tools/tagtool.py).
+libflash: library
+	$(TAGTOOL) --force
+
+# The newest tags into the checkout; make flash then writes them.
+libupdate: library
+	git -C "$(LIBRARY_DIR)" pull --ff-only
 
 help:
 	@echo "make menuconfig     choose what to build (kept in $(CONFIG))"
@@ -118,9 +144,11 @@ help:
 	@echo "make idf-menuconfig ESP-IDF's own settings for this board"
 	@echo "make clean          delete $(BUILD_DIR)"
 	@echo "make e32r40t        build that board (or es3c50p) with the other choices"
-	@echo "make libflash LIB=<Bambu-Lab-RFID-Library checkout>"
-	@echo "                    the whole tag library into the board's tag library"
+	@echo "make libflash       the Bambu Lab tag library into the board now (make flash"
+	@echo "                    writes it when it changed, if the menu says so)"
+	@echo "make libupdate      the newest tags into the library checkout"
 	@echo "make show           what the choices are"
 	@echo "Any choice on the command line overrides the menu: BOARD=es3c50p,"
-	@echo "TAG_WRITER=OFF, TAG_READER=MFRC522, LANGUAGES=ja, PORT=/dev/ttyUSB1;"
+	@echo "TAG_WRITER=OFF, TAG_READER=MFRC522, TAG_LIBRARY=ON, LIB=<dir>, LANGUAGES=ja,"
+	@echo "PORT=/dev/ttyUSB1;"
 	@echo "CMAKE_DEFS=-DMMU_APP_VERSION=1.2.0 adds more -D options."

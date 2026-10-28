@@ -38,6 +38,28 @@ choice TAG_READER
         bool "MFRC522 (Bambu MIFARE Classic tags only)"
 endchoice
 
+config TAG_LIBRARY
+    bool "Bambu Lab tag library"
+    depends on TAG_WRITER
+    default n
+    help
+        make flash also writes the Bambu-Lab-RFID-Library
+        (github.com/queengooborg/Bambu-Lab-RFID-Library) into the board's tag
+        library, to clone from the touchscreen: every tag on the 5 inch board,
+        every colour and as many UIDs as fit on the 4 inch one. It replaces
+        what the library held. make clones the library the first time (about
+        200 MB) and writes it only when it changed since the last flash;
+        make libupdate pulls the newest tags, make libflash writes it anyway.
+
+config TAG_LIBRARY_DIR
+    string "Where the library is (cloned there if it is not)"
+    depends on TAG_LIBRARY
+    default "../../third_party/Bambu-Lab-RFID-Library"
+    help
+        A Bambu-Lab-RFID-Library checkout: a path from platform/esp32, an
+        absolute path or ~/... The default is in the repository's
+        third_party/, which git ignores.
+
 choice LANGUAGES
     prompt "Languages"
     default LANGUAGES_LATIN

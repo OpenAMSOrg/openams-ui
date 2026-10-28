@@ -21,6 +21,7 @@ on the PC (--key or --key-file).
 """
 
 import argparse
+import hashlib
 import pathlib
 import re
 import shutil
@@ -351,10 +352,21 @@ def cmd_libflash(args):
         pathlib.Path(args.out).write_bytes(image)
         print("wrote %s: flash it at 0x%X" % (args.out, offset))
         return 0
+    # --stamp records what was flashed, so the next run (make flash) can skip
+    # writing the same 8 MB again.
+    flashed = "%s 0x%X %s\n" % (hashlib.sha256(image).hexdigest(), offset, args.port)
+    stamp = pathlib.Path(args.stamp) if args.stamp else None
+    if stamp and not args.force and stamp.is_file() and stamp.read_text() == flashed:
+        print("# the library is unchanged since it was last flashed: skipped "
+              "(make libflash writes it anyway)")
+        return 0
     with tempfile.TemporaryDirectory() as tmp:
         path = pathlib.Path(tmp) / "taglib.bin"
         path.write_bytes(image)
         esptool(args, "write_flash", "0x%X" % offset, str(path))
+    if stamp:
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        stamp.write_text(flashed)
     print("# flashed %d tags into the library at 0x%X" % (len(picked), offset))
     return 0
 
@@ -408,6 +420,9 @@ def main():
     lf.add_argument("--partitions", help="take the taglib partition from this CSV instead "
                     "of reading the display's table")
     lf.add_argument("--out", help="only write the partition image to this file")
+    lf.add_argument("--stamp", help="record the flashed image in this file, and skip the "
+                    "flash when it records this same image already")
+    lf.add_argument("--force", action="store_true", help="flash even when --stamp says it is there")
     lf.add_argument("query", nargs="*")
     lu = sub.add_parser("libupload")
     lu.add_argument("--lib", required=True)

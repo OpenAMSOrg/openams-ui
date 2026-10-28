@@ -144,8 +144,12 @@ checkout of that library over USB:
 python tools/tagtool.py libflash --lib ~/Bambu-Lab-RFID-Library
 ```
 
-(or `make libflash LIB=~/Bambu-Lab-RFID-Library` in `platform/esp32`, which
-uses the menu's serial port)
+From `platform/esp32`, `make` can do it for you: turn on **Bambu Lab tag
+library** in `make menuconfig` and say where the checkout is (`make` clones it
+there the first time, about 200 MB). `make flash` then writes the library after
+the firmware, but only when it changed since the last flash, which saves a
+minute. `make libupdate` pulls the newest tags into the checkout, and
+`make libflash` writes the library now.
 
 `libflash` reads the display's partition table, builds the whole library and
 flashes it in about a minute (through the bootloader, so the display restarts;
