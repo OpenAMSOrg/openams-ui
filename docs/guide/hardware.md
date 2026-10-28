@@ -73,7 +73,7 @@ board has. The UI is the same, drawn at 800x480 ([VISUAL_SPEC_800.md](../VISUAL_
 |------|-------|
 | Module | ESP32-S3 (QFN56), dual core, 240 MHz |
 | Memory | 512 KB SRAM, 8 MB octal PSRAM (the frame buffer, LVGL's pool, the program) |
-| Flash | 16 MB, quad I/O, 80 MHz: two OTA slots and the tag library (`partitions_es3c50p.csv`) |
+| Flash | 16 MB, quad I/O, 80 MHz: two 4 MB OTA slots and a 7.9 MB tag library of 7,475 tags (`partitions_es3c50p.csv`) |
 | Panel | ST7282E, 800x480, 16-bit RGB, no command interface |
 | Touch | GT911 capacitive controller on I2C, address 0x5D: no calibration |
 | Backlight | PWM on GPIO2 (an SY7200 boost driver) |

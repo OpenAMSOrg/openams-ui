@@ -3,7 +3,7 @@
 # default): one app partition and the tag library instead of two OTA slots,
 # since a 4 MB flash holds one or the other. nvs keeps its offset and size, so
 # Wi-Fi, Moonraker and touch settings survive a switch between the layouts
-# (flashed over USB). The library holds one captured tag per 4 KB slot.
+# (flashed over USB). The library holds 1,599 tags (taglib.cpp).
 nvs,      data, nvs,     0x9000,   0x6000,
 phy_init, data, phy,     0xf000,   0x1000,
 factory,  app,  factory, 0x10000,  0x240000,

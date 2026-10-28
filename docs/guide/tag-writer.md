@@ -78,7 +78,7 @@ idf.py build flash monitor
 
 An image with the tag writer has its own partition table,
 `platform/esp32/partitions_tagwriter.csv`: one app partition and the tag
-library (432 captured tags), instead of the two OTA slots. A 4 MB flash holds
+library (1,599 tags), instead of the two OTA slots. A 4 MB flash holds
 one or the other, so **an image with the tag writer is updated over USB**,
 not with `ota`. Its settings live in a separate generated `sdkconfig.tagwriter`,
 so switching the option needs no clean-up. Flashing over USB from one layout to
@@ -107,7 +107,7 @@ The home page shows the spool you are composing and what is on the reader.
 | Material / Color / Details | edit the spool |
 | Read | read the tag on the reader (any type and format with a PN5180) |
 | Write | write the spool to a blank or custom MIFARE Classic 1K tag, then verify it |
-| Clone | clone a tag from the on-device library onto a magic tag |
+| Clone | clone a tag from the on-device library onto a magic tag; each clone takes a UID of that colour not cloned before, so two spools never share one |
 | Gear | copy a physical tag, clone from the library, reset a tag to blank |
 | Back arrow | return to the display |
 
@@ -124,11 +124,35 @@ prefix; `tag help` lists them.
 | `tag write` / `tag erase yes` | write the spool (Bambu layout) / reset a tag to factory keys |
 | `tag dump`, `tag magic` | all 64 blocks as hex; identify a magic tag |
 | `tag capture`, `tag loadimage`, `tag image`, `tag clone` | the clone image buffer |
-| `tag libadd`, `tag liblist`, `tag libclear yes` | the on-device library |
+| `tag libadd`, `tag liblist`, `tag libclear yes` | add one tag to the on-device library, list it, erase it |
 | `tag key <32 hex>` / `tag key clear` | store or forget the Bambu master key |
 
-`tools/tagtool.py` drives these from a PC: `libupload` fills the library from a
-folder of tag dumps, `clonefrom` clones one, `cmd` sends any command.
+`tools/tagtool.py` drives these from a PC: `clonefrom` clones one tag from a
+folder of dumps, `cmd` sends any command.
+
+## The on-device library
+
+The library holds genuine tag dumps to clone from the touchscreen: 1,599 on
+the 4 inch board, 7,475 on the 5 inch one, which holds every dump in the
+[Bambu-Lab-RFID-Library](https://github.com/queengooborg/Bambu-Lab-RFID-Library)
+(6,550 distinct tags in 269 colours as of October 2026). Fill it from a
+checkout of that library over USB:
+
+```sh
+python tools/tagtool.py libflash --lib ~/Bambu-Lab-RFID-Library
+```
+
+`libflash` reads the display's partition table, builds the whole library and
+flashes it in about a minute (through the bootloader, so the display restarts;
+run it from an ESP-IDF shell, which has esptool). It replaces what was there.
+When everything does not fit, it takes every colour first, then a second UID
+of each, and so on. A query (`libflash --lib DIR "PLA Matte"`), `--per-color N`
+and `--limit N` take less.
+
+`libupload` adds tags one at a time over the console instead (about two
+seconds each), and keeps what is there. A library written by an older firmware
+(one tag per 4 KB) reads as empty: fill it again with `libflash`, or run
+`tag libclear yes` before `libupload`.
 
 ## License
 

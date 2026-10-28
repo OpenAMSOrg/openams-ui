@@ -10,6 +10,7 @@
 #include "console.h"
 
 #include <ctype.h>
+#include <new>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,7 +49,7 @@ static const char HELP[] =
     "  clone                  write the image buffer onto a magic tag\n"
     "  libadd <mat>|<color>   store a genuine tag in the on-device library\n"
     "  liblist / libcount     the on-device library\n"
-    "  libclear yes           empty the library\n"
+    "  libclear yes           empty (and format) the library\n"
     "  scan                   the tag on the reader, if any\n"
     "  read                   decode the tag as JSON (Bambu layout)\n"
 #if defined(TW_READER_UNIVERSAL)
@@ -546,6 +547,32 @@ static void cmd_loadimage() {
            snap.image_info.detail);
 }
 
+// The library's materials and colours, with how many entries each colour has
+// and how many of those were never cloned. The lists are on the heap: the
+// command's stack is 6 KB.
+static void cmd_liblist() {
+    const int MAX = 48;
+    struct Lists {
+        char materials[MAX][taglib::NAME_LEN];
+        char colors[MAX][taglib::NAME_LEN];
+        uint16_t counts[MAX], fresh[MAX];
+    };
+    Lists *l = new (std::nothrow) Lists;
+    if (!l) {
+        printf("ERROR no memory\n");
+        return;
+    }
+    printf("library: %d of %d entries\n", taglib::count(), taglib::slot_count());
+    int nm = taglib::list_materials(l->materials, MAX);
+    for (int i = 0; i < nm; i++) {
+        int nc = taglib::list_colors(l->materials[i], l->colors, l->counts, l->fresh, MAX);
+        for (int j = 0; j < nc; j++)
+            printf("  %-30s %-26s x%u (%u never cloned)\n", l->materials[i], l->colors[j],
+                   l->counts[j], l->fresh[j]);
+    }
+    delete l;
+}
+
 // libadd <material>|<color> then 64 image lines: store a genuine tag in the
 // on-device library so it can be cloned from the touchscreen.
 static void cmd_libadd(char *args) {
@@ -555,7 +582,7 @@ static void cmd_libadd(char *args) {
         return;
     }
     *bar = 0;
-    char material[28], color[28];
+    char material[taglib::NAME_LEN], color[taglib::NAME_LEN];
     strncpy(material, args, sizeof(material) - 1);
     material[sizeof(material) - 1] = 0;
     strncpy(color, bar + 1, sizeof(color) - 1);
@@ -575,11 +602,8 @@ static void cmd_libadd(char *args) {
         printf("ERROR image rejected: %s\n", why);
         return;
     }
-    if (!taglib::add(material, color, image)) {
-        if (taglib::slot_count() == 0)
-            printf("ERROR this image has no tag library partition\n");
-        else
-            printf("ERROR library full (%d slots)\n", taglib::slot_count());
+    if (!taglib::add(material, color, image, &why)) {
+        printf("ERROR %s (%d of %d entries)\n", why, taglib::count(), taglib::slot_count());
         return;
     }
     printf("OK stored %02X%02X%02X%02X %s / %s (%d in library)\n", image[0], image[1], image[2],
@@ -725,25 +749,18 @@ static void execute(char *command) {
     else if (!strcmp(command, "image")) cmd_image();
     else if (!strcmp(command, "clone")) cmd_clone();
     else if (!strcmp(command, "libadd")) cmd_libadd(args);
-    else if (!strcmp(command, "liblist")) {
-        char mats[16][taglib::NAME_LEN];
-        int nm = taglib::list_materials(mats, 16);
-        printf("library: %d entries, %d slots\n", taglib::count(), taglib::slot_count());
-        for (int i = 0; i < nm; i++) {
-            char cols[40][taglib::NAME_LEN];
-            uint16_t counts[40];
-            int nc = taglib::list_colors(mats[i], cols, counts, 40);
-            for (int j = 0; j < nc; j++)
-                printf("  %-20s %-20s x%u\n", mats[i], cols[j], counts[j]);
-        }
-    }
+    else if (!strcmp(command, "liblist")) cmd_liblist();
     else if (!strcmp(command, "libcount")) printf("OK %d entries\n", taglib::count());
     else if (!strcmp(command, "libclear")) {
         if (strcmp(args, "yes"))
             printf("ERROR confirm with: libclear yes\n");
         else {
             taglib::clear();
-            printf("OK library cleared\n");
+            if (taglib::slot_count())
+                printf("OK library cleared (%d entries free)\n", taglib::slot_count());
+            else
+                printf("ERROR %s\n", taglib::has_partition() ? "erase failed"
+                                                             : "this image has no tag library partition");
         }
     }
     else if (!strcmp(command, "dump")) cmd_dump();

@@ -86,7 +86,8 @@ it composes a spool and writes it to an RFID tag, reads any filament tag, and
 resets, copies and clones Bambu tags, with a PN5180 (or `-DMMU_TAG_READER=MFRC522`)
 on the board's VSPI connector. `-DMMU_SPOOL_TAG_WRITER=OFF` builds the display
 alone. An image with the tag writer trades the two OTA slots for an on-device
-tag library (`platform/esp32/partitions_tagwriter.csv`) and is updated over USB.
+tag library (`platform/esp32/partitions_tagwriter.csv`) and is updated over USB;
+the 5 inch board's 16 MB holds both.
 The tag writer (`platform/esp32/tag_writer/`) is under the GPLv3, so an image
 built with it is too; the display alone stays MIT. See
 [docs/guide/tag-writer.md](docs/guide/tag-writer.md).

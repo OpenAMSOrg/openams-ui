@@ -100,7 +100,7 @@ extern "C" void tag_writer_init(void) {
     if (!spool::load_key(key))
         ESP_LOGI(TAG, "no Bambu master key stored (tag key <32 hex>)");
     tagsvc::init(READER_PINS, key);
-    if (taglib::slot_count() == 0)
+    if (!taglib::has_partition())
         // No taglib partition: this image is running on a display still using
         // the two-OTA-slot table (an over-the-air update across layouts). The
         // writer works, but capture/clone from the on-device library do not;

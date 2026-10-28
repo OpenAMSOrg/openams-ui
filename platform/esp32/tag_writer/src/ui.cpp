@@ -641,7 +641,8 @@ static void build_details() {
 enum CloneStage { CL_OFF, CL_SOURCE, CL_TARGET };
 static CloneStage clone_stage;
 static bool clone_from_library;  // library pick vs. physical capture
-static char clone_desc[48];
+static char clone_desc[80];
+static void library_cloned();
 
 static const char *job_title(tagsvc::Op op) {
     switch (op) {
@@ -791,8 +792,11 @@ static void refresh_job(const tagsvc::Snapshot &snap) {
             }
             return;
         }
-        if (job_op == tagsvc::OP_CLONE)
+        if (job_op == tagsvc::OP_CLONE) {
             clone_stage = CL_OFF;
+            if (clone_from_library && job_result.ok)
+                library_cloned();
+        }
 #if defined(TW_READER_UNIVERSAL)
         if (job_op == tagsvc::OP_DECODE) {
             job_decode_ok = false;
@@ -1060,15 +1064,20 @@ static void build_tag_view() {
 
 // ------------------------------------------------------------- library
 
-// The library pages' lists (about 2.4 KB), on the heap from the first visit
+// The library pages' lists (about 3.3 KB), on the heap from the first visit
 // to the library until the tag writer closes, not in static RAM for good.
+static const int LIB_MAX = 48;  // materials, and colours per material
 struct Library {
-    char materials[16][taglib::NAME_LEN];
+    char materials[LIB_MAX][taglib::NAME_LEN];
     int material_n;
     char material[taglib::NAME_LEN];
-    char colors[64][taglib::NAME_LEN];
-    uint16_t counts[64];
+    char colors[LIB_MAX][taglib::NAME_LEN];
+    uint16_t counts[LIB_MAX], fresh[LIB_MAX];
     int color_n;
+    int pick_slot = -1;   // the entry the confirm page offers
+    int clone_slot = -1;  // the entry being cloned
+    char pick_uid[9];
+    bool pick_fresh;
 };
 static Library *lib;
 
@@ -1083,6 +1092,16 @@ static void on_lib_material(lv_event_t *e) {
     navigate(LIBRARY_COLORS);
 }
 
+// The scrolling area under a page's header.
+static lv_obj_t *scroll_area(lv_obj_t *scr) {
+    lv_obj_t *list = lv_obj_create(scr);
+    lv_obj_set_pos(list, 0, PX(48));
+    lv_obj_set_size(list, PX(480), PX(272));
+    lv_obj_set_style_bg_color(list, hex(C_BG), 0);
+    lv_obj_set_style_border_width(list, 0, 0);
+    return list;
+}
+
 static void build_library() {
     lv_obj_t *scr = new_screen();
     lv_obj_t *bar = header(scr, "Clone from library");
@@ -1095,22 +1114,27 @@ static void build_library() {
         show(scr, LIBRARY);
         return;
     }
-    lib->material_n = taglib::list_materials(lib->materials, 16);
+    lib->material_n = taglib::list_materials(lib->materials, LIB_MAX);
     if (lib->material_n == 0) {
         lv_obj_t *l = text(scr, TW_FONT_20, C_MUTED,
                            "Library empty");
         lv_obj_align(l, LV_ALIGN_CENTER, 0, PX(-20));
         lv_obj_t *h = text(scr, TW_FONT_14, C_MUTED,
                            "Upload genuine tags from a PC:\n"
-                           "tools/tagtool.py libupload --lib <dir> <query>");
+                           "tools/tagtool.py libflash --lib <dir>");
         lv_obj_set_style_text_align(h, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_align(h, LV_ALIGN_CENTER, 0, PX(30));
         show(scr, LIBRARY);
         return;
     }
+    // Four to a row, as many rows as it takes.
+    lv_obj_t *grid = scroll_area(scr);
+    lv_obj_set_style_pad_hor(grid, PX(12), 0);
+    lv_obj_set_style_pad_ver(grid, PX(8), 0);
+    lv_obj_set_style_pad_gap(grid, PX(8), 0);
+    lv_obj_set_flex_flow(grid, LV_FLEX_FLOW_ROW_WRAP);
     for (int i = 0; i < lib->material_n; i++) {
-        int x = 12 + (i % 4) * 116, y = 56 + (i / 4) * 64;
-        lv_obj_t *b = button(scr, x, y, 108, 56, "", C_BUTTON, on_lib_material,
+        lv_obj_t *b = button(grid, 0, 0, 108, 56, "", C_BUTTON, on_lib_material,
                              (void *)(intptr_t)i);
         lv_obj_set_style_pad_all(b, PX(4), 0);
         lv_label_set_text(lv_obj_get_child(b, 0), lib->materials[i]);
@@ -1120,7 +1144,7 @@ static void build_library() {
     show(scr, LIBRARY);
 }
 
-static void start_library_clone(int color_idx);
+static void start_library_clone();
 
 // Picking a colour no longer writes straight away: a stray tap used to arm a
 // clone that then fired the instant any tag touched the reader. Confirm first.
@@ -1142,13 +1166,10 @@ static void build_library_colors() {
     }
     lv_obj_t *bar = header(scr, lib->material);
     button(bar, 384, 6, 88, 36, "Back", C_BUTTON, on_lib_colors_back, nullptr);
-    lib->color_n = taglib::list_colors(lib->material, lib->colors, lib->counts, 64);
+    lib->color_n =
+        taglib::list_colors(lib->material, lib->colors, lib->counts, lib->fresh, LIB_MAX);
 
-    lv_obj_t *list = lv_obj_create(scr);
-    lv_obj_set_pos(list, 0, PX(48));
-    lv_obj_set_size(list, PX(480), PX(272));
-    lv_obj_set_style_bg_color(list, hex(C_BG), 0);
-    lv_obj_set_style_border_width(list, 0, 0);
+    lv_obj_t *list = scroll_area(scr);
     lv_obj_set_style_pad_all(list, PX(10), 0);
     lv_obj_set_style_pad_row(list, PX(8), 0);
     lv_obj_set_flex_flow(list, LV_FLEX_FLOW_COLUMN);
@@ -1162,11 +1183,17 @@ static void build_library_colors() {
         lv_obj_add_event_cb(b, on_lib_color, LV_EVENT_CLICKED, (void *)(intptr_t)i);
         lv_obj_t *name = text(b, TW_FONT_16, C_TEXT, lib->colors[i]);
         lv_obj_align(name, LV_ALIGN_LEFT_MID, PX(8), 0);
-        if (lib->counts[i] > 1) {
-            lv_obj_t *n = text(b, TW_FONT_14, C_MUTED, "");
-            lv_label_set_text_fmt(n, "%u tags", lib->counts[i]);
-            lv_obj_align(n, LV_ALIGN_RIGHT_MID, PX(-12), 0);
-        }
+        // How many UIDs this colour has, and how many are still unused (each
+        // clone takes one that has not been cloned before).
+        unsigned n = lib->counts[i], fresh = lib->fresh[i];
+        lv_obj_t *c = text(b, TW_FONT_14, C_MUTED, "");
+        if (fresh == n && n > 1)
+            lv_label_set_text_fmt(c, "%u tags", n);
+        else if (fresh == 0)
+            lv_label_set_text(c, n > 1 ? "all cloned" : "cloned");
+        else if (fresh < n)
+            lv_label_set_text_fmt(c, "%u of %u unused", fresh, n);
+        lv_obj_align(c, LV_ALIGN_RIGHT_MID, PX(-12), 0);
     }
     show(scr, LIBRARY_COLORS);
 }
@@ -1174,10 +1201,7 @@ static void build_library_colors() {
 static void on_lib_confirm(lv_event_t *e) {
     switch ((intptr_t)lv_event_get_user_data(e)) {
     case 0: navigate(LIBRARY_COLORS); break;  // back, no write
-    case 1:                                   // write now
-        if (lib_pending_color >= 0)
-            start_library_clone(lib_pending_color);
-        break;
+    case 1: start_library_clone(); break;     // write now
     }
 }
 
@@ -1187,47 +1211,65 @@ static void build_library_confirm() {
         navigate(LIBRARY);
         return;
     }
+    const char *color = lib->colors[lib_pending_color];
+    lib->pick_slot = taglib::pick(lib->material, color, lib->pick_uid, &lib->pick_fresh);
+    if (lib->pick_slot < 0) {
+        navigate(LIBRARY);
+        return;
+    }
     lv_obj_t *bar = header(scr, "Write clone");
     button(bar, 384, 6, 88, 36, "Back", C_BUTTON, on_lib_confirm, (void *)0);
 
-    lv_obj_t *panel = box(scr, 12, 64, 456, 96, C_PANEL, 12);
+    lv_obj_t *panel = box(scr, 12, 64, 456, 124, C_PANEL, 12);
     lv_obj_t *what = text(panel, TW_FONT_20, C_TEXT, "");
     lv_obj_set_pos(what, PX(16), PX(14));
-    lv_label_set_text_fmt(what, "%s" BULLET "%s", lib->material, lib->colors[lib_pending_color]);
+    lv_label_set_text_fmt(what, "%s" BULLET "%s", lib->material, color);
+    lv_obj_t *uid = text(panel, TW_FONT_16, lib->pick_fresh ? C_TEXT : C_WARN, "");
+    lv_obj_set_pos(uid, PX(16), PX(44));
+    if (lib->pick_fresh)
+        lv_label_set_text_fmt(uid, "UID %s, not cloned before", lib->pick_uid);
+    else
+        lv_label_set_text_fmt(uid, "UID %s, already cloned (none unused)", lib->pick_uid);
     lv_obj_t *note = text(panel, TW_FONT_16, C_MUTED,
                           "Place a blank magic tag, then tap Write.\n"
                           "The tag is locked after writing (write-once).");
-    lv_obj_set_pos(note, PX(16), PX(46));
+    lv_obj_set_pos(note, PX(16), PX(70));
 
-    button(scr, 12, 176, 456, 56, LV_SYMBOL_COPY "  Write to tag", C_ACCENT, on_lib_confirm,
+    button(scr, 12, 200, 456, 56, LV_SYMBOL_COPY "  Write to tag", C_ACCENT, on_lib_confirm,
            (void *)1);
     show(scr, LIBRARY_CONFIRM);
 }
 
-static void start_library_clone(int color_idx) {
-    if (!lib || color_idx < 0 || color_idx >= lib->color_n)
+static void start_library_clone() {
+    if (!lib || lib->pick_slot < 0)
         return;
     uint8_t *image = static_cast<uint8_t *>(malloc(1024));  // load_image() copies it
     if (!image) {
         navigate(HOME);
         return;
     }
-    char uid[9];
-    // Pick the least-recently... just the first entry; one UID per spool is the
-    // user's call. (color_entry_count tells them how many share this colour.)
-    bool loaded = taglib::load(lib->material, lib->colors[color_idx], 0, image, uid);
     const char *why;
-    loaded = loaded && tagsvc::load_image(image, &why);
+    bool loaded = taglib::load(lib->pick_slot, image) && tagsvc::load_image(image, &why);
     free(image);
     if (!loaded) {
         navigate(HOME);
         return;
     }
     snprintf(clone_desc, sizeof(clone_desc), "%s %s" BULLET "%s", lib->material,
-             lib->colors[color_idx], uid);
+             lib->colors[lib_pending_color], lib->pick_uid);
+    lib->clone_slot = lib->pick_slot;
     clone_from_library = true;
     clone_stage = CL_TARGET;
     request_job(tagsvc::OP_CLONE);
+}
+
+// A library clone was written and verified: its UID is now on a spool, so the
+// next clone of that colour takes another.
+static void library_cloned() {
+    if (lib && lib->clone_slot >= 0) {
+        taglib::mark_cloned(lib->clone_slot);
+        lib->clone_slot = -1;
+    }
 }
 
 // ------------------------------------------------------------- settings

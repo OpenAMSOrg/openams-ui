@@ -8,18 +8,26 @@ commands over the USB serial port; see docs/guide/tag-writer.md).
                                      OpenAMS bambu_lab_tag_processor
   tagtool.py library --lib DIR [q]   search a local Bambu-Lab-RFID-Library checkout
   tagtool.py clonefrom --lib DIR q   clone one library tag onto the magic tag on the reader
-  tagtool.py libupload --lib DIR [q] fill the display's on-device library
+  tagtool.py libflash --lib DIR [q]  write the whole library into the display's
+                                     on-device library over USB (resets the display)
+  tagtool.py libupload --lib DIR [q] add tags to it one at a time over the console
   tagtool.py libclear                empty it
   tagtool.py export DIR              capture the genuine tag on the reader into DIR
 
-The port does not reset the display when it opens. The Bambu master key is
-only needed by `decode`, and only on the PC (--key or --key-file).
+The port does not reset the display when it opens, except for libflash, which
+flashes through the bootloader with esptool (run it from an ESP-IDF shell, or
+pip install esptool). The Bambu master key is only needed by `decode`, and only
+on the PC (--key or --key-file).
 """
 
 import argparse
 import pathlib
 import re
+import shutil
+import struct
+import subprocess
 import sys
+import tempfile
 import time
 import types
 
@@ -31,8 +39,9 @@ PROMPT = b"\n> "
 def open_port(port):
     s = serial.Serial()
     s.port, s.baudrate, s.timeout = port, 115200, 0.05
-    s.dtr = False  # keep IO0 high and EN released: opening must not reset
-    s.rts = False
+    # Opening must not reset. The kernel asserts DTR and RTS together, and the
+    # auto-reset circuit only pulls EN or IO0 low while the two differ, so they
+    # are left as they are: releasing one and then the other reset the board.
     s.open()
     time.sleep(0.05)
     s.reset_input_buffer()
@@ -213,6 +222,143 @@ def cmd_libupload(s, args):
     print("# uploaded %d/%d" % (ok, len(hits)))
 
 
+# The on-device library's layout (version 2): a superblock alone in the first
+# 4 KB, one 80-byte header per entry, then one 1 KB image per entry. It must
+# match platform/esp32/tag_writer/src/taglib.cpp.
+LIB_SUPER = 4096
+LIB_HEADER = 80
+LIB_IMAGE = 1024
+LIB_NAME = 32
+
+
+def lib_capacity(size):
+    return max(0, (size - LIB_SUPER) // (LIB_HEADER + LIB_IMAGE))
+
+
+def lib_name(text):
+    """A name field: UTF-8, at most 31 bytes (whole characters), NUL-padded."""
+    raw = text.encode()
+    while len(raw) > LIB_NAME - 1:
+        text = text[:-1]
+        raw = text.encode()
+    return raw.ljust(LIB_NAME, b"\0")
+
+
+def lib_image(entries, size):
+    """The whole partition: entries is [(material, color, image)], in slot
+    order. Free space is erased flash (0xFF), so the display can add to it."""
+    capacity = lib_capacity(size)
+    assert len(entries) <= capacity
+    out = bytearray(b"\xff" * size)
+    struct.pack_into("<IHHII", out, 0, 0x42494C54, 2, LIB_HEADER, capacity, LIB_IMAGE)
+    images = LIB_SUPER + capacity * LIB_HEADER
+    for slot, (material, color, image) in enumerate(entries):
+        header = (struct.pack("<I", 0x32474154) + image[:4] + b"\xff" * 8 +
+                  lib_name(material) + lib_name(color))
+        assert len(header) == LIB_HEADER
+        at = LIB_SUPER + slot * LIB_HEADER
+        out[at:at + LIB_HEADER] = header
+        out[images + slot * LIB_IMAGE:images + (slot + 1) * LIB_IMAGE] = image
+    return bytes(out)
+
+
+def lib_select(index, query, capacity, per_color):
+    """Picks the dumps to store: every material+colour first, then a second UID
+    of each, and so on, so a library that cannot hold everything still has
+    every colour. Skips dumps that are not a 1 KB image with a valid block 0,
+    and repeated UIDs."""
+    q = " ".join(query).lower()
+    groups = {}
+    for binpath, cat, material, color, uid in index:
+        if q and q not in ("%s %s %s" % (cat, material, color)).lower():
+            continue
+        groups.setdefault((material, color), []).append(binpath)
+    picked, uids, skipped = [], set(), 0
+    queues = [(key, iter(paths)) for key, paths in sorted(groups.items())]
+    rounds = 0
+    while queues and len(picked) < capacity and (not per_color or rounds < per_color):
+        rounds += 1
+        remaining = []
+        for key, paths in queues:
+            for binpath in paths:
+                image = binpath.read_bytes()
+                if (len(image) != LIB_IMAGE or image[0] ^ image[1] ^ image[2] ^ image[3] != image[4]
+                        or image[:4] in uids):
+                    skipped += 1
+                    continue
+                uids.add(image[:4])
+                picked.append((key[0], key[1], image))
+                remaining.append((key, paths))
+                break
+            if len(picked) == capacity:
+                break
+        queues = remaining
+    available = sum(len(p) for p in groups.values())
+    return picked, len(groups), available, skipped
+
+
+def esptool(args, *command):
+    for name in ("esptool.py", "esptool"):
+        path = shutil.which(name)
+        if path:
+            base = [path]
+            break
+    else:
+        base = [sys.executable, "-m", "esptool"]
+    run = base + ["--port", args.port, "--baud", str(args.baud)] + list(command)
+    if subprocess.call(run) != 0:
+        sys.exit("esptool failed: %s" % " ".join(run))
+
+
+def taglib_partition(args):
+    """(offset, size) of the display's taglib partition, from a partitions CSV
+    (--partitions) or from the table on the display."""
+    if args.partitions:
+        for line in pathlib.Path(args.partitions).read_text().splitlines():
+            fields = [f.strip() for f in line.split("#")[0].split(",")]
+            if len(fields) >= 5 and fields[0] == "taglib":
+                return int(fields[3], 0), int(fields[4], 0)
+        sys.exit("%s has no taglib partition" % args.partitions)
+    with tempfile.TemporaryDirectory() as tmp:
+        table = pathlib.Path(tmp) / "table.bin"
+        esptool(args, "read_flash", "0x8000", "0xC00", str(table))
+        data = table.read_bytes()
+    for at in range(0, len(data), 32):
+        magic, ptype, subtype, offset, size, label = struct.unpack_from("<HBBII16s", data, at)
+        if magic != 0x50AA:
+            break
+        if ptype == 1 and subtype == 0x40 and label.rstrip(b"\0") == b"taglib":
+            return offset, size
+    sys.exit("the display's partition table has no taglib partition (flash an image "
+             "with the tag writer first)")
+
+
+def cmd_libflash(args):
+    """Builds the on-device library from a Bambu-Lab-RFID-Library checkout and
+    writes it to the display's taglib partition, replacing what is there."""
+    offset, size = taglib_partition(args)
+    capacity = lib_capacity(size)
+    if args.limit:
+        capacity = min(capacity, args.limit)
+    picked, colors, available, skipped = lib_select(library_index(args.lib), args.query,
+                                                    capacity, args.per_color)
+    if not picked:
+        sys.exit("no library tag matches %r" % " ".join(args.query))
+    print("library: %d tags of %d colours (%d dumps available, %d skipped), %d of %d entries"
+          % (len(picked), colors, available, skipped, len(picked), lib_capacity(size)))
+    image = lib_image(picked, size)
+    if args.out:
+        pathlib.Path(args.out).write_bytes(image)
+        print("wrote %s: flash it at 0x%X" % (args.out, offset))
+        return 0
+    with tempfile.TemporaryDirectory() as tmp:
+        path = pathlib.Path(tmp) / "taglib.bin"
+        path.write_bytes(image)
+        esptool(args, "write_flash", "0x%X" % offset, str(path))
+    print("# flashed %d tags into the library at 0x%X" % (len(picked), offset))
+    return 0
+
+
 def cmd_export(s, args):
     """Captures the genuine tag on the reader and saves it under out_dir in the
     library's layout (so your own scans can fill the gaps)."""
@@ -253,6 +399,16 @@ def main():
     cf.add_argument("--lib", required=True)
     cf.add_argument("--uid", help="disambiguate when several tags match")
     cf.add_argument("query", nargs="+")
+    lf = sub.add_parser("libflash")
+    lf.add_argument("--lib", required=True, help="path to a Bambu-Lab-RFID-Library checkout")
+    lf.add_argument("--per-color", type=int, default=0,
+                    help="at most this many UIDs per material+colour (default: all that fit)")
+    lf.add_argument("--limit", type=int, default=0, help="at most this many tags in all")
+    lf.add_argument("--baud", type=int, default=921600)
+    lf.add_argument("--partitions", help="take the taglib partition from this CSV instead "
+                    "of reading the display's table")
+    lf.add_argument("--out", help="only write the partition image to this file")
+    lf.add_argument("query", nargs="*")
     lu = sub.add_parser("libupload")
     lu.add_argument("--lib", required=True)
     lu.add_argument("--limit", type=int, default=50)
@@ -266,6 +422,8 @@ def main():
 
     if args.action == "library":
         return cmd_library(None, args)
+    if args.action == "libflash":
+        return cmd_libflash(args)
     s = open_port(args.port)
     if args.action == "cmd":
         bad = False
@@ -285,7 +443,7 @@ def main():
     if args.action == "libupload":
         return cmd_libupload(s, args)
     if args.action == "libclear":
-        print(run(s, "libclear yes"), end="")
+        print(run(s, "libclear yes", timeout=180), end="")  # erases the partition
         return 0
     return cmd_export(s, args)
 
