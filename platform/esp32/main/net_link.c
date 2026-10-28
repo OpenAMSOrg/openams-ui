@@ -377,8 +377,10 @@ static void on_ws_event(void *arg, esp_event_base_t base, int32_t id, void *even
     (void)base;
     if(!s_lock) return;
 
-    if(id == WEBSOCKET_EVENT_DISCONNECTED || id == WEBSOCKET_EVENT_CLOSED ||
-       id == WEBSOCKET_EVENT_FINISH) {
+    /* A pause stops the client on purpose (net_link_pause): that is no drop to
+     * warn about, and read as one it looked like Wi-Fi going away. */
+    if((id == WEBSOCKET_EVENT_DISCONNECTED || id == WEBSOCKET_EVENT_CLOSED ||
+        id == WEBSOCKET_EVENT_FINISH) && !s_paused) {
         log_link_drop(id, d);
     }
     else if(id == WEBSOCKET_EVENT_DATA && d && d->op_code == 0x8) {
@@ -604,7 +606,7 @@ void net_link_pause(void)
     mc_on_disconnected(now);
     txq_drop_all();
     xSemaphoreGive(s_lock);
-    ESP_LOGI(TAG, "Moonraker link paused");
+    ESP_LOGI(TAG, "Moonraker link paused, Wi-Fi stays up (the tag writer uses the link's memory)");
 }
 
 void net_link_resume(void)
