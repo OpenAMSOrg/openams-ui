@@ -65,8 +65,19 @@ make menuconfig       # the board, the tag writer, its reader and tag library, t
 make flash monitor    # build, flash, then the console
 ```
 
-On Windows, where there is no `make`, the same is `python make.py menuconfig`
-and `python make.py flash monitor`, from the ESP-IDF PowerShell
+On Windows there is no `make`: run `make.py` with Python instead, which does
+the same. Open the **ESP-IDF PowerShell** from the Start menu (or run
+`.\export.ps1` in the ESP-IDF folder; `export.sh` is for Linux and macOS
+shells, and PowerShell does not run it), then:
+
+```powershell
+cd C:\openams-ui\platform\esp32
+python make.py menuconfig       # the same menu
+python make.py flash monitor    # build, flash, then the console
+```
+
+Leave **Serial port** at its default and `idf.py` finds the board's COM port,
+or set it (`COM3`) in the menu
 ([flash-and-setup.md](docs/guide/flash-and-setup.md#install)).
 
 `make` turns the menu's choices into the `-D` options of `idf.py`, which also
