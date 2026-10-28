@@ -134,8 +134,15 @@ def send_lines(s, command, image):
     assert len(image) == 1024
     s.reset_input_buffer()
     s.write(("tag " + command).encode() + b"\n")
-    time.sleep(0.4)  # the reader comes up and the command asks for the lines
-    s.read(4096)
+    # The lines go only once the command asks for them: before that the reader
+    # comes up (and the printer link pauses), and lines sent meanwhile overflow
+    # the display's 512-byte serial buffer.
+    asked = b""
+    end = time.time() + 10
+    while time.time() < end and b"send 64 lines" not in asked and PROMPT not in asked:
+        asked += s.read(4096)
+    if b"send 64 lines" not in asked:
+        return asked.decode(errors="replace")
     for block in range(64):
         s.write(image[block * 16:(block + 1) * 16].hex().encode() + b"\n")
         time.sleep(0.025)
