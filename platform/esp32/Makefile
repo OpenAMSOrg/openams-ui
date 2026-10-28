@@ -52,9 +52,23 @@ IDF := $(IDF_PY) -B $(BUILD_DIR) $(DEFS)
 .PHONY: build flash monitor size idf-menuconfig clean idf menuconfig show help \
 	e32r40t es3c50p libflash
 
+# idf.py will not use a build directory that another Python (another ESP-IDF
+# install or environment) or another checkout set up, and its advice, idf.py
+# fullclean, would clean build/ rather than this one. The directory holds
+# only build output, so it starts again.
 idf:
 	@command -v $(firstword $(IDF_PY)) >/dev/null || { echo "make: $(firstword $(IDF_PY)) \
 	not found: run make from an ESP-IDF shell (. \$$IDF_PATH/export.sh)"; exit 1; }
+	@cache=$(BUILD_DIR)/CMakeCache.txt; [ -f $$cache ] || exit 0; \
+	python=$$(sed -n 's/^PYTHON:[A-Z]*=//p' $$cache); \
+	home=$$(sed -n 's/^CMAKE_HOME_DIRECTORY:[A-Z]*=//p' $$cache); \
+	active=$$($(PYTHON) -c 'import sys; print(sys.executable)'); \
+	if [ -n "$$python" ] && [ "$$python" != "$$active" ]; then \
+	    echo "make: $(BUILD_DIR) was set up with another Python ($$python): starting it again"; \
+	    rm -rf $(BUILD_DIR); \
+	elif [ -n "$$home" ] && [ "$$(realpath -m "$$home")" != "$$(realpath .)" ]; then \
+	    echo "make: $(BUILD_DIR) was set up for another checkout ($$home): starting it again"; \
+	    rm -rf $(BUILD_DIR); fi
 
 build: idf
 	$(IDF) build

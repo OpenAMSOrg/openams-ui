@@ -54,6 +54,20 @@ set_property(CACHE MMU_BOARD PROPERTY STRINGS e32r40t es3c50p)
 if(NOT MMU_BOARD MATCHES "^(e32r40t|es3c50p)$")
     message(FATAL_ERROR "MMU_BOARD is \"${MMU_BOARD}\"; it takes e32r40t or es3c50p")
 endif()
+# A build directory belongs to one chip. Building the other board in it would
+# stop deep in ESP-IDF, with advice to delete the sdkconfig file, which is not
+# the problem; say what is.
+if(MMU_BOARD STREQUAL "es3c50p")
+    set(mmu_board_chip "esp32s3")
+else()
+    set(mmu_board_chip "esp32")
+endif()
+if(DEFINED CACHE{IDF_TARGET} AND NOT "$CACHE{IDF_TARGET}" STREQUAL mmu_board_chip)
+    message(FATAL_ERROR "This build directory was set up for an $CACHE{IDF_TARGET}, and the "
+        "${MMU_BOARD} board is an ${mmu_board_chip}. Give each board its own directory: "
+        "idf.py -B build-${MMU_BOARD} -DMMU_BOARD=${MMU_BOARD} build, or make (make "
+        "menuconfig), which does.")
+endif()
 
 if(MMU_SPOOL_TAG_WRITER)
     list(APPEND EXTRA_COMPONENT_DIRS "${CMAKE_CURRENT_LIST_DIR}/tag_writer")

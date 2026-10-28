@@ -24,6 +24,11 @@ serial console. Later updates can go over the air.
   versions are untested). Use it as installed: do not add components to
   ESP-IDF's own `components` folder (an `lvgl` copied there for another
   project breaks this build). This project brings its own LVGL.
+- On Debian and Ubuntu, ESP-IDF's install script needs the `venv` package of
+  your Python first: `sudo apt install python3.14-venv` for Python 3.14 (see
+  `python3 --version`). Without it the script stops at `python3 -m venv`. It
+  leaves a half-made `~/.espressif/python_env/idf6.0_py3.*_env`; delete that
+  before running the script again.
 - A checkout with the LVGL submodule: `git submodule update --init --recursive`.
 - `lib/lvgl` must exist. The ESP32 project reads LVGL from there.
 - A serial terminal at 115200 baud (the ESP-IDF default console speed; the
@@ -46,6 +51,12 @@ Each board builds in its own directory, `build-<board>`. A choice on the
 command line overrides the menu (`make BOARD=es3c50p flash`), and `make help`
 lists the rest: `make size`, `make clean`, and `make idf-menuconfig` for
 ESP-IDF's own settings of the chosen board.
+
+A build directory that another ESP-IDF Python or another checkout set up (after
+reinstalling ESP-IDF, say, or moving the checkout) cannot be reused: `make`
+starts it again by itself, while `idf.py` stops and asks for
+`idf.py -B <directory> fullclean`. Building one board in the other's directory
+stops with a message that names the directory to use.
 
 Or run `idf.py` yourself:
 

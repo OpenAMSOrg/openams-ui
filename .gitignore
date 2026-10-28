@@ -4,6 +4,7 @@ build-web/
 dist/
 out/
 hw/*.bin
+__pycache__/
 third_party/
 /assets/fonts/cjk/*.otf
 platform/esp32/build/
