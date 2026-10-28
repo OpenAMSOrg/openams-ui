@@ -145,12 +145,12 @@ Its on-device library of genuine Bambu tags, cloned from the touchscreen onto
 magic tags, holds 1,599 tags on the 4 inch board and 7,475 on the 5 inch one,
 enough for the whole
 [Bambu-Lab-RFID-Library](https://github.com/queengooborg/Bambu-Lab-RFID-Library)
-(6,550 distinct tags in 269 colours in October 2026). `tools/tagtool.py libflash
+(7,026 distinct tags in 272 colours on 27 October 2026). `tools/tagtool.py libflash
 --lib <checkout>` writes it over USB in about a minute, or turn on **Bambu Lab
 tag library** in `make menuconfig` and `make flash` writes it with the
-firmware. Each clone takes a UID that has not been cloned before. On the 4 inch board the library takes the second OTA
-slot's place, so an image with the tag writer is updated over USB; the 5 inch
-board's 16 MB holds both.
+firmware. Each clone takes a UID that has not been cloned before. On the 4
+inch board the library takes the second OTA slot's place, so an image with the
+tag writer is updated over USB; the 5 inch board's 16 MB holds both.
 
 The tag writer (`platform/esp32/tag_writer/`) is under the GPLv3, so an image
 built with it is too; the display alone stays MIT. See

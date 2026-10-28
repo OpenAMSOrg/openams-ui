@@ -22,6 +22,7 @@ on the PC (--key or --key-file).
 
 import argparse
 import hashlib
+import importlib.util
 import pathlib
 import re
 import shutil
@@ -298,15 +299,23 @@ def lib_select(index, query, capacity, per_color):
     return picked, len(groups), available, skipped
 
 
-def esptool(args, *command):
-    for name in ("esptool.py", "esptool"):
-        path = shutil.which(name)
-        if path:
-            base = [path]
-            break
-    else:
+def esptool(args, command, *rest):
+    """Runs esptool: this Python's own when it has one (ESP-IDF's, run from
+    make or an ESP-IDF shell), else the one on PATH. command is spelled as
+    esptool 5 wants it (write-flash); esptool 4 knows only write_flash, which
+    5 still runs but warns about, as it does about the name esptool.py."""
+    if importlib.util.find_spec("esptool"):
         base = [sys.executable, "-m", "esptool"]
-    run = base + ["--port", args.port, "--baud", str(args.baud)] + list(command)
+    else:
+        path = shutil.which("esptool") or shutil.which("esptool.py")
+        if not path:
+            sys.exit("libflash needs esptool: run it from an ESP-IDF shell, or pip install esptool")
+        base = [path]
+    version = subprocess.run(base + ["version"], capture_output=True, text=True)
+    major = re.search(r"v(\d+)\.", version.stdout + version.stderr)
+    if not major or int(major.group(1)) < 5:
+        command = command.replace("-", "_")
+    run = base + ["--port", args.port, "--baud", str(args.baud), command] + list(rest)
     if subprocess.call(run) != 0:
         sys.exit("esptool failed: %s" % " ".join(run))
 
@@ -322,7 +331,7 @@ def taglib_partition(args):
         sys.exit("%s has no taglib partition" % args.partitions)
     with tempfile.TemporaryDirectory() as tmp:
         table = pathlib.Path(tmp) / "table.bin"
-        esptool(args, "read_flash", "0x8000", "0xC00", str(table))
+        esptool(args, "read-flash", "0x8000", "0xC00", str(table))
         data = table.read_bytes()
     for at in range(0, len(data), 32):
         magic, ptype, subtype, offset, size, label = struct.unpack_from("<HBBII16s", data, at)
@@ -363,7 +372,7 @@ def cmd_libflash(args):
     with tempfile.TemporaryDirectory() as tmp:
         path = pathlib.Path(tmp) / "taglib.bin"
         path.write_bytes(image)
-        esptool(args, "write_flash", "0x%X" % offset, str(path))
+        esptool(args, "write-flash", "0x%X" % offset, str(path))
     if stamp:
         stamp.parent.mkdir(parents=True, exist_ok=True)
         stamp.write_text(flashed)

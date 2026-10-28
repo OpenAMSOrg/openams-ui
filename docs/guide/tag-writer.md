@@ -137,7 +137,7 @@ folder of dumps, `cmd` sends any command.
 The library holds genuine tag dumps to clone from the touchscreen: 1,599 on
 the 4 inch board, 7,475 on the 5 inch one, which holds every dump in the
 [Bambu-Lab-RFID-Library](https://github.com/queengooborg/Bambu-Lab-RFID-Library)
-(6,550 distinct tags in 269 colours as of October 2026). Fill it from a
+(7,026 distinct tags in 272 colours as of 27 October 2026). Fill it from a
 checkout of that library over USB:
 
 ```sh
