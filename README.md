@@ -147,10 +147,12 @@ Its library of genuine Bambu tags, cloned from the touchscreen onto magic
 tags, is the whole
 [Bambu-Lab-RFID-Library](https://github.com/queengooborg/Bambu-Lab-RFID-Library)
 (7,026 distinct tags in 272 colours on 27 October 2026), served by OpenAMS on
-the printer host: its `openams_taglib` Moonraker component downloads the
-library on first use and keeps track of which tags were cloned, so each clone
-takes a UID that has not been cloned before. Nothing of it is stored on the
-board. The 5 inch board can keep the library in its own flash instead, to
+the printer host: its `openams_taglib` Moonraker component, which the OpenAMS
+installer sets up, downloads the library, adds it to Moonraker's update
+manager and keeps track of which tags were cloned, so each clone takes a UID
+that has not been cloned before. Nothing of it is stored on the board. On a
+printer that already has OpenAMS, update it and run `./install.sh` again
+([OpenAMS: the RFID tag library](https://github.com/OpenAMSOrg/openams#the-rfid-tag-library)). The 5 inch board can keep the library in its own flash instead, to
 clone without the printer (**Tag library → On the board** in `make menuconfig`,
 or `-DMMU_TAG_LIBRARY=board`); `make flash` or `tools/tagtool.py libflash`
 writes it over USB. The 4 inch tag-writer image does not fit an OTA slot, so

@@ -212,9 +212,12 @@ stored on the board, so the 4 inch board gets the whole library too.
 
 - The display finds OpenAMS at the Moonraker address it already uses
   (`moonraker ws://host:port/websocket`).
-- The first time the library is opened, OpenAMS downloads it (about 200 MB);
-  the display says so meanwhile. OpenAMS keeps it there and updates it on
-  request (`POST /server/openams/taglib/update`).
+- The OpenAMS installer downloads the library (about 200 MB) and adds it to
+  Moonraker's update manager as `Bambu-Lab-RFID-Library`, so new tags arrive
+  like any other update. On a printer that already has OpenAMS, update it and
+  run `~/openams/install.sh` again. Without the installer's download, OpenAMS
+  downloads the library the first time the display asks for it, and the
+  display says so meanwhile.
 - OpenAMS remembers which tags were cloned, so every display on the printer
   offers a UID not cloned before.
 - `tag libadd` (and `tools/tagtool.py libupload`) add a tag to the library on
