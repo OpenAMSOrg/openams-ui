@@ -21,17 +21,17 @@
 #include <string.h>
 
 #define ICON_X   UI_HOME_HEADER_PAD
-#define ICON_S   38
-#define ICON_Y   (PATH_Y + 14)
-#define GLYPH_Y  4
-#define CHIP_Y   17
-#define CHIP_W   24
-#define CHIP_H   16
+#define ICON_S   UI_PX(38)
+#define ICON_Y   (PATH_Y + UI_PX(14))
+#define GLYPH_Y  UI_PX(4)
+#define CHIP_Y   UI_PX(17)
+#define CHIP_W   UI_PX(24)
+#define CHIP_H   UI_PX(16)
 
-#define STEM_H   8
-#define STEM_W   2
-#define PATH_Y   (STEM_H + 8)                 /* the horizontal run, from the strip top */
-#define LINE_W   3
+#define STEM_H   UI_PX(8)
+#define STEM_W   UI_PX(2)
+#define PATH_Y   (STEM_H + UI_PX(8))          /* the horizontal run, from the strip top */
+#define LINE_W   UI_PX(3)
 
 #define SLOT_W   UI_HOME_SLOT_W
 #define SLOT_H   UI_HOME_SLOT_H
@@ -63,18 +63,18 @@ static void build_hotend(lv_obj_t *parent, const view_toolhead_t *th)
     lv_obj_t *chip;
 
     lv_obj_set_style_bg_opa(frame, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(frame, 2, 0);
+    lv_obj_set_style_border_width(frame, UI_PX(2), 0);
     lv_obj_set_style_border_color(frame, col, 0);
     lv_obj_set_style_border_opa(frame, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(frame, 10, 0);
+    lv_obj_set_style_radius(frame, UI_PX(10), 0);
     /* a dark filament gets a light 1 px outline, outside the frame (4g) */
-    lv_obj_set_style_outline_width(frame, 1, 0);
+    lv_obj_set_style_outline_width(frame, UI_PX(1), 0);
     lv_obj_set_style_outline_pad(frame, 0, 0);
     lv_obj_set_style_outline_color(frame, UI_TOK_TEXT_FAINT, 0);
     lv_obj_set_style_outline_opa(frame, (loaded && th->tool.outline) ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
 
     glyph = ui_home_label(frame, UI_ICON_PRINTER_3D_NOZZLE, UI_HOME_FONT_ICON,
-                          loaded ? UI_TOK_TEXT : UI_TOK_TEXT_FAINT, 10, GLYPH_Y);
+                          loaded ? UI_TOK_TEXT : UI_TOK_TEXT_FAINT, UI_PX(10), GLYPH_Y);
     lv_obj_set_style_text_align(glyph, LV_TEXT_ALIGN_CENTER, 0);
 
     if(!loaded) return;
@@ -83,11 +83,12 @@ static void build_hotend(lv_obj_t *parent, const view_toolhead_t *th)
      * box shows overflow): the two are then nested rather than partly covering
      * each other. Frame content is ICON_S - 4 wide; the chip is centered in it. */
     lv_obj_set_overflow_visible(glyph, true);
-    chip = box(glyph, (ICON_S - 4 - CHIP_W) / 2 - 10, CHIP_Y - GLYPH_Y - 2, CHIP_W, CHIP_H);
+    chip = box(glyph, (ICON_S - UI_PX(4) - CHIP_W) / 2 - UI_PX(10), CHIP_Y - GLYPH_Y - UI_PX(2),
+               CHIP_W, CHIP_H);
     lv_obj_set_style_bg_color(chip, col, 0);
     lv_obj_set_style_bg_opa(chip, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(chip, UI_TOK_RADIUS_CHIP, 0);
-    lv_obj_set_style_outline_width(chip, 1, 0);
+    lv_obj_set_style_outline_width(chip, UI_PX(1), 0);
     lv_obj_set_style_outline_pad(chip, 0, 0);
     lv_obj_set_style_outline_color(chip, UI_TOK_TEXT_FAINT, 0);
     lv_obj_set_style_outline_opa(chip, th->tool.outline ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
@@ -117,7 +118,7 @@ lv_obj_t *ui_toolhead_message(lv_obj_t *parent, const view_toolhead_t *th,
     int x = 0;
     int slot_x = UI_HOME_INNER_W - SLOT_W;
     lv_obj_t *row = box(parent, UI_HOME_HEADER_PAD, UI_HOME_MSG_Y, UI_HOME_INNER_W, UI_HOME_MSG_H);
-    lv_obj_t *msg = box(row, 0, 0, slot_x - 4, UI_HOME_MSG_H);
+    lv_obj_t *msg = box(row, 0, 0, slot_x - UI_PX(4), UI_HOME_MSG_H);
     lv_obj_t *slot = box(row, slot_x, 0, SLOT_W, SLOT_H);
 
     /* During a load or unload the row names the current step (the view's
@@ -138,12 +139,12 @@ lv_obj_t *ui_toolhead_message(lv_obj_t *parent, const view_toolhead_t *th,
             ui_home_label(msg, m->tone == VIEW_TONE_ERROR ? UI_HOME_ICON_ERROR
                                                           : UI_HOME_ICON_INFO,
                           UI_HOME_FONT_SEV, ui_home_tone_color(m->tone), 0,
-                          (UI_HOME_MSG_H - 15) / 2);
-            x = 22;
+                          (UI_HOME_MSG_H - UI_PX(15)) / 2);
+            x = UI_PX(22);
         }
         l = ui_home_label_fit(msg, text, UI_HOME_FONT_BODY, ui_home_tone_color(m->tone),
                               x, (UI_HOME_MSG_H - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2,
-                              slot_x - 4 - x);
+                              slot_x - UI_PX(4) - x);
         lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_LEFT, 0);
     }
 
@@ -200,12 +201,13 @@ static void build_path(lv_obj_t *strip, const view_toolhead_t *th, int bays, int
          * larger all round, under them (so no line crosses a joint). Always
          * built, transparent when the color needs none, so a color change
          * never changes the shape. The top edge meets the tile and stays. */
-        o = bar(strip, cx - LINE_W / 2 - 1, 0, LINE_W + 2, PATH_Y + 1, oc);
+        o = bar(strip, cx - LINE_W / 2 - UI_PX(1), 0, LINE_W + 2 * UI_PX(1), PATH_Y + UI_PX(1), oc);
         lv_obj_set_style_bg_opa(o, ol ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
-        o = bar(strip, fx - LINE_W / 2 - 1, PATH_Y - 1, cx - fx + LINE_W + 2, LINE_W + 2, oc);
+        o = bar(strip, fx - LINE_W / 2 - UI_PX(1), PATH_Y - UI_PX(1), cx - fx + LINE_W + 2 * UI_PX(1),
+                LINE_W + 2 * UI_PX(1), oc);
         lv_obj_set_style_bg_opa(o, ol ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
-        o = bar(strip, fx - LINE_W / 2 - 1, PATH_Y + LINE_W - 1, LINE_W + 2,
-                ICON_Y - PATH_Y - LINE_W + 2, oc);
+        o = bar(strip, fx - LINE_W / 2 - UI_PX(1), PATH_Y + LINE_W - UI_PX(1), LINE_W + 2 * UI_PX(1),
+                ICON_Y - PATH_Y - LINE_W + 2 * UI_PX(1), oc);
         lv_obj_set_style_bg_opa(o, ol ? LV_OPA_COVER : LV_OPA_TRANSP, 0);
 
         bar(strip, cx - LINE_W / 2, 0, LINE_W, PATH_Y, col);
@@ -216,13 +218,13 @@ static void build_path(lv_obj_t *strip, const view_toolhead_t *th, int bays, int
 
 int ui_toolhead_rest_x(void)
 {
-    return ICON_X + ICON_S + 12;
+    return ICON_X + ICON_S + UI_PX(12);
 }
 
 int ui_toolhead_rest_w(int pages)
 {
     /* up to the paging chevrons when there are some, else to the screen's margin */
-    int end = (pages > 1) ? UI_HOME_CHEVRON_X(0) - 8 : UI_HOME_W - UI_HOME_HEADER_PAD;
+    int end = (pages > 1) ? UI_HOME_CHEVRON_X(0) - UI_PX(8) : UI_HOME_W - UI_HOME_HEADER_PAD;
 
     return end - ui_toolhead_rest_x();
 }

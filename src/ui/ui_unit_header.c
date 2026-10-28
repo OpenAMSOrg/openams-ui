@@ -21,18 +21,18 @@
 #define SLOT_H   UI_HOME_SLOT_H
 #define SLOT_Y   ((UI_HOME_HEADER_H - SLOT_H) / 2)
 
-#define MENU_W   40
-#define MENU_H   40
-#define MENU_X   (UI_HOME_HEADER_PAD - 6)
+#define MENU_W   UI_PX(40)
+#define MENU_H   UI_PX(40)
+#define MENU_X   (UI_HOME_HEADER_PAD - UI_PX(6))
 #define MENU_Y   ((UI_HOME_HEADER_H - MENU_H) / 2)
 
-#define PILL_H   22
+#define PILL_H   UI_PX(22)
 #define PILL_Y   ((UI_HOME_HEADER_H - PILL_H) / 2)
-#define PILL_PAD 9
+#define PILL_PAD UI_PX(9)
 
 /* One line: the family title (20/600), then the config name (12/400, muted)
  * inline after it, on the same baseline. */
-#define TITLE_X  (MENU_X + MENU_W + 6)
+#define TITLE_X  (MENU_X + MENU_W + UI_PX(6))
 
 /* A plain box: no style of its own, so its area is exactly what is asked. */
 static lv_obj_t *box(lv_obj_t *parent, int x, int y, int w, int h)
@@ -78,7 +78,7 @@ static void build_pill(lv_obj_t *parent, const view_unit_t *u,
     w = text_w(text, UI_HOME_FONT_META) + 2 * PILL_PAD;
 
     /* The alert slot keeps its place, so the pill ends before it. */
-    x = UI_HOME_W - UI_HOME_HEADER_PAD - SLOT_W - 8 - w;
+    x = UI_HOME_W - UI_HOME_HEADER_PAD - SLOT_W - UI_PX(8) - w;
 
     pill = box(parent, x, PILL_Y, w, PILL_H);
     lv_obj_set_style_bg_color(pill, UI_TOK_PILL_BG, 0);
@@ -92,7 +92,7 @@ static void build_pill(lv_obj_t *parent, const view_unit_t *u,
         lv_obj_add_event_cb(pill, cb, LV_EVENT_CLICKED, user);
     }
 
-    l = ui_home_label(pill, text, UI_HOME_FONT_META, color, PILL_PAD, 4);
+    l = ui_home_label(pill, text, UI_HOME_FONT_META, color, PILL_PAD, UI_PX(4));
     lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_CENTER, 0);
 }
 
@@ -128,7 +128,7 @@ lv_obj_t *ui_unit_header_menu(lv_obj_t *parent, lv_event_cb_t cb, void *user)
         lv_obj_set_clickable(b, true);
         lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, user);
     }
-    lv_obj_set_style_radius(b, 8, 0);
+    lv_obj_set_style_radius(b, UI_PX(8), 0);
     lv_obj_set_style_bg_color(b, UI_TOK_TEXT, LV_STATE_PRESSED);
     lv_obj_set_style_bg_opa(b, LV_OPA_20, LV_STATE_PRESSED);
     l = ui_home_label(b, UI_ICON_MENU, UI_HOME_FONT_ICON, UI_TOK_TEXT_MUTED,
@@ -152,7 +152,7 @@ lv_obj_t *ui_unit_header(lv_obj_t *parent, const view_unit_t *u,
 
     ui_home_label(parent, u->title, UI_HOME_FONT_TITLE, title_col, TITLE_X, ty);
     ui_home_label(parent, u->subtitle, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED,
-                  TITLE_X + tw + 6, ty + lh_t - lh_s - 3);
+                  TITLE_X + tw + UI_PX(6), ty + lh_t - lh_s - UI_PX(3));
 
     build_pill(parent, u, env_cb, env_user);
     build_alert_slot(parent, u, alert_cb, alert_user);

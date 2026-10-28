@@ -30,9 +30,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ROW_H 46
-#define TRAIL_GAP 10        /* what a trailing tag leaves before the word beside it */
-#define CHEVRON_W 18
+#define ROW_H UI_PX(46)
+#define TRAIL_GAP UI_PX(10) /* what a trailing tag leaves before the word beside it */
+#define CHEVRON_W UI_PX(18)
 
 /* A bay of this unit, in a group or in none, opens the change-group sheet. */
 static void on_change_group(lv_event_t *e)
@@ -88,9 +88,9 @@ static lv_color_t state_color(const view_group_member_t *mem, int member_count)
  * tappable. @p left is how far left the row's own trailing content reaches. */
 static void trail_chevron(lv_obj_t *row, int left)
 {
-    if(left > UI_HOME_INNER_W - 24 - TRAIL_GAP)
+    if(left > UI_HOME_INNER_W - UI_PX(24) - TRAIL_GAP)
         ui_home_label(row, UI_ICON_CHEVRON_RIGHT, UI_HOME_FONT_ICON, UI_TOK_TEXT_FAINT,
-                      UI_HOME_INNER_W - 24 - CHEVRON_W, 4);
+                      UI_HOME_INNER_W - UI_PX(24) - CHEVRON_W, UI_PX(4));
 }
 
 /* One member row: swatch, "Spool N" (dimmed, with its unit, on another unit),
@@ -102,26 +102,27 @@ static void member_row(lv_obj_t *col, const view_group_member_t *mem, int member
     lv_color_t color = state_color(mem, member_count);
     char buf[64];
     int unit = mmu_this_unit();
-    int rx = UI_HOME_INNER_W - 24;
+    int rx = UI_HOME_INNER_W - UI_PX(24);
     lv_obj_t *row;
 
     row = ui_kit_row(col, ROW_H, mem->mine ? on_change_group : NULL,
                      mem->mine ? UI_ENC(unit, mem->bay) : NULL);
-    ui_kit_swatch(row, 0, 8, 14, mem->color, !mem->color_known);
+    ui_kit_swatch(row, 0, UI_PX(8), UI_PX(14), mem->color, !mem->color_known);
     ui_home_label(row, mem->label, UI_HOME_FONT_BODY,
-                  mem->dim ? UI_TOK_TEXT_MUTED : UI_TOK_TEXT, 24, 0);
+                  mem->dim ? UI_TOK_TEXT_MUTED : UI_TOK_TEXT, UI_PX(24), 0);
     meta_text(mem, buf, sizeof buf);
-    ui_home_label_fit(row, buf, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 24, 18, 220);
+    ui_home_label_fit(row, buf, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, UI_PX(24), UI_PX(18),
+                      UI_PX(220));
 
     if(mem->spare) {
         int cw = ui_kit_tag_w(view_str(VS_GROUP_NEXT));
 
-        ui_kit_tag(row, view_str(VS_GROUP_NEXT), UI_KIT_TONE_ACCENT, rx - cw, 4);
+        ui_kit_tag(row, view_str(VS_GROUP_NEXT), UI_KIT_TONE_ACCENT, rx - cw, UI_PX(4));
         rx -= cw + TRAIL_GAP;
     }
     if(state[0]) {
         rx -= ui_home_text_w(state, UI_HOME_FONT_BODY);
-        ui_home_label(row, state, UI_HOME_FONT_BODY, color, rx, 4);
+        ui_home_label(row, state, UI_HOME_FONT_BODY, color, rx, UI_PX(4));
     }
     if(mem->mine) trail_chevron(row, rx);
 }
@@ -166,11 +167,12 @@ static bool build_unassigned(lv_obj_t *col)
         any = true;
 
         row = ui_kit_row(col, ROW_H, on_change_group, UI_ENC(unit, b->bay));
-        ui_kit_swatch(row, 0, 8, 14, b->color, !b->color_known);
-        ui_home_label(row, b->label, UI_HOME_FONT_BODY, UI_TOK_TEXT, 24, 0);
+        ui_kit_swatch(row, 0, UI_PX(8), UI_PX(14), b->color, !b->color_known);
+        ui_home_label(row, b->label, UI_HOME_FONT_BODY, UI_TOK_TEXT, UI_PX(24), 0);
         meta_text(b, buf, sizeof buf);
-        ui_home_label_fit(row, buf, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 24, 18, 260);
-        trail_chevron(row, UI_HOME_INNER_W - 24);
+        ui_home_label_fit(row, buf, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, UI_PX(24), UI_PX(18),
+                          UI_PX(260));
+        trail_chevron(row, UI_HOME_INNER_W - UI_PX(24));
     }
     free(ug);
     return any;
@@ -186,7 +188,7 @@ static lv_obj_t *build(void)
     int count, g;
 
     (void)ui_kit_header(scr, view_str(VS_SCREEN_GROUPS), true);
-    col = ui_kit_column(scr, UI_HOME_HEADER_H + 2, UI_HOME_H - UI_HOME_HEADER_H - 2);
+    col = ui_kit_column(scr, UI_HOME_HEADER_H + UI_PX(2), UI_HOME_H - UI_HOME_HEADER_H - UI_PX(2));
 
     count = view_group_count(&g_mmu, mmu_this_unit());
     for(g = 0; g < count; g++) {

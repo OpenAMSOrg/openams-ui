@@ -17,9 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BACK_W    40
-#define BACK_X    (UI_HOME_HEADER_PAD - 6)
-#define TITLE_X   (BACK_X + BACK_W + 6)
+#define BACK_W    UI_PX(40)
+#define BACK_X    (UI_HOME_HEADER_PAD - UI_PX(6))
+#define TITLE_X   (BACK_X + BACK_W + UI_PX(6))
 #define ROW_R     UI_TOK_RADIUS_TILE
 #define GAP       UI_TOK_SPACE_CARD_GAP
 
@@ -77,7 +77,7 @@ lv_obj_t *ui_kit_header(lv_obj_t *scr, const char *title, bool alert_slot)
 
     lv_obj_set_clickable(back, true);
     lv_obj_add_event_cb(back, on_back, LV_EVENT_CLICKED, NULL);
-    lv_obj_set_style_radius(back, 8, 0);
+    lv_obj_set_style_radius(back, UI_PX(8), 0);
     lv_obj_set_style_bg_color(back, UI_TOK_TEXT, LV_STATE_PRESSED);
     lv_obj_set_style_bg_opa(back, LV_OPA_20, LV_STATE_PRESSED);
     ui_home_label(back, UI_ICON_CHEVRON_LEFT, UI_HOME_FONT_ICON, UI_TOK_TEXT_MUTED,
@@ -86,7 +86,7 @@ lv_obj_t *ui_kit_header(lv_obj_t *scr, const char *title, bool alert_slot)
 
     l = ui_home_label_fit(hdr, title, UI_HOME_FONT_TITLE, UI_TOK_TEXT, TITLE_X,
                           (UI_HOME_HEADER_H - lh) / 2,
-                          UI_HOME_W - TITLE_X - UI_HOME_HEADER_PAD - UI_HOME_SLOT_W - 8);
+                          UI_HOME_W - TITLE_X - UI_HOME_HEADER_PAD - UI_HOME_SLOT_W - UI_PX(8));
     lv_obj_set_clickable(l, true);
     lv_obj_add_event_cb(l, on_debug, LV_EVENT_LONG_PRESSED, NULL);
 
@@ -114,8 +114,8 @@ lv_obj_t *ui_kit_header(lv_obj_t *scr, const char *title, bool alert_slot)
 
 lv_obj_t *ui_kit_header_action(lv_obj_t *scr, const char *label, lv_event_cb_t cb, void *user)
 {
-    int w = ui_home_text_w(label, UI_HOME_FONT_BODY) + 24;
-    int h = 30;
+    int w = ui_home_text_w(label, UI_HOME_FONT_BODY) + UI_PX(24);
+    int h = UI_PX(30);
     lv_obj_t *b = box(scr, UI_HOME_W - UI_HOME_HEADER_PAD - w, (UI_HOME_HEADER_H - h) / 2, w, h);
 
     lv_obj_set_style_radius(b, h / 2, 0);
@@ -127,7 +127,7 @@ lv_obj_t *ui_kit_header_action(lv_obj_t *scr, const char *label, lv_event_cb_t c
         lv_obj_set_clickable(b, true);
         lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, user);
     }
-    ui_home_label(b, label, UI_HOME_FONT_BODY, UI_TOK_TEXT, 12,
+    ui_home_label(b, label, UI_HOME_FONT_BODY, UI_TOK_TEXT, UI_PX(12),
                   (h - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2);
     return b;
 }
@@ -143,8 +143,8 @@ lv_obj_t *ui_kit_column(lv_obj_t *scr, int y, int h)
     lv_obj_set_size(c, UI_HOME_INNER_W, h);
     lv_obj_set_flex_flow(c, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(c, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_set_style_pad_row(c, GAP - 2, 0);
-    lv_obj_set_style_pad_bottom(c, 8, 0);
+    lv_obj_set_style_pad_row(c, GAP - UI_PX(2), 0);
+    lv_obj_set_style_pad_bottom(c, UI_PX(8), 0);
     lv_obj_set_scroll_dir(c, LV_DIR_VER);
     lv_obj_set_scrollbar_mode(c, LV_SCROLLBAR_MODE_OFF);
     return c;
@@ -159,7 +159,7 @@ lv_obj_t *ui_kit_section(lv_obj_t *col, const char *text)
     lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_CLIP);
     lv_obj_set_style_text_font(l, UI_HOME_FONT_SECTION, 0);
     lv_obj_set_style_text_color(l, UI_TOK_TEXT_MUTED, 0);
-    lv_obj_set_style_pad_top(l, 6, 0);
+    lv_obj_set_style_pad_top(l, UI_PX(6), 0);
     lv_obj_set_width(l, LV_PCT(100));
     return l;
 }
@@ -176,7 +176,7 @@ lv_obj_t *ui_kit_row(lv_obj_t *col, int h, lv_event_cb_t cb, void *user)
     lv_obj_set_style_radius(r, ROW_R, 0);
     lv_obj_set_style_bg_color(r, UI_TOK_SURFACE_1, 0);
     lv_obj_set_style_bg_opa(r, LV_OPA_COVER, 0);
-    lv_obj_set_style_pad_all(r, 12, 0);
+    lv_obj_set_style_pad_all(r, UI_PX(12), 0);
     if(cb) {
         lv_obj_set_clickable(r, true);
         lv_obj_set_style_bg_color(r, UI_TOK_TEXT, LV_STATE_PRESSED);
@@ -192,18 +192,18 @@ lv_obj_t *ui_kit_text_row(lv_obj_t *col, const char *title, const char *note,
 {
     lv_obj_t *r = ui_kit_row(col, 0, cb, user);
     int tw = 0;
-    int text_w = UI_HOME_INNER_W - 24;
+    int text_w = UI_HOME_INNER_W - UI_PX(24);
     lv_obj_t *t;
 
     if(trailing && trailing[0]) {
         tw = ui_home_text_w(trailing, UI_HOME_FONT_ICON);
-        text_w -= tw + 10;
+        text_w -= tw + UI_PX(10);
     }
     t = ui_kit_text(r, title, UI_HOME_FONT_BODY, UI_TOK_TEXT, 0, 0, text_w);
     if(note && note[0]) {
         lv_obj_t *n = ui_kit_text(r, note, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 0, 0, text_w);
 
-        lv_obj_align_to(n, t, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 2);
+        lv_obj_align_to(n, t, LV_ALIGN_OUT_BOTTOM_LEFT, 0, UI_PX(2));
     }
     if(tw > 0) {
         lv_obj_t *g = ui_home_label(r, trailing, UI_HOME_FONT_ICON, trailing_color, 0, 0);
@@ -211,14 +211,14 @@ lv_obj_t *ui_kit_text_row(lv_obj_t *col, const char *title, const char *note,
         lv_obj_align(g, LV_ALIGN_RIGHT_MID, 0, 0);
     }
     /* A title-only row keeps a touch-sized height. */
-    lv_obj_set_style_min_height(r, 44, 0);
+    lv_obj_set_style_min_height(r, UI_PX(44), 0);
     return r;
 }
 
 /* -------------------------------------------------------------- controls */
 
-#define SW_W 40
-#define SW_H 22
+#define SW_W UI_PX(40)
+#define SW_H UI_PX(22)
 
 static void on_switch(lv_event_t *e)
 {
@@ -229,20 +229,21 @@ static void on_switch(lv_event_t *e)
     if(lv_obj_has_state(sw, LV_STATE_CHECKED)) lv_obj_remove_state(sw, LV_STATE_CHECKED);
     else                                       lv_obj_add_state(sw, LV_STATE_CHECKED);
     on = lv_obj_has_state(sw, LV_STATE_CHECKED);
-    lv_obj_set_x(knob, on ? SW_W - SW_H + 2 : 2);
+    lv_obj_set_x(knob, on ? SW_W - SW_H + UI_PX(2) : UI_PX(2));
     lv_obj_send_event(sw, LV_EVENT_VALUE_CHANGED, NULL);
 }
 
 lv_obj_t *ui_kit_switch(lv_obj_t *parent, int x, int y, bool on, lv_event_cb_t cb, void *user)
 {
     lv_obj_t *sw = box(parent, x, y, SW_W, SW_H);
-    lv_obj_t *knob = box(sw, on ? SW_W - SW_H + 2 : 2, 2, SW_H - 4, SW_H - 4);
+    lv_obj_t *knob = box(sw, on ? SW_W - SW_H + UI_PX(2) : UI_PX(2), UI_PX(2),
+                         SW_H - UI_PX(4), SW_H - UI_PX(4));
 
     lv_obj_set_clickable(sw, true);
     lv_obj_set_style_radius(sw, SW_H / 2, 0);
     lv_obj_set_style_bg_color(sw, UI_TOK_SURFACE_3, 0);
     lv_obj_set_style_bg_opa(sw, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(sw, 1, 0);
+    lv_obj_set_style_border_width(sw, UI_PX(1), 0);
     lv_obj_set_style_border_color(sw, UI_TOK_LINE, 0);
     lv_obj_set_style_border_opa(sw, UI_TOK_LINE_OPA, 0);
     lv_obj_set_style_bg_color(sw, UI_TOK_ACCENT, LV_STATE_CHECKED);
@@ -263,7 +264,7 @@ bool ui_kit_switch_get(lv_obj_t *sw)
     return sw && lv_obj_has_state(sw, LV_STATE_CHECKED);
 }
 
-#define CHIP_H 30
+#define CHIP_H UI_PX(30)
 
 void ui_kit_chip_set_selected(lv_obj_t *chip, bool selected)
 {
@@ -281,18 +282,18 @@ lv_obj_t *ui_kit_chip(lv_obj_t *parent, const char *label, int x, int y, int w,
     lv_obj_t *c;
     lv_obj_t *l;
 
-    if(w <= 0) w = tw + 24;
+    if(w <= 0) w = tw + UI_PX(24);
     c = box(parent, x, y, w, CHIP_H);
     lv_obj_set_style_radius(c, CHIP_H / 2, 0);
     lv_obj_set_style_bg_color(c, UI_TOK_SURFACE_3, 0);
     lv_obj_set_style_bg_opa(c, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(c, 1, 0);
+    lv_obj_set_style_border_width(c, UI_PX(1), 0);
     lv_obj_set_style_border_color(c, UI_TOK_LINE, 0);
     lv_obj_set_style_border_opa(c, UI_TOK_LINE_OPA, 0);
     lv_obj_set_style_bg_color(c, UI_TOK_ACCENT, LV_STATE_CHECKED);
     lv_obj_set_style_border_width(c, 0, LV_STATE_CHECKED);
-    l = ui_home_label(c, label, UI_HOME_FONT_BODY, UI_TOK_TEXT_MUTED, (w - tw) / 2 - 1,
-                      (CHIP_H - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2 - 1);
+    l = ui_home_label(c, label, UI_HOME_FONT_BODY, UI_TOK_TEXT_MUTED, (w - tw) / 2 - UI_PX(1),
+                      (CHIP_H - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2 - UI_PX(1));
     (void)l;
     if(cb) {
         lv_obj_set_clickable(c, true);
@@ -376,14 +377,14 @@ lv_obj_t *ui_kit_swatch(lv_obj_t *parent, int x, int y, int size, uint32_t rgb, 
     lv_obj_set_style_radius(s, size / 4, 0);
     if(empty) {
         lv_obj_set_style_bg_opa(s, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(s, 1, 0);
+        lv_obj_set_style_border_width(s, UI_PX(1), 0);
         lv_obj_set_style_border_color(s, UI_TOK_TEXT_FAINT, 0);
     }
     else {
         lv_obj_set_style_bg_color(s, lv_color_hex(rgb), 0);
         lv_obj_set_style_bg_opa(s, LV_OPA_COVER, 0);
         /* a hairline, so a black or white filament still reads on a card */
-        lv_obj_set_style_border_width(s, 1, 0);
+        lv_obj_set_style_border_width(s, UI_PX(1), 0);
         lv_obj_set_style_border_color(s, UI_TOK_LINE, 0);
         lv_obj_set_style_border_opa(s, 60, 0);
     }
@@ -405,10 +406,10 @@ lv_obj_t *ui_kit_ring(lv_obj_t *parent, int x, int y, int size, int pct, lv_colo
     lv_arc_set_rotation(arc, 270);
     lv_arc_set_bg_angles(arc, 0, 360);
     lv_arc_set_angles(arc, 0, sweep);
-    lv_obj_set_style_arc_width(arc, 4, 0);
+    lv_obj_set_style_arc_width(arc, UI_PX(4), 0);
     lv_obj_set_style_arc_color(arc, UI_TOK_SURFACE_3, 0);
     lv_obj_set_style_arc_opa(arc, LV_OPA_COVER, 0);
-    lv_obj_set_style_arc_width(arc, 4, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(arc, UI_PX(4), LV_PART_INDICATOR);
     lv_obj_set_style_arc_color(arc, color, LV_PART_INDICATOR);
     lv_obj_set_style_arc_opa(arc, LV_OPA_COVER, LV_PART_INDICATOR);
     lv_obj_set_style_arc_rounded(arc, true, LV_PART_INDICATOR);
@@ -423,8 +424,8 @@ lv_obj_t *ui_kit_ring(lv_obj_t *parent, int x, int y, int size, int pct, lv_colo
     return arc;
 }
 
-#define TAG_H   20
-#define TAG_PAD 8
+#define TAG_H   UI_PX(20)
+#define TAG_PAD UI_PX(8)
 
 int ui_kit_tag_w(const char *text)
 {
@@ -453,8 +454,8 @@ lv_obj_t *ui_kit_tag(lv_obj_t *parent, const char *text, ui_kit_tone_t tone, int
 static lv_obj_t *stepper(lv_obj_t *parent, int x, int y, int w, const char *value,
                          lv_event_cb_t on_minus, lv_event_cb_t on_plus, bool hold, void *user)
 {
-    const int h = 34;
-    const int bw = 40;
+    const int h = UI_PX(34);
+    const int bw = UI_PX(40);
     lv_obj_t *s = box(parent, x, y, w, h);
     lv_obj_t *m = box(s, 0, 0, bw, h);
     lv_obj_t *p = box(s, w - bw, 0, bw, h);

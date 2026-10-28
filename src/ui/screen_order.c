@@ -56,7 +56,7 @@ static void open_bind_confirm(int unit)
               (vs_arg_t[]){ VS_ARG_T("unit", u->name), VS_ARG_T("variant", mmu_variant_name(u->variant)) }, 2);
     /* docs/VISUAL_SPEC_480.md, "This unit": h = 148, body "This display will
      * show unit B." at local (16, 52). */
-    sheet = ui_sheet_open(title, 148);
+    sheet = ui_sheet_open(title, UI_PX(148));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     body = ui_sheet_body(sheet);
     if(body) {
@@ -91,7 +91,7 @@ static void on_confirm_rescan(lv_event_t *e)
 
 static void open_rescan_confirm(void)
 {
-    lv_obj_t *sheet = ui_sheet_open(view_str(VS_ORDER_RESCAN_TITLE), 168);
+    lv_obj_t *sheet = ui_sheet_open(view_str(VS_ORDER_RESCAN_TITLE), UI_PX(168));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
 
     ui_sheet_row(sheet, UI_ICON_REFRESH, view_str(VS_ORDER_RESCAN_HEAD),
@@ -133,19 +133,19 @@ static void add_unit_row(lv_obj_t *col, int unit)
         free(vu);
         return;
     }
-    row = ui_kit_row(col, 52, mine ? NULL : on_unit_click, (void *)(intptr_t)unit);
+    row = ui_kit_row(col, UI_PX(52), mine ? NULL : on_unit_click, (void *)(intptr_t)unit);
     tw = ui_home_text_w(vu->title, UI_HOME_FONT_BODY);
     ui_home_label(row, vu->title, UI_HOME_FONT_BODY, UI_TOK_TEXT, 0, 0);
-    ui_home_label(row, vu->subtitle, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, tw + 6, 2);
+    ui_home_label(row, vu->subtitle, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, tw + UI_PX(6), UI_PX(2));
     vs_format(VS_ORDER_SLOTS, sub, sizeof sub, (vs_arg_t[]){ VS_ARG_N("n", (int)u->slot_count) }, 1);
-    ui_home_label(row, sub, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 0, 20);
+    ui_home_label(row, sub, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 0, UI_PX(20));
     if(mine) {
         ui_kit_tag(row, view_str(VS_ORDER_THIS_DISPLAY), UI_KIT_TONE_ACCENT,
-                   UI_HOME_INNER_W - 24 - ui_kit_tag_w(view_str(VS_ORDER_THIS_DISPLAY)), 4);
+                   UI_HOME_INNER_W - UI_PX(24) - ui_kit_tag_w(view_str(VS_ORDER_THIS_DISPLAY)), UI_PX(4));
     }
     else {
         ui_home_label(row, UI_ICON_CHEVRON_RIGHT, UI_HOME_FONT_ICON, UI_TOK_TEXT_FAINT,
-                      UI_HOME_INNER_W - 24 - 18, 6);
+                      UI_HOME_INNER_W - UI_PX(24) - UI_PX(18), UI_PX(6));
     }
     free(vu);
 }
@@ -169,15 +169,15 @@ static void add_side_row(lv_obj_t *col)
 {
     mmu_unit_t *u = mmu_this();
     bool locked = (mmu_toolhead_source() == MMU_FEED_THIS);
-    lv_obj_t *row = ui_kit_row(col, 52, NULL, NULL);
-    int x = UI_HOME_INNER_W - 24 - 72 - 8 - 72;
+    lv_obj_t *row = ui_kit_row(col, UI_PX(52), NULL, NULL);
+    int x = UI_HOME_INNER_W - UI_PX(24) - UI_PX(72) - UI_PX(8) - UI_PX(72);
     lv_obj_t *l, *r;
 
     ui_home_label(row, view_str(VS_ORDER_FEEDS), UI_HOME_FONT_BODY, UI_TOK_TEXT, 0, 0);
-    ui_home_label(row, view_str(VS_ORDER_NOZZLES), UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 0, 20);
-    l = ui_kit_chip(row, view_str(VS_SIDE_LEFT), x, 4, 72, u->side == MMU_SIDE_LEFT,
+    ui_home_label(row, view_str(VS_ORDER_NOZZLES), UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 0, UI_PX(20));
+    l = ui_kit_chip(row, view_str(VS_SIDE_LEFT), x, UI_PX(4), UI_PX(72), u->side == MMU_SIDE_LEFT,
                     locked ? on_side_locked : on_side, (void *)(intptr_t)MMU_SIDE_LEFT);
-    r = ui_kit_chip(row, view_str(VS_SIDE_RIGHT), x + 80, 4, 72, u->side == MMU_SIDE_RIGHT,
+    r = ui_kit_chip(row, view_str(VS_SIDE_RIGHT), x + UI_PX(80), UI_PX(4), UI_PX(72), u->side == MMU_SIDE_RIGHT,
                     locked ? on_side_locked : on_side, (void *)(intptr_t)MMU_SIDE_RIGHT);
     (void)l;
     (void)r;
@@ -213,7 +213,7 @@ static lv_obj_t *build(void)
     lv_obj_t *col;
 
     (void)ui_kit_header(scr, ui_nav_screen_title(UI_SCREEN_ORDER), true);
-    col = ui_kit_column(scr, UI_HOME_HEADER_H + 2, UI_HOME_H - UI_HOME_HEADER_H - 2);
+    col = ui_kit_column(scr, UI_HOME_HEADER_H + UI_PX(2), UI_HOME_H - UI_HOME_HEADER_H - UI_PX(2));
 
     if(s_waiting) build_waiting(col);
     else build_units(col);

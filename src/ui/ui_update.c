@@ -137,7 +137,7 @@ void ui_update_header_title(lv_obj_t *hdr, const char *text)
      * rather than mirrored: from where it sits to the alert slot's edge. */
     x = lv_obj_get_style_x(title, LV_PART_MAIN);
     ui_update_text_fit(title, text, UI_HOME_FONT_TITLE,
-                       UI_HOME_W - x - UI_HOME_HEADER_PAD - UI_HOME_SLOT_W - 8);
+                       UI_HOME_W - x - UI_HOME_HEADER_PAD - UI_HOME_SLOT_W - UI_PX(8));
 }
 
 void ui_update_alert_totals(int *count, int *tone, bool *clear)

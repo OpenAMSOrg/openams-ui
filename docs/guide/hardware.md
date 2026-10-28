@@ -61,6 +61,43 @@ that shows wrong colors, a mirrored image or garbage:
 Override one with a compiler define, or edit the header. See
 [troubleshooting.md](troubleshooting.md) for which to try.
 
+## The 5 inch board (ES3C50P)
+
+The firmware also builds for a 5 inch board, the LCDWiki "5.0inch ESP32-S3
+display" ES3C50P (sold as Hosyond), capacitive version, with
+`-DMMU_BOARD=es3c50p` ([flash-and-setup.md](flash-and-setup.md#the-5-inch-board)).
+Its code is `display_rgb.c` and `touch_gt911.c`; `main/board.h` says what each
+board has. The UI is the same, drawn at 800x480 ([VISUAL_SPEC_800.md](../VISUAL_SPEC_800.md)).
+
+| Part | Value |
+|------|-------|
+| Module | ESP32-S3 (QFN56), dual core, 240 MHz |
+| Memory | 512 KB SRAM, 8 MB octal PSRAM (the frame buffer, LVGL's pool, the program) |
+| Flash | 16 MB, quad I/O, 80 MHz: two OTA slots and the tag library (`partitions_es3c50p.csv`) |
+| Panel | ST7282E, 800x480, 16-bit RGB, no command interface |
+| Touch | GT911 capacitive controller on I2C, address 0x5D: no calibration |
+| Backlight | PWM on GPIO2 (an SY7200 boost driver) |
+| USB | CH340 serial (`/dev/ttyUSB*`), auto reset into the bootloader |
+
+| Signal | GPIO |
+|--------|------|
+| DE, VSYNC, HSYNC, PCLK | 40, 41, 39, 42 |
+| R0-R4 | 45, 48, 47, 21, 14 |
+| G0-G5 | 5, 6, 7, 15, 16, 4 |
+| B0-B4 | 8, 3, 46, 9, 1 |
+| Touch SDA, SCL, INT, RST | 19, 20, 18, 38 |
+| microSD CS, MOSI, MISO, SCK | 10, 11, 13, 12 |
+| Speaker I2S LRCLK, DATA, BCLK | 18, 17, 0 (not used) |
+
+The image is turned 180 degrees from the panel's own scan order
+(`BOARD_ROTATED_180`); the display settings' flip turns it from there.
+
+The board has two free GPIOs, 17 and 18, and 18 is the touch controller's
+interrupt. So the tag writer's reader shares the microSD slot's SPI bus (SCK 12,
+MOSI 11, MISO 13, CS 10; leave the slot empty), and GPIO17, on the "Expand"
+connector, is the PN5180's BUSY or the MFRC522's reset. The PN5180's reset is
+tied high. This wiring is not yet tried on hardware.
+
 ## Requirements
 
 - A USB cable and a computer with a USB serial driver for the board.

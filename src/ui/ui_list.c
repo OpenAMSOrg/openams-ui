@@ -38,7 +38,7 @@ lv_obj_t *ui_list_column(lv_obj_t *parent, int x, int y, int w, int h)
     lv_obj_set_size(col, w, h);
     lv_obj_set_style_bg_opa(col, LV_OPA_TRANSP, 0);
     lv_obj_set_style_pad_all(col, 0, 0);
-    lv_obj_set_style_pad_row(col, 8, 0); /* the shared default; a screen overrides for 4 or 6 */
+    lv_obj_set_style_pad_row(col, UI_PX(8), 0); /* the shared default; a screen overrides for 4 or 6 */
     lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(col, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
     lv_obj_set_scrollable(col, true);
@@ -91,15 +91,15 @@ lv_obj_t *ui_list_row(lv_obj_t *parent, const char *icon, const char *title, con
     lv_obj_remove_style_all(row);
     lv_obj_set_width(row, LV_PCT(100));
     lv_obj_set_height(row, LV_SIZE_CONTENT);
-    lv_obj_set_style_min_height(row, 44, 0);
+    lv_obj_set_style_min_height(row, UI_PX(44), 0);
     lv_obj_set_style_bg_color(row, UI_COL_PANEL, 0);
     lv_obj_set_style_bg_opa(row, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(row, UI_RADIUS, 0);
-    lv_obj_set_style_pad_left(row, 12, 0);
-    lv_obj_set_style_pad_right(row, 12, 0);
-    lv_obj_set_style_pad_top(row, 10, 0);
-    lv_obj_set_style_pad_bottom(row, 10, 0);
-    lv_obj_set_style_pad_column(row, 10, 0);
+    lv_obj_set_style_pad_left(row, UI_PX(12), 0);
+    lv_obj_set_style_pad_right(row, UI_PX(12), 0);
+    lv_obj_set_style_pad_top(row, UI_PX(10), 0);
+    lv_obj_set_style_pad_bottom(row, UI_PX(10), 0);
+    lv_obj_set_style_pad_column(row, UI_PX(10), 0);
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_scrollable(row, false);
@@ -111,7 +111,7 @@ lv_obj_t *ui_list_row(lv_obj_t *parent, const char *icon, const char *title, con
 
     if(icon) {
         lv_obj_t *ic = mk_label(row, icon, UI_FONT_ICON, UI_COL_TEXT_DIM, LV_LABEL_LONG_MODE_CLIP);
-        lv_obj_set_width(ic, 18);
+        lv_obj_set_width(ic, UI_PX(18));
     }
 
     text = mk_text_block(row);

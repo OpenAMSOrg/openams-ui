@@ -27,7 +27,7 @@ static lv_obj_t *build(void)
     int i, n;
 
     (void)ui_kit_header(scr, view_str(VS_SCREEN_DEBUG), true);
-    col = ui_kit_column(scr, UI_HOME_HEADER_H + 2, UI_HOME_H - UI_HOME_HEADER_H - 2);
+    col = ui_kit_column(scr, UI_HOME_HEADER_H + UI_PX(2), UI_HOME_H - UI_HOME_HEADER_H - UI_PX(2));
 
     ui_kit_section(col, view_str(VS_DEBUG_SCENARIOS));
     n = app_scenario_count();

@@ -12,6 +12,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # ---------------------------------------------------------------------------
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(languages)
+# The UI's resolution (-DMMU_UI_RESOLUTION=480x320|800x480): which font set the
+# UI builds with and how it scales its 480x320 grid. Same module as the ESP32.
+include(resolution)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
@@ -46,6 +49,8 @@ add_subdirectory(lib/lvgl)
 # compile+link time, so there is nothing to find_package/pkg_check_modules.
 # ---------------------------------------------------------------------------
 target_compile_definitions(lvgl PUBLIC LV_USE_SDL=1)
+# lv_conf.h sizes LVGL's pool by resolution: LVGL and the app must agree.
+target_compile_definitions(lvgl PUBLIC ${MMU_UI_DEFINES})
 
 if(EMSCRIPTEN)
     target_compile_options(lvgl PUBLIC -sUSE_SDL=2)
@@ -76,6 +81,8 @@ if(EMSCRIPTEN)
     list(APPEND MMU_WEB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/platform/sim/display_cfg.c")
     mmu_languages_filter_sources(MMU_WEB_SOURCES ${MMU_WEB_SOURCES})
 
+    mmu_resolution_filter_sources(MMU_WEB_SOURCES ${MMU_WEB_SOURCES})
+
     add_executable(openams-ui-web ${MMU_WEB_SOURCES})
 
     target_include_directories(openams-ui-web PRIVATE
@@ -84,7 +91,7 @@ if(EMSCRIPTEN)
         "${CMAKE_CURRENT_SOURCE_DIR}/platform"
     )
 
-    target_compile_definitions(openams-ui-web PRIVATE ${MMU_LANGUAGE_DEFINES})
+    target_compile_definitions(openams-ui-web PRIVATE ${MMU_LANGUAGE_DEFINES} ${MMU_UI_DEFINES})
 
     target_compile_options(openams-ui-web PRIVATE
         -Wall -Wextra
@@ -113,6 +120,8 @@ else()
     )
     mmu_languages_filter_sources(MMU_APP_SOURCES ${MMU_APP_SOURCES})
 
+    mmu_resolution_filter_sources(MMU_APP_SOURCES ${MMU_APP_SOURCES})
+
     add_executable(openams-ui-sim ${MMU_APP_SOURCES})
 
     target_include_directories(openams-ui-sim PRIVATE
@@ -121,7 +130,7 @@ else()
         "${CMAKE_CURRENT_SOURCE_DIR}/platform"
     )
 
-    target_compile_definitions(openams-ui-sim PRIVATE ${MMU_LANGUAGE_DEFINES})
+    target_compile_definitions(openams-ui-sim PRIVATE ${MMU_LANGUAGE_DEFINES} ${MMU_UI_DEFINES})
 
     # Warnings are on for our code only; LVGL keeps its own (quieter) flags.
     # format-truncation/format-overflow are promoted to errors here so a
@@ -306,7 +315,7 @@ if(NOT EMSCRIPTEN)
 
     string(REPLACE ";" "," MMU_LANGUAGES_CSV "${MMU_LANGUAGE_CODES}")
     target_compile_definitions(test_languages PRIVATE
-        ${MMU_LANGUAGE_DEFINES}
+        ${MMU_LANGUAGE_DEFINES} ${MMU_UI_DEFINES}
         "MMU_TEST_LANGS=\"${MMU_LANGUAGES_CSV}\"")
 
     target_compile_options(test_languages PRIVATE -Wall -Wextra)
@@ -325,6 +334,8 @@ if(NOT EMSCRIPTEN)
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_screen_edit.c")
     mmu_languages_filter_sources(MMU_EDIT_SCREEN_SOURCES ${MMU_EDIT_SCREEN_SOURCES})
 
+    mmu_resolution_filter_sources(MMU_EDIT_SCREEN_SOURCES ${MMU_EDIT_SCREEN_SOURCES})
+
     add_executable(test_screen_edit ${MMU_EDIT_SCREEN_SOURCES})
 
     target_include_directories(test_screen_edit PRIVATE
@@ -332,7 +343,7 @@ if(NOT EMSCRIPTEN)
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
         "${CMAKE_CURRENT_SOURCE_DIR}/platform")
 
-    target_compile_definitions(test_screen_edit PRIVATE ${MMU_LANGUAGE_DEFINES})
+    target_compile_definitions(test_screen_edit PRIVATE ${MMU_LANGUAGE_DEFINES} ${MMU_UI_DEFINES})
 
     target_compile_options(test_screen_edit PRIVATE -Wall -Wextra)
 
@@ -354,6 +365,8 @@ if(NOT EMSCRIPTEN)
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_screen_update.c")
     mmu_languages_filter_sources(MMU_SCREEN_UPDATE_SOURCES ${MMU_SCREEN_UPDATE_SOURCES})
 
+    mmu_resolution_filter_sources(MMU_SCREEN_UPDATE_SOURCES ${MMU_SCREEN_UPDATE_SOURCES})
+
     add_executable(test_screen_update ${MMU_SCREEN_UPDATE_SOURCES})
 
     target_include_directories(test_screen_update PRIVATE
@@ -361,7 +374,7 @@ if(NOT EMSCRIPTEN)
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
         "${CMAKE_CURRENT_SOURCE_DIR}/platform")
 
-    target_compile_definitions(test_screen_update PRIVATE ${MMU_LANGUAGE_DEFINES})
+    target_compile_definitions(test_screen_update PRIVATE ${MMU_LANGUAGE_DEFINES} ${MMU_UI_DEFINES})
 
     target_compile_options(test_screen_update PRIVATE -Wall -Wextra)
 

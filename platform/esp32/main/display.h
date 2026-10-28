@@ -1,5 +1,9 @@
 /**
  * @file display.h
+ * The board's panel and its LVGL display driver (main/board.h): display.c for
+ * the E32R40T, display_rgb.c for the ES3C50P. What follows describes the
+ * E32R40T's; the ES3C50P's differences are in display_rgb.c.
+ *
  * ST7796S SPI display bring-up for the 4.0" board (HSPI: SCK14 MOSI13
  * MISO12 CS15 DC2, backlight GPIO27 via LEDC PWM; RST is tied to EN, so
  * bring-up is a software reset only), plus the LVGL display driver on top
@@ -20,6 +24,7 @@
 #include "lvgl.h"
 
 typedef struct {
+    const char *name;    /* the panel's controller, for the boot log */
     uint32_t id_0xd3;    /* RDID4 response (3 bytes, packed MSB-first); ST7796S: 0x007796 */
     bool     id_read_ok; /* true if id_0xd3's low 16 bits matched 0x7796 */
     bool     inversion_on;

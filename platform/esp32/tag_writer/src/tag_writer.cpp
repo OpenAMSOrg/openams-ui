@@ -27,6 +27,25 @@
 
 static const char *TAG = "tag_writer";
 
+#if defined(MMU_BOARD_ES3C50P)
+// The ES3C50P (5" ESP32-S3) has two free GPIOs, 17 and 18, and 18 is the touch
+// controller's interrupt. So the reader shares the microSD slot's SPI bus
+// (SCK IO12, MOSI IO11, MISO IO13, CS IO10; the slot must stay empty), and
+// IO17, on the "Expand" connector, is the PN5180's BUSY or the MFRC522's
+// reset. The PN5180's reset is tied high (it starts on power-up) and the
+// MFRC522's IRQ is not used.
+#if defined(TW_READER_MFRC522)
+static const Reader::Pins READER_PINS = {
+    SPI3_HOST, /*sck*/ 12, /*mosi*/ 11, /*miso*/ 13, /*cs*/ 10, /*rst*/ 17, /*irq*/ -1,
+    /*clock_hz*/ 4 * 1000 * 1000,
+};
+#else
+static const Reader::Pins READER_PINS = {
+    SPI3_HOST, /*sck*/ 12, /*mosi*/ 11, /*miso*/ 13, /*cs*/ 10, /*busy*/ 17, /*rst*/ -1,
+    /*clock_hz*/ 4 * 1000 * 1000,
+};
+#endif
+#else
 // The reader on the board's VSPI connector (P3: MOSI IO23, MISO IO19, SCK IO18,
 // CS IO21; shared with the microSD slot, which must stay empty) plus reset on
 // IO32 and the PN5180's BUSY (or the MFRC522's IRQ) on IO35, input only. The
@@ -41,6 +60,7 @@ static const Reader::Pins READER_PINS = {
     SPI3_HOST, /*sck*/ 18, /*mosi*/ 23, /*miso*/ 19, /*cs*/ 21, /*busy*/ 35, /*rst*/ 32,
     /*clock_hz*/ 4 * 1000 * 1000,
 };
+#endif
 #endif
 
 /* A console command runs on its own task: the display's console task has 3 KB

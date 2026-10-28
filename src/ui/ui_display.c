@@ -64,7 +64,7 @@ static void hero_apply(lv_obj_t *box, const char *number, const char *unit)
 
     /* 1 px gap to the right of the number, unit bottom aligned with it then
      * lifted 2 px so the two baselines sit the way the spec draws them. */
-    lv_obj_align_to(un, num, LV_ALIGN_OUT_RIGHT_BOTTOM, 1, -2);
+    lv_obj_align_to(un, num, LV_ALIGN_OUT_RIGHT_BOTTOM, UI_PX(1), UI_PX(-2));
 }
 
 lv_obj_t *ui_hero_value(lv_obj_t *parent, int x, int y, const char *number, const char *unit)
@@ -109,9 +109,9 @@ lv_obj_t *ui_ring(lv_obj_t *parent, int x, int y, int size, int pct, lv_color_t 
     lv_arc_set_rotation(arc, 270); /* 0 degrees at 12 o'clock */
     lv_arc_set_bg_angles(arc, 0, 360);
 
-    lv_obj_set_style_arc_width(arc, 3, 0);
+    lv_obj_set_style_arc_width(arc, UI_PX(3), 0);
     lv_obj_set_style_arc_color(arc, UI_COL_LINE, 0);
-    lv_obj_set_style_arc_width(arc, 3, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(arc, UI_PX(3), LV_PART_INDICATOR);
     lv_obj_set_style_arc_color(arc, color, LV_PART_INDICATOR);
     lv_obj_set_style_arc_rounded(arc, true, LV_PART_INDICATOR);
 
@@ -141,9 +141,9 @@ lv_obj_t *ui_pill(lv_obj_t *parent, const char *text, ui_style_id_t pill_style)
     /* The capsule geometry is fixed: 20 px tall, 0/8 padding, the medium cut
      * of the small size. The style carries only the fill and the text color. */
     lv_obj_set_style_text_font(pill, UI_FONT_S_MED, 0);
-    lv_obj_set_style_pad_hor(pill, 8, 0);
+    lv_obj_set_style_pad_hor(pill, UI_PX(8), 0);
     lv_obj_set_style_pad_ver(pill, 0, 0);
-    lv_obj_set_height(pill, 20);
+    lv_obj_set_height(pill, UI_PX(20));
     lv_obj_set_width(pill, LV_SIZE_CONTENT);
     lv_obj_set_scrollable(pill, false);
     lv_obj_set_clickable(pill, false);
@@ -179,14 +179,14 @@ lv_obj_t *ui_swatch(lv_obj_t *parent, uint32_t rgb, int x, int y, int size, bool
     lv_obj_set_size(sw, size, size);
     lv_obj_set_scrollable(sw, false);
     lv_obj_set_clickable(sw, false);
-    lv_obj_set_style_radius(sw, round ? size / 2 : 2, 0);
+    lv_obj_set_style_radius(sw, round ? size / 2 : UI_PX(2), 0);
     lv_obj_set_style_bg_opa(sw, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(sw, top, 0);
     lv_obj_set_style_bg_grad_color(sw, bottom, 0);
     lv_obj_set_style_bg_grad_dir(sw, LV_GRAD_DIR_VER, 0);
 
     if(dark) {
-        lv_obj_set_style_border_width(sw, 1, 0);
+        lv_obj_set_style_border_width(sw, UI_PX(1), 0);
         lv_obj_set_style_border_color(sw, UI_COL_TEXT_FAINT, 0);
         lv_obj_set_style_border_opa(sw, LV_OPA_COVER, 0);
     }
@@ -200,8 +200,8 @@ lv_obj_t *ui_section_label(lv_obj_t *parent, const char *text)
     lv_obj_t *l = mk_label(parent, text, UI_FONT_S, UI_COL_TEXT_FAINT);
 
     lv_obj_set_width(l, LV_PCT(100));
-    lv_obj_set_style_pad_left(l, 4, 0);
-    lv_obj_set_style_pad_top(l, 6, 0);
+    lv_obj_set_style_pad_left(l, UI_PX(4), 0);
+    lv_obj_set_style_pad_top(l, UI_PX(6), 0);
     return l;
 }
 
@@ -215,7 +215,7 @@ lv_obj_t *ui_empty_state(lv_obj_t *parent, const char *icon, const char *text)
 
     lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(col, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_row(col, 8, 0);
+    lv_obj_set_style_pad_row(col, UI_PX(8), 0);
 
     ic = mk_label(col, icon, UI_FONT_ICON_L, UI_COL_TEXT_FAINT);
     lv_obj_set_width(ic, LV_SIZE_CONTENT);
@@ -228,7 +228,7 @@ lv_obj_t *ui_empty_state(lv_obj_t *parent, const char *icon, const char *text)
     tx = mk_label(col, text, UI_FONT_S, UI_COL_TEXT_DIM);
     lv_label_set_long_mode(tx, LV_LABEL_LONG_MODE_WRAP);
     lv_obj_set_style_text_align(tx, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_width(tx, lv_obj_get_width(parent) - 32);
+    lv_obj_set_width(tx, lv_obj_get_width(parent) - UI_PX(32));
     lv_obj_set_height(tx, LV_SIZE_CONTENT);
 
     lv_obj_center(col);

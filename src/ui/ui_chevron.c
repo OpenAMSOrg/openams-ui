@@ -38,7 +38,7 @@ static lv_obj_t *chevron(lv_obj_t *strip, int index, bool enabled,
 
     if(enabled) {
         /* A pressed state, so a tap that lands is seen (PRINCIPLES.md 10). */
-        lv_obj_set_style_radius(b, 8, 0);
+        lv_obj_set_style_radius(b, UI_PX(8), 0);
         lv_obj_set_style_bg_color(b, UI_TOK_TEXT, LV_STATE_PRESSED);
         lv_obj_set_style_bg_opa(b, LV_OPA_20, LV_STATE_PRESSED);
         lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, user);

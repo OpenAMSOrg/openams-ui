@@ -78,14 +78,14 @@ lv_obj_t *ui_editenv_stepper(lv_obj_t *parent, int x, int y, int w, int h,
     lv_obj_t *val;
 
     /* Keep the value readable when the caller gives us a narrow column. */
-    if(bw * 2 + 24 > w) bw = (w - 24) / 2;
-    if(bw < 18) bw = 18;
+    if(bw * 2 + UI_PX(24) > w) bw = (w - UI_PX(24)) / 2;
+    if(bw < UI_PX(18)) bw = UI_PX(18);
 
     ui_editenv_button(parent, LV_SYMBOL_MINUS,
                       enabled ? UI_STYLE_BTN : UI_STYLE_BTN_DISABLED,
                       x, y, bw, h, enabled ? cb : NULL, minus_user);
 
-    box = ui_editenv_panel(parent, UI_STYLE_PANEL, x + bw + 2, y, w - 2 * bw - 4, h);
+    box = ui_editenv_panel(parent, UI_STYLE_PANEL, x + bw + UI_PX(2), y, w - 2 * bw - UI_PX(4), h);
     val = lv_label_create(box);
     lv_obj_remove_style_all(val);
     lv_obj_add_style(val, ui_style(UI_STYLE_LABEL), 0);

@@ -18,10 +18,10 @@
 
 /* The body these screens share: a scrolling list under the 44 px header,
  * down to the screen's bottom margin: viewport y 48-312, x 12, w 456. */
-#define UI_MISC_LIST_X 12
-#define UI_MISC_LIST_Y 48
-#define UI_MISC_LIST_W 456
-#define UI_MISC_LIST_H 264
+#define UI_MISC_LIST_X UI_PX(12)
+#define UI_MISC_LIST_Y UI_PX(48)
+#define UI_MISC_LIST_W (UI_SCREEN_W - 2 * UI_MISC_LIST_X)
+#define UI_MISC_LIST_H (UI_SCREEN_H - UI_MISC_LIST_Y - UI_PX(8))
 
 static inline void ui_misc_goto_cb(lv_event_t *e)
 {

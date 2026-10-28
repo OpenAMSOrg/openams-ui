@@ -4,15 +4,14 @@
  * GPIO to pulse — SWRESET (cmd 0x01) is the only reset path.
  */
 #include "display.h"
+#include "backlight.h"
 #include "panel_config.h"
 
 #include "ui/ui_theme.h" /* UI_SCREEN_W / UI_SCREEN_H: the LVGL display always matches these */
 
-#include <math.h>
 #include <string.h>
 
 #include "driver/gpio.h"
-#include "driver/ledc.h"
 #include "driver/spi_master.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
@@ -48,14 +47,6 @@
  * expects on the wire. */
 #define PANEL_BG_HI 0x08
 #define PANEL_BG_LO 0x62
-
-/* Backlight LEDC (PWM): 5 kHz, 10-bit duty. */
-#define BL_LEDC_TIMER LEDC_TIMER_0
-#define BL_LEDC_MODE  LEDC_LOW_SPEED_MODE
-#define BL_LEDC_CH    LEDC_CHANNEL_0
-#define BL_LEDC_HZ    5000
-#define BL_LEDC_RES   LEDC_TIMER_10_BIT
-#define BL_LEDC_MAX   1023
 
 /* MADCTL rotation bits a 180-degree flip toggles (display_set_flip()). */
 #define MADCTL_FLIP_BITS 0xC0 /* MX|MY */
@@ -187,6 +178,7 @@ static void lcd_set_window(int x1, int y1, int x2, int y2)
 static void detect_panel(void)
 {
     memset(&s_panel_info, 0, sizeof(s_panel_info));
+    s_panel_info.name = "ST7796S";
     s_panel_info.spi_hz = PANEL_SPI_HZ;
 
     s_panel_info.id_0xd3 = lcd_read_id(0xD3, 3); /* RDID4 */
@@ -332,64 +324,6 @@ void display_set_flip(bool flip)
              madctl);
 }
 
-/* -------------------------------------------------------------- backlight */
-
-/* Perceptual gamma (~2.2) so 10-30% duty is visibly distinct instead of
- * crowding near zero — a linear duty-vs-percent map makes the low end of
- * the slider feel like an on/off switch. */
-static uint32_t backlight_gamma_duty(uint8_t pct)
-{
-    if(pct == 0) return 0;
-    if(pct > 100) pct = 100;
-    float f = (float)pct / 100.0f;
-    float g = powf(f, 2.2f);
-    uint32_t duty = (uint32_t)(g * BL_LEDC_MAX + 0.5f);
-    return duty > BL_LEDC_MAX ? BL_LEDC_MAX : duty;
-}
-
-static void backlight_init(void)
-{
-    ledc_timer_config_t timer_cfg = {
-        .speed_mode = BL_LEDC_MODE,
-        .duty_resolution = BL_LEDC_RES,
-        .timer_num = BL_LEDC_TIMER,
-        .freq_hz = BL_LEDC_HZ,
-        .clk_cfg = LEDC_AUTO_CLK,
-    };
-    ledc_timer_config(&timer_cfg);
-
-    ledc_channel_config_t ch_cfg = {
-        .gpio_num = PIN_BL,
-        .speed_mode = BL_LEDC_MODE,
-        .channel = BL_LEDC_CH,
-        .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = BL_LEDC_TIMER,
-        .duty = 0, /* stay off until display_set_brightness() is called explicitly */
-        .hpoint = 0,
-    };
-    ledc_channel_config(&ch_cfg);
-
-    ledc_fade_func_install(0);
-}
-
-void display_set_brightness(uint8_t pct, uint16_t fade_ms)
-{
-    if(pct > 100) pct = 100;
-    uint32_t duty = backlight_gamma_duty(pct);
-
-    if(fade_ms == 0) {
-        ledc_set_duty(BL_LEDC_MODE, BL_LEDC_CH, duty);
-        ledc_update_duty(BL_LEDC_MODE, BL_LEDC_CH);
-    }
-    else {
-        ledc_set_fade_with_time(BL_LEDC_MODE, BL_LEDC_CH, duty, fade_ms);
-        ledc_fade_start(BL_LEDC_MODE, BL_LEDC_CH, LEDC_FADE_NO_WAIT);
-    }
-
-    ESP_LOGI(TAG, "backlight brightness %u%% (duty %u/%u%s)", pct, (unsigned)duty, BL_LEDC_MAX,
-             fade_ms ? ", fading" : "");
-}
-
 /* Fills the whole 480x320 panel with the app's background colour, so any
  * border around a smaller-than-panel UI is the app's colour rather than
  * whatever garbage was in the panel's RAM at power-on. Reuses s_buf1. */
@@ -478,7 +412,7 @@ lv_display_t *display_init(void)
     };
     gpio_config(&dc_cfg);
 
-    backlight_init(); /* duty 0 — stays off until display_set_brightness() is called */
+    backlight_init(PIN_BL); /* duty 0 — stays off until display_set_brightness() is called */
 
     spi_bus_config_t buscfg;
     memset(&buscfg, 0, sizeof(buscfg));

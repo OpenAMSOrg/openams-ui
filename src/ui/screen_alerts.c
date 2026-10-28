@@ -81,7 +81,7 @@ static lv_color_t sev_color(mmu_severity_t sev)
 static void add_card(lv_obj_t *col, const view_alert_t *a, bool current)
 {
     lv_obj_t *row = ui_kit_row(col, 0, NULL, NULL);
-    int inner = UI_HOME_INNER_W - 24;
+    int inner = UI_HOME_INNER_W - UI_PX(24);
     lv_color_t tone = sev_color(a->severity);
     lv_obj_t *head;
     lv_obj_t *l;
@@ -90,18 +90,18 @@ static void add_card(lv_obj_t *col, const view_alert_t *a, bool current)
 
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_set_style_pad_row(row, 6, 0);
+    lv_obj_set_style_pad_row(row, UI_PX(6), 0);
     if(!current) lv_obj_set_style_bg_color(row, UI_TOK_SURFACE_3, 0);
 
     /* the severity icon (shape carries the level as well as the color), then the title */
     head = lv_obj_create(row);
     lv_obj_remove_style_all(head);
-    lv_obj_set_size(head, inner, 18);
+    lv_obj_set_size(head, inner, UI_PX(18));
     lv_obj_set_scrollable(head, false);
     ui_home_label(head, a->severity >= MMU_SEV_PAUSE ? UI_HOME_ICON_ERROR : UI_HOME_ICON_INFO,
-                  UI_HOME_FONT_SEV, current ? tone : UI_TOK_TEXT_FAINT, 0, 1);
+                  UI_HOME_FONT_SEV, current ? tone : UI_TOK_TEXT_FAINT, 0, UI_PX(1));
     ui_home_label_fit(head, a->title ? a->title : "", UI_HOME_FONT_SECTION,
-                      current ? UI_TOK_TEXT : UI_TOK_TEXT_MUTED, 24, -1, inner - 24);
+                      current ? UI_TOK_TEXT : UI_TOK_TEXT_MUTED, UI_PX(24), UI_PX(-1), inner - UI_PX(24));
 
     l = ui_kit_text(row, a->text, UI_HOME_FONT_BODY, current ? UI_TOK_TEXT : UI_TOK_TEXT_MUTED,
                     0, 0, inner);
@@ -119,12 +119,12 @@ static void add_card(lv_obj_t *col, const view_alert_t *a, bool current)
 
     if(current && a->action_count > 0) {
         int n = a->action_count;
-        int gap = 8;
+        int gap = UI_PX(8);
         int w = (inner - gap * (n - 1)) / n;
         lv_obj_t *bar = lv_obj_create(row);
 
         lv_obj_remove_style_all(bar);
-        lv_obj_set_size(bar, inner, 36);
+        lv_obj_set_size(bar, inner, UI_PX(36));
         lv_obj_set_scrollable(bar, false);
         for(i = 0; i < n; i++) {
             const view_action_t *ac = &a->actions[i];
@@ -135,7 +135,7 @@ static void add_card(lv_obj_t *col, const view_alert_t *a, bool current)
                 snprintf(s_act[idx].line, sizeof s_act[idx].line, "%s", ac->line);
             }
             ui_kit_button(bar, ac->label, i == 0 ? UI_KIT_BTN_PRIMARY : UI_KIT_BTN_NORMAL,
-                          i * (w + gap), 0, w, 36, ac->enabled && idx >= 0, on_action,
+                          i * (w + gap), 0, w, UI_PX(36), ac->enabled && idx >= 0, on_action,
                           (void *)(intptr_t)idx);
         }
         for(i = 0; i < n; i++)
@@ -238,7 +238,7 @@ static lv_obj_t *build(void)
     (void)ui_kit_header(scr, panel ? panel->labels.alerts : view_str(VS_LABEL_ALERTS), false);
     if(has_resolved()) ui_kit_header_action(scr, view_str(VS_ALERTS_CLEAR), on_clear_resolved, NULL);
 
-    col = ui_kit_column(scr, UI_HOME_HEADER_H + 2, UI_HOME_H - UI_HOME_HEADER_H - 2);
+    col = ui_kit_column(scr, UI_HOME_HEADER_H + UI_PX(2), UI_HOME_H - UI_HOME_HEADER_H - UI_PX(2));
 
     if(g && one && panel) {
         /* the errors on the tiles, the message row's own text when nothing above
@@ -283,11 +283,11 @@ static lv_obj_t *build(void)
     }
 
     if(shown == 0) {
-        lv_obj_t *r = ui_kit_row(col, 60, NULL, NULL);
+        lv_obj_t *r = ui_kit_row(col, UI_PX(60), NULL, NULL);
 
-        ui_home_label(r, UI_ICON_CHECK_CIRCLE, UI_HOME_FONT_ICON, UI_TOK_OK, 0, 6);
+        ui_home_label(r, UI_ICON_CHECK_CIRCLE, UI_HOME_FONT_ICON, UI_TOK_OK, 0, UI_PX(6));
         ui_home_label(r, panel ? panel->labels.no_alerts : view_str(VS_LABEL_NO_ALERTS), UI_HOME_FONT_SECTION,
-                      UI_TOK_TEXT, 28, 6);
+                      UI_TOK_TEXT, UI_PX(28), UI_PX(6));
     }
 
     free(panel);

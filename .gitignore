@@ -13,4 +13,6 @@ platform/esp32/managed_components/
 /review/
 platform/esp32/sdkconfig.tagwriter
 platform/esp32/sdkconfig.tagwriter.old
+platform/esp32/sdkconfig.es3c50p
+platform/esp32/sdkconfig.es3c50p.old
 platform/esp32/build-*/

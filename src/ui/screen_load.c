@@ -25,12 +25,12 @@
 #include <stdio.h>
 #include <string.h>
 
-#define STEP_ROW_H  34         /* one step: a circle, its label, a rail to the next */
-#define STEP_FIRST  94         /* first row y */
-#define STEP_VIEW_H 170        /* five rows, the scrolling viewport when there are more */
-#define STEP_DOT    18         /* the circle's diameter */
-#define BTN_Y       268
-#define BTN_H       40
+#define STEP_ROW_H  UI_PX(34)  /* one step: a circle, its label, a rail to the next */
+#define STEP_FIRST  UI_PX(94)  /* first row y */
+#define STEP_VIEW_H UI_PX(170) /* five rows, the scrolling viewport when there are more */
+#define STEP_DOT    UI_PX(18)  /* the circle's diameter */
+#define BTN_Y       UI_PX(268)
+#define BTN_H       UI_PX(40)
 
 /* How the screen reads this time it is built. */
 enum {
@@ -153,8 +153,8 @@ static void step_row(lv_obj_t *parent, int y, const char *text, step_state_t st,
      * done: a step that finishes is a value to write, not an object to build,
      * which is what lets a run be followed in place. */
     tick = ui_home_label(dot, UI_ICON_CHECK, UI_HOME_FONT_ICON, UI_TOK_BG,
-                         (STEP_DOT - ui_home_text_w(UI_ICON_CHECK, UI_HOME_FONT_ICON)) / 2 - 1,
-                         (STEP_DOT - lv_font_get_line_height(UI_HOME_FONT_ICON)) / 2 - 1);
+                         (STEP_DOT - ui_home_text_w(UI_ICON_CHECK, UI_HOME_FONT_ICON)) / 2 - UI_PX(1),
+                         (STEP_DOT - lv_font_get_line_height(UI_HOME_FONT_ICON)) / 2 - UI_PX(1));
     switch(st) {
     case ST_DONE:
         lv_obj_set_style_bg_color(dot, UI_TOK_ACCENT, 0);
@@ -162,7 +162,7 @@ static void step_row(lv_obj_t *parent, int y, const char *text, step_state_t st,
         break;
     case ST_ACTIVE:
         lv_obj_set_style_bg_opa(dot, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(dot, 3, 0);
+        lv_obj_set_style_border_width(dot, UI_PX(3), 0);
         lv_obj_set_style_border_color(dot, UI_TOK_ACCENT, 0);
         break;
     case ST_FAILED:
@@ -172,20 +172,20 @@ static void step_row(lv_obj_t *parent, int y, const char *text, step_state_t st,
         break;
     default:
         lv_obj_set_style_bg_opa(dot, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(dot, 2, 0);
+        lv_obj_set_style_border_width(dot, UI_PX(2), 0);
         lv_obj_set_style_border_color(dot, UI_TOK_TEXT_FAINT, 0);
         break;
     }
     if(st != ST_DONE) lv_obj_set_hidden(tick, true);
 
-    ui_home_label_fit(parent, text, UI_HOME_FONT_SECTION, label, cx + STEP_DOT + 12,
+    ui_home_label_fit(parent, text, UI_HOME_FONT_SECTION, label, cx + STEP_DOT + UI_PX(12),
                       y + (STEP_ROW_H - lv_font_get_line_height(UI_HOME_FONT_SECTION)) / 2,
-                      UI_HOME_W - 2 * UI_HOME_HEADER_PAD - STEP_DOT - 12);
+                      UI_HOME_W - 2 * UI_HOME_HEADER_PAD - STEP_DOT - UI_PX(12));
 
     if(!last) {
-        lv_obj_t *rail = plain(parent, cx + STEP_DOT / 2 - 1,
-                               y + (STEP_ROW_H + STEP_DOT) / 2 + 2, 2,
-                               STEP_ROW_H - STEP_DOT - 4, false);
+        lv_obj_t *rail = plain(parent, cx + (STEP_DOT - UI_PX(2)) / 2,
+                               y + (STEP_ROW_H + STEP_DOT) / 2 + UI_PX(2), UI_PX(2),
+                               STEP_ROW_H - STEP_DOT - UI_PX(4), false);
 
         lv_obj_set_style_bg_color(rail, st == ST_DONE ? UI_TOK_ACCENT : UI_TOK_SURFACE_1, 0);
         lv_obj_set_style_bg_opa(rail, LV_OPA_COVER, 0);
@@ -268,13 +268,13 @@ static void draw_filament_line(lv_obj_t *scr, int y, const char *line, uint32_t 
 {
     lv_obj_t *sw;
 
-    sw = plain(scr, UI_HOME_HEADER_PAD, y + 3, 12, 12, false);
-    lv_obj_set_style_radius(sw, 3, 0);
+    sw = plain(scr, UI_HOME_HEADER_PAD, y + UI_PX(3), UI_PX(12), UI_PX(12), false);
+    lv_obj_set_style_radius(sw, UI_PX(3), 0);
     lv_obj_set_style_bg_color(sw, known ? lv_color_hex(rgb) : UI_TOK_SURFACE_1, 0);
     lv_obj_set_style_bg_opa(sw, LV_OPA_COVER, 0);
     s_shown.swatch = sw;
     s_shown.line = ui_home_label_fit(scr, line, UI_HOME_FONT_BODY, UI_TOK_TEXT_MUTED,
-                                     UI_HOME_HEADER_PAD + 20, y, UI_HOME_INNER_W - 20);
+                                     UI_HOME_HEADER_PAD + UI_PX(20), y, UI_HOME_INNER_W - UI_PX(20));
 }
 
 static const char *title_text(int phase, const view_toolhead_t *th)
@@ -331,12 +331,12 @@ static void on_retry_failed(lv_event_t *e)
 static void buttons(int phase)
 {
     int w = UI_HOME_INNER_W;
-    int half = (w - 8) / 2;
+    int half = (w - UI_PX(8)) / 2;
 
     if(phase == LP_FAILED) {
         ui_kit_button(s_scr, view_str(VS_ACTION_RETRY_LOAD), UI_KIT_BTN_PRIMARY, UI_HOME_HEADER_PAD, BTN_Y, half, BTN_H,
                       true, on_retry_failed, NULL);
-        ui_kit_button(s_scr, view_str(VS_ACTION_STOP), UI_KIT_BTN_NORMAL, UI_HOME_HEADER_PAD + half + 8, BTN_Y, half,
+        ui_kit_button(s_scr, view_str(VS_ACTION_STOP), UI_KIT_BTN_NORMAL, UI_HOME_HEADER_PAD + half + UI_PX(8), BTN_Y, half,
                       BTN_H, true, on_stop, NULL);
     }
     else if(phase == LP_BUSY) {
@@ -346,7 +346,7 @@ static void buttons(int phase)
     else if(phase == LP_CONFIRM) {
         ui_kit_button(s_scr, view_str(VS_LOAD_EXTRUDED), UI_KIT_BTN_PRIMARY, UI_HOME_HEADER_PAD, BTN_Y,
                       half, BTN_H, true, on_confirm, NULL);
-        ui_kit_button(s_scr, view_str(VS_LOAD_NOT_YET), UI_KIT_BTN_NORMAL, UI_HOME_HEADER_PAD + half + 8,
+        ui_kit_button(s_scr, view_str(VS_LOAD_NOT_YET), UI_KIT_BTN_NORMAL, UI_HOME_HEADER_PAD + half + UI_PX(8),
                       BTN_Y, half, BTN_H, true, on_retry_ext, NULL);
     }
     else if(phase != LP_IDLE && phase != LP_ELSEWHERE) {
@@ -369,12 +369,12 @@ static void build_this(int phase, const view_toolhead_t *th)
     s_shown.hdr = ui_kit_header(s_scr, title_text(phase, th), true);
     s_shown.alert = child_at(s_shown.hdr, 2);
     if(filament_text(&rgb, &known, line, sizeof line))
-        draw_filament_line(s_scr, UI_HOME_HEADER_H + 4, line, rgb, known);
+        draw_filament_line(s_scr, UI_HOME_HEADER_H + UI_PX(4), line, rgb, known);
     /* A failed run says what the host reported, in its tone, under the filament. */
     if(phase == LP_FAILED && th->message.text[0])
         s_shown.failed = ui_home_label_fit(s_scr, th->message.text, UI_HOME_FONT_BODY,
                                             ui_home_tone_color(th->message.tone), UI_HOME_HEADER_PAD,
-                                            UI_HOME_HEADER_H + 4 + 22, UI_HOME_INNER_W);
+                                            UI_HOME_HEADER_H + UI_PX(4) + UI_PX(22), UI_HOME_INNER_W);
 
     /* Five rows fit above the buttons; a longer run scrolls inside that zone
      * instead of pushing the buttons down. */
@@ -403,7 +403,7 @@ static void build_elsewhere(const char *why, const view_toolhead_t *th)
 
     ui_kit_header(s_scr, view_str(VS_SCREEN_LOAD), true);
     ui_kit_text(s_scr, why, UI_HOME_FONT_BODY, UI_TOK_TEXT, UI_HOME_HEADER_PAD,
-                UI_HOME_HEADER_H + 4, UI_HOME_INNER_W);
+                UI_HOME_HEADER_H + UI_PX(4), UI_HOME_INNER_W);
     body = plain(s_scr, 0, STEP_FIRST, UI_HOME_W, STEP_VIEW_H, true);
     build_rows(body, 0, LP_BUSY, &th->activity);
 }
@@ -413,7 +413,7 @@ static void build_idle(void)
     uint32_t rgb = 0;
     bool known = false;
     char line[96];
-    int y = UI_HOME_HEADER_H + 20 + 30;
+    int y = UI_HOME_HEADER_H + UI_PX(20) + UI_PX(30);
 
     /* Waiting on a load or an unload the host has not reported, and the wait
      * is over: say that plainly instead of "Nothing is loading", which would
@@ -421,16 +421,16 @@ static void build_idle(void)
     if(s_starting_seq && lv_tick_elaps(s_starting_at) >= LP_STARTING_MS) {
         ui_kit_header(s_scr, view_str(VS_SCREEN_LOAD), true);
         ui_home_label_fit(s_scr, view_str(VS_LOAD_NO_REPORT), UI_HOME_FONT_SECTION, UI_TOK_TEXT_MUTED,
-                          UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + 20, UI_HOME_INNER_W);
+                          UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + UI_PX(20), UI_HOME_INNER_W);
         buttons(LP_DONE);
         return;
     }
 
     ui_kit_header(s_scr, view_str(VS_SCREEN_LOAD), true);
     ui_home_label(s_scr, UI_ICON_TRAY_ARROW_DOWN, UI_HOME_FONT_ICON, UI_TOK_TEXT_FAINT,
-                  UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + 20);
+                  UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + UI_PX(20));
     ui_home_label(s_scr, view_str(VS_LOAD_NOTHING), UI_HOME_FONT_SECTION, UI_TOK_TEXT_MUTED,
-                  UI_HOME_HEADER_PAD + 28, UI_HOME_HEADER_H + 20);
+                  UI_HOME_HEADER_PAD + UI_PX(28), UI_HOME_HEADER_H + UI_PX(20));
 
     /* At rest the screen also says what is in the toolhead now, and the next
      * step (PRINCIPLES.md 2). The context is the loaded filament; the next run
@@ -440,7 +440,7 @@ static void build_idle(void)
     s_ctx_ext = (g_mmu.loaded && g_mmu.loaded_unit < 0) ? g_mmu.loaded_ext : -1;
     if(filament_text(&rgb, &known, line, sizeof line)) {
         draw_filament_line(s_scr, y, line, rgb, known);
-        y += 26;
+        y += UI_PX(26);
     }
     ui_home_label_fit(s_scr, view_str(VS_LOAD_IDLE_NEXT), UI_HOME_FONT_BODY, UI_TOK_TEXT_MUTED,
                       UI_HOME_HEADER_PAD, y, UI_HOME_INNER_W);
@@ -452,11 +452,11 @@ static void build_starting(void)
 {
     ui_kit_header(s_scr, view_str(VS_SCREEN_LOAD), true);
     ui_home_label(s_scr, UI_ICON_TRAY_ARROW_DOWN, UI_HOME_FONT_ICON, UI_TOK_TEXT_FAINT,
-                  UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + 20);
+                  UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + UI_PX(20));
     ui_home_label(s_scr, view_str(VS_LOAD_STARTING), UI_HOME_FONT_SECTION, UI_TOK_TEXT_MUTED,
-                  UI_HOME_HEADER_PAD + 28, UI_HOME_HEADER_H + 20);
+                  UI_HOME_HEADER_PAD + UI_PX(28), UI_HOME_HEADER_H + UI_PX(20));
     ui_home_label_fit(s_scr, view_str(VS_LOAD_STARTING_HINT), UI_HOME_FONT_BODY, UI_TOK_TEXT_MUTED,
-                      UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + 20 + 26, UI_HOME_INNER_W);
+                      UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + UI_PX(20) + UI_PX(26), UI_HOME_INNER_W);
 }
 
 /* The host refused the load or the unload, in its own words, after the
@@ -473,7 +473,7 @@ static void build_refused(void)
      * refusal such as "Heat the extruder before an OpenAMS toolchange..." is
      * longer than one line of this screen. */
     ui_kit_text(s_scr, text, UI_HOME_FONT_BODY, UI_TOK_TEXT, UI_HOME_HEADER_PAD,
-                UI_HOME_HEADER_H + 20, UI_HOME_INNER_W);
+                UI_HOME_HEADER_H + UI_PX(20), UI_HOME_INNER_W);
     buttons(LP_REFUSED);
 }
 
@@ -638,15 +638,15 @@ static void write_row(step_parts_t *r, const char *text, step_state_t st)
     if(st == ST_ACTIVE) {
         if(lv_obj_get_style_bg_opa(r->dot, LV_PART_MAIN) != LV_OPA_TRANSP)
             lv_obj_set_style_bg_opa(r->dot, LV_OPA_TRANSP, LV_PART_MAIN);
-        if(lv_obj_get_style_border_width(r->dot, LV_PART_MAIN) != 3)
-            lv_obj_set_style_border_width(r->dot, 3, LV_PART_MAIN);
+        if(lv_obj_get_style_border_width(r->dot, LV_PART_MAIN) != UI_PX(3))
+            lv_obj_set_style_border_width(r->dot, UI_PX(3), LV_PART_MAIN);
         lv_obj_set_style_border_color(r->dot, UI_TOK_ACCENT, LV_PART_MAIN);
     }
     else if(st == ST_PENDING) {
         if(lv_obj_get_style_bg_opa(r->dot, LV_PART_MAIN) != LV_OPA_TRANSP)
             lv_obj_set_style_bg_opa(r->dot, LV_OPA_TRANSP, LV_PART_MAIN);
-        if(lv_obj_get_style_border_width(r->dot, LV_PART_MAIN) != 2)
-            lv_obj_set_style_border_width(r->dot, 2, LV_PART_MAIN);
+        if(lv_obj_get_style_border_width(r->dot, LV_PART_MAIN) != UI_PX(2))
+            lv_obj_set_style_border_width(r->dot, UI_PX(2), LV_PART_MAIN);
         lv_obj_set_style_border_color(r->dot, UI_TOK_TEXT_FAINT, LV_PART_MAIN);
     }
     else {
@@ -666,7 +666,7 @@ static void write_row(step_parts_t *r, const char *text, step_state_t st)
         ui_update_bg(r->rail, st == ST_DONE ? UI_TOK_ACCENT : UI_TOK_SURFACE_1);
     }
     ui_update_text_fit(r->label, text, UI_HOME_FONT_SECTION,
-                       UI_HOME_W - 2 * UI_HOME_HEADER_PAD - STEP_DOT - 12);
+                       UI_HOME_W - 2 * UI_HOME_HEADER_PAD - STEP_DOT - UI_PX(12));
     ui_update_text_color(r->label, st == ST_FAILED ? UI_TOK_ERROR
                                      : (st == ST_PENDING ? UI_TOK_TEXT_FAINT : UI_TOK_TEXT));
     r->state = st;
@@ -739,7 +739,7 @@ static bool update(void)
     if(count > 0 && s_shown.alert) ui_update_alert_mark(s_shown.alert, tone, count);
 
     if(s_shown.line) {
-        ui_update_text_fit(s_shown.line, line, UI_HOME_FONT_BODY, UI_HOME_INNER_W - 20);
+        ui_update_text_fit(s_shown.line, line, UI_HOME_FONT_BODY, UI_HOME_INNER_W - UI_PX(20));
         /* the swatch is a plain box, not a kit one: its fill is all it has */
         ui_update_bg(s_shown.swatch, known ? lv_color_hex(rgb) : UI_TOK_SURFACE_1);
     }

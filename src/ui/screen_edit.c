@@ -65,17 +65,17 @@
 /* --------------------------------------------------------------- layout */
 
 /* Six cards in three rows: vendor | material, PA | color, remaining | initial. */
-#define ED_HERO_Y      (UI_HOME_HEADER_H + 4)
-#define ED_HERO_H      44
-#define ED_ROW0_Y      98
-#define ED_ROW1_Y      154
-#define ED_ROW2_Y      210
-#define ED_CARD_H      50
+#define ED_HERO_Y      (UI_HOME_HEADER_H + UI_PX(4))
+#define ED_HERO_H      UI_PX(44)
+#define ED_ROW0_Y      UI_PX(98)
+#define ED_ROW1_Y      UI_PX(154)
+#define ED_ROW2_Y      UI_PX(210)
+#define ED_CARD_H      UI_PX(50)
 #define ED_COL0_X      UI_HOME_HEADER_PAD
-#define ED_COL_W       224
+#define ED_COL_W       ((UI_HOME_INNER_W - UI_PX(8)) / 2)   /* 224: two columns, 8 apart */
 #define ED_COL1_X      (UI_HOME_HEADER_PAD + UI_HOME_INNER_W - ED_COL_W)
-#define ED_NOTE_Y      261
-#define ED_BTN_Y       276
+#define ED_NOTE_Y      UI_PX(261)
+#define ED_BTN_Y       UI_PX(276)
 
 /* ------------------------------------------------------------------ state */
 
@@ -380,7 +380,7 @@ static void paint_swatch(lv_obj_t *sw)
     if(sw == NULL) return;
     if(s_e.color < 0) {
         lv_obj_set_style_bg_opa(sw, LV_OPA_TRANSP, 0);
-        lv_obj_set_style_border_width(sw, 1, 0);
+        lv_obj_set_style_border_width(sw, UI_PX(1), 0);
         lv_obj_set_style_border_color(sw, UI_TOK_TEXT_FAINT, 0);
         lv_obj_set_style_border_opa(sw, LV_OPA_COVER, 0);
     }
@@ -706,15 +706,15 @@ static void open_color(void)
 {
     lv_obj_t *sheet, *body;
     const int cols = 6;
-    const int cell = 44;
-    const int gap = 12;
-    const int gx = 78;
-    const int gy = 8; /* local to the body, which already starts at sheet y 48 */
+    const int cell = UI_PX(44);
+    const int gap = UI_PX(12);
+    const int gx = (UI_SCREEN_W - (cols * cell + (cols - 1) * gap)) / 2; /* 78: the grid centered */
+    const int gy = UI_PX(8); /* local to the body, which already starts at sheet y 48 */
     int i;
 
     if(!s_prepared && !edit_prepare()) return;
 
-    sheet = ui_sheet_open(view_str(VS_EDIT_COLOR), 240);
+    sheet = ui_sheet_open(view_str(VS_EDIT_COLOR), UI_PX(240));
     if(sheet == NULL) return;
     body = ui_sheet_body(sheet);
     if(body == NULL) return;
@@ -730,7 +730,7 @@ static void open_color(void)
         lv_obj_remove_style_all(sw);
         lv_obj_set_pos(sw, gx + col * (cell + gap), gy + row * (cell + gap));
         lv_obj_set_size(sw, cell, cell);
-        lv_obj_set_style_radius(sw, 2, 0);
+        lv_obj_set_style_radius(sw, UI_PX(2), 0);
         lv_obj_set_style_bg_color(sw, lv_color_hex(rgb), 0);
         lv_obj_set_style_bg_opa(sw, LV_OPA_COVER, 0);
         lv_obj_set_scrollable(sw, false);
@@ -739,12 +739,12 @@ static void open_color(void)
         lv_obj_set_floating(sw, true);
 
         if(current) {
-            lv_obj_set_style_border_width(sw, 2, 0);
+            lv_obj_set_style_border_width(sw, UI_PX(2), 0);
             lv_obj_set_style_border_color(sw, UI_COL_ACCENT, 0);
             lv_obj_set_style_border_opa(sw, LV_OPA_COVER, 0);
         }
         else if(edge) {
-            lv_obj_set_style_border_width(sw, 1, 0);
+            lv_obj_set_style_border_width(sw, UI_PX(1), 0);
             lv_obj_set_style_border_color(sw, UI_COL_TEXT_FAINT, 0);
             lv_obj_set_style_border_opa(sw, LV_OPA_COVER, 0);
         }
@@ -757,7 +757,7 @@ static void open_color(void)
 
     if(!s_editable) {
         lv_obj_t *note = wrap_label(body, view_str(VS_EDIT_COLOR_RO),
-                                    UI_PAD_XXL, gy + 3 * cell + 2 * gap + 8,
+                                    UI_PAD_XXL, gy + 3 * cell + 2 * gap + UI_PX(8),
                                     UI_SCREEN_W - 2 * UI_PAD_XXL, UI_FONT_S, UI_COL_TEXT_DIM);
         lv_obj_set_floating(note, true);
     }
@@ -776,7 +776,7 @@ static void open_reset(void)
     spool_name(id, sizeof id);
     vs_format(VS_EDIT_RESET_TITLE, title, sizeof title, (vs_arg_t[]){ VS_ARG_T("spool", id) }, 1);
 
-    sheet = ui_sheet_open(title, 160);
+    sheet = ui_sheet_open(title, UI_PX(160));
     if(sheet == NULL) return;
     body = ui_sheet_body(sheet);
     if(body == NULL) return;
@@ -821,7 +821,7 @@ static lv_obj_t *field_card(lv_obj_t *scr, int x, int y, const char *caption)
         lv_obj_set_clickable(c, true);
         lv_obj_add_event_cb(c, on_locked, LV_EVENT_CLICKED, NULL);
     }
-    ui_home_label(c, caption, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 12, 0);
+    ui_home_label(c, caption, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, UI_PX(12), 0);
     return c;
 }
 
@@ -829,7 +829,7 @@ static lv_obj_t *make_stepper(lv_obj_t *scr, int x, int y, const char *caption, 
                               int field)
 {
     lv_obj_t *c = field_card(scr, x, y, caption);
-    lv_obj_t *v = ui_kit_stepper_hold(c, 12, 15, ED_COL_W - 24, value,
+    lv_obj_t *v = ui_kit_stepper_hold(c, UI_PX(12), UI_PX(15), ED_COL_W - UI_PX(24), value,
                                       s_editable ? on_minus_cb : NULL, s_editable ? on_plus_cb : NULL,
                                       (void *)(intptr_t)field);
 
@@ -847,21 +847,21 @@ static void build_color_field(lv_obj_t *scr, int y)
         lv_obj_set_clickable(c, true);
         lv_obj_add_event_cb(c, on_color_click, LV_EVENT_CLICKED, NULL);
     }
-    s_color_sw = ui_kit_swatch(c, 12, 22, 20, s_e.color < 0 ? 0 : (uint32_t)s_e.color, s_e.color < 0);
+    s_color_sw = ui_kit_swatch(c, UI_PX(12), UI_PX(22), UI_PX(20), s_e.color < 0 ? 0 : (uint32_t)s_e.color, s_e.color < 0);
     s_color_val = ui_home_label(c, color_text(), UI_HOME_FONT_BODY,
-                                s_editable ? UI_TOK_TEXT : UI_TOK_TEXT_FAINT, 40,
-                                15 + (34 - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2);
-    lv_obj_set_width(s_color_val, 140);
+                                s_editable ? UI_TOK_TEXT : UI_TOK_TEXT_FAINT, UI_PX(40),
+                                UI_PX(15) + (UI_PX(34) - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2);
+    lv_obj_set_width(s_color_val, UI_PX(140));
     if(s_editable)
         ui_home_label(c, UI_ICON_CHEVRON_RIGHT, UI_HOME_FONT_ICON, UI_TOK_TEXT_FAINT,
-                      ED_COL_W - 12 - 18, 15 + (34 - 18) / 2);
+                      ED_COL_W - UI_PX(12) - UI_PX(18), UI_PX(15) + (UI_PX(34) - UI_PX(18)) / 2);
 }
 
 /** Reset and Save along the bottom; each dimmed, with the reason on tap, when
  * it cannot act. Rebuilt whenever a field changes. */
 static void build_buttons(void)
 {
-    int half = (UI_HOME_INNER_W - 8) / 2;
+    int half = (UI_HOME_INNER_W - UI_PX(8)) / 2;
     const char *reset_why = NULL;
     const char *save_why = NULL;
 
@@ -870,7 +870,7 @@ static void build_buttons(void)
     s_btns = lv_obj_create(s_scr);
     lv_obj_remove_style_all(s_btns);
     lv_obj_set_pos(s_btns, 0, ED_BTN_Y);
-    lv_obj_set_size(s_btns, UI_HOME_W, 40);
+    lv_obj_set_size(s_btns, UI_HOME_W, UI_PX(40));
     lv_obj_set_scrollable(s_btns, false);
 
     if(!s_editable)          reset_why = save_why = why_locked();
@@ -879,10 +879,10 @@ static void build_buttons(void)
         if(s_load_after && s_e.material < 0) save_why = view_str(VS_MATERIAL_CHOOSE);
         else if(!s_dirty && !s_create)      save_why = view_str(VS_EDIT_NO_CHANGES);
     }
-    ui_kit_button_r(s_btns, view_str(VS_BTN_RESET), UI_KIT_BTN_NORMAL, UI_HOME_HEADER_PAD, 0, half, 40,
+    ui_kit_button_r(s_btns, view_str(VS_BTN_RESET), UI_KIT_BTN_NORMAL, UI_HOME_HEADER_PAD, 0, half, UI_PX(40),
                     reset_why, on_reset_prompt, NULL);
     ui_kit_button_r(s_btns, s_load_after ? view_str(VS_SAVE_AND_LOAD) : view_str(VS_ACTION_SAVE_EDIT),
-                    UI_KIT_BTN_PRIMARY, UI_HOME_HEADER_PAD + half + 8, 0, half, 40,
+                    UI_KIT_BTN_PRIMARY, UI_HOME_HEADER_PAD + half + UI_PX(8), 0, half, UI_PX(40),
                     save_why, on_save, NULL);
 }
 
@@ -896,7 +896,7 @@ static void build_hero(lv_obj_t *scr)
     char buf[80]; /* sublabel and vendor are each up to 31 whole, plus " · " */
     int tw;
 
-    s_swatch = ui_kit_swatch(card, 12, 4, 36, s_e.color < 0 ? 0 : (uint32_t)s_e.color, s_e.color < 0);
+    s_swatch = ui_kit_swatch(card, UI_PX(12), UI_PX(4), UI_PX(36), s_e.color < 0 ? 0 : (uint32_t)s_e.color, s_e.color < 0);
     if(s_editable) {
         lv_obj_set_clickable(s_swatch, true);
         lv_obj_add_event_cb(s_swatch, on_color_click, LV_EVENT_CLICKED, NULL);
@@ -907,14 +907,14 @@ static void build_hero(lv_obj_t *scr)
     }
 
     snprintf(buf, sizeof buf, "%s \xC2\xB7 %s", t->label, material_name());
-    ui_home_label_fit(card, buf, UI_HOME_FONT_TITLE, UI_TOK_TEXT, 60, 0, 280);
+    ui_home_label_fit(card, buf, UI_HOME_FONT_TITLE, UI_TOK_TEXT, UI_PX(60), 0, UI_PX(280));
     tw = ui_home_text_w(buf, UI_HOME_FONT_TITLE);
     snprintf(buf, sizeof buf, "%s \xC2\xB7 %s", t->sublabel, vendor_name());
-    ui_home_label_fit(card, buf, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 60, 25, 300);
+    ui_home_label_fit(card, buf, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, UI_PX(60), UI_PX(25), UI_PX(300));
     if(s_readonly)
         ui_home_label(card, UI_ICON_NFC_VARIANT, UI_HOME_FONT_ICON, UI_TOK_TEXT_MUTED,
-                      UI_HOME_INNER_W - 12 - 18, 4);
-    s_pill = ui_kit_tag(card, view_str(VS_EDIT_EDITED), UI_KIT_TONE_ACCENT, 60 + tw + 10, 4);
+                      UI_HOME_INNER_W - UI_PX(12) - UI_PX(18), UI_PX(4));
+    s_pill = ui_kit_tag(card, view_str(VS_EDIT_EDITED), UI_KIT_TONE_ACCENT, UI_PX(60) + tw + UI_PX(10), UI_PX(4));
     lv_obj_set_hidden(s_pill, true);
     free(t);
 }

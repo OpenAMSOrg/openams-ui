@@ -26,7 +26,7 @@
 #endif
 
 #define UI_FX_MODAL_MS   160
-#define UI_FX_MODAL_RISE 12
+#define UI_FX_MODAL_RISE UI_PX(12)
 
 /** Apply @p kind to @p btn together with its pressed and disabled states and
  * its 100 ms background transition. Prefer this over a bare

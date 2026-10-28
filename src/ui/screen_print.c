@@ -23,8 +23,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CARD_Y  (UI_HOME_HEADER_H + 4)
-#define CARD_H  88
+#define CARD_Y  (UI_HOME_HEADER_H + UI_PX(4))
+#define CARD_H  UI_PX(88)
+/* The hero's material line: from x 56 to 16 short of the ring (320 on the grid). */
+#define MATERIAL_W (UI_HOME_INNER_W - UI_PX(16) - UI_PX(48) - UI_PX(16) - UI_PX(56))
 
 /* The bay the print is using: the printing bay while printing, otherwise
  * whatever is parked in the toolhead. */
@@ -135,26 +137,29 @@ static void build_hero(lv_obj_t *scr)
     if(!t) return;
     s_shown.card = card;
     if(!active_slot(&unit, &slot) || !view_tile(&g_mmu, unit, slot, t)) {
-        ui_home_label(card, view_str(VS_PRINT_NO_FILAMENT), UI_HOME_FONT_SECTION, UI_TOK_TEXT_MUTED, 16, 32);
+        ui_home_label(card, view_str(VS_PRINT_NO_FILAMENT), UI_HOME_FONT_SECTION, UI_TOK_TEXT_MUTED,
+                      UI_PX(16), UI_PX(32));
         free(t);
         return;                      /* a card that says "no filament" is a rebuild */
     }
     s_shown.slot = slot;
-    s_shown.swatch = ui_kit_swatch(card, 16, 30, 28, t->color, t->dim || !t->color_known);
-    s_shown.label = ui_home_label(card, t->label, UI_HOME_FONT_LABEL, UI_TOK_TEXT, 56, 12);
+    s_shown.swatch = ui_kit_swatch(card, UI_PX(16), UI_PX(30), UI_PX(28), t->color, t->dim || !t->color_known);
+    s_shown.label = ui_home_label(card, t->label, UI_HOME_FONT_LABEL, UI_TOK_TEXT, UI_PX(56), UI_PX(12));
     /* Another unit's bay names its unit: "B Spool 2". */
     if(elsewhere) vs_unit_spool(mmu_unit_name(unit), slot, buf, sizeof buf);
     else          snprintf(buf, sizeof buf, "%s", t->sublabel);
     s_shown.sublabel = ui_home_label(card, buf, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED,
-                                     56 + ui_home_text_w(t->label, UI_HOME_FONT_LABEL) + 8, 20);
+                                     UI_PX(56) + ui_home_text_w(t->label, UI_HOME_FONT_LABEL) + UI_PX(8),
+                                     UI_PX(20));
 
     material_line(t, buf, sizeof buf);
-    s_shown.line = ui_home_label_fit(card, buf, UI_HOME_FONT_BODY, UI_TOK_TEXT, 56, 44, 320);
+    s_shown.line = ui_home_label_fit(card, buf, UI_HOME_FONT_BODY, UI_TOK_TEXT, UI_PX(56), UI_PX(44), MATERIAL_W);
     if(t->grams_text[0])
-        s_shown.grams = ui_home_label(card, t->grams_text, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 56, 64);
+        s_shown.grams = ui_home_label(card, t->grams_text, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED,
+                                      UI_PX(56), UI_PX(64));
 
-    s_shown.ring = ui_kit_ring(card, UI_HOME_INNER_W - 16 - 48, 20, 48, t->pct < 0 ? 0 : t->pct,
-                               t->low ? UI_TOK_WARN : UI_TOK_ACCENT, t->pct_text);
+    s_shown.ring = ui_kit_ring(card, UI_HOME_INNER_W - UI_PX(16) - UI_PX(48), UI_PX(20), UI_PX(48),
+                               t->pct < 0 ? 0 : t->pct, t->low ? UI_TOK_WARN : UI_TOK_ACCENT, t->pct_text);
     s_shown.pct = child_at(s_shown.ring, 0);
     free(t);
 }
@@ -166,16 +171,17 @@ static int build_message(lv_obj_t *scr, const view_toolhead_t *th, int y)
     lv_obj_t *row;
 
     if(th->message.tone == VIEW_TONE_NEUTRAL || !th->message.text[0]) return y;
-    row = ui_kit_card(scr, UI_HOME_HEADER_PAD, y, UI_HOME_INNER_W, 40);
+    row = ui_kit_card(scr, UI_HOME_HEADER_PAD, y, UI_HOME_INNER_W, UI_PX(40));
     s_shown.message = row;
     s_shown.message_icon = ui_home_label(row,
                                          th->message.tone == VIEW_TONE_ERROR ? UI_HOME_ICON_ERROR
                                                                                : UI_HOME_ICON_INFO,
-                                         UI_HOME_FONT_SEV, ui_home_tone_color(th->message.tone), 12, 12);
-    s_shown.message_text = ui_home_label_fit(row, th->message.text, UI_HOME_FONT_BODY, UI_TOK_TEXT, 40,
-                                             (40 - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2,
-                                             UI_HOME_INNER_W - 40 - 12);
-    return y + 40 + 8;
+                                         UI_HOME_FONT_SEV, ui_home_tone_color(th->message.tone),
+                                         UI_PX(12), UI_PX(12));
+    s_shown.message_text = ui_home_label_fit(row, th->message.text, UI_HOME_FONT_BODY, UI_TOK_TEXT, UI_PX(40),
+                                             (UI_PX(40) - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2,
+                                             UI_HOME_INNER_W - UI_PX(40) - UI_PX(12));
+    return y + UI_PX(40) + UI_PX(8);
 }
 
 static lv_obj_t *build(void)
@@ -196,14 +202,14 @@ static lv_obj_t *build(void)
     if(!g_mmu.printing) {
         /* the empty state is two lines that never change: a rebuild, always */
         ui_home_label(scr, UI_ICON_PRINTER_3D_NOZZLE, UI_HOME_FONT_ICON, UI_TOK_TEXT_FAINT,
-                      UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + 20);
+                      UI_HOME_HEADER_PAD, UI_HOME_HEADER_H + UI_PX(20));
         ui_home_label(scr, view_str(VS_PRINT_NOT_PRINTING), UI_HOME_FONT_SECTION, UI_TOK_TEXT_MUTED,
-                      UI_HOME_HEADER_PAD + 28, UI_HOME_HEADER_H + 20);
+                      UI_HOME_HEADER_PAD + UI_PX(28), UI_HOME_HEADER_H + UI_PX(20));
         return scr;
     }
 
     build_hero(scr);
-    y = CARD_Y + CARD_H + 8;
+    y = CARD_Y + CARD_H + UI_PX(8);
 
     /* the filament-change count, and the step of a load in progress */
     {
@@ -212,18 +218,19 @@ static lv_obj_t *build(void)
         change_line(&th, buf, sizeof buf);
         s_shown.count = ui_home_label_fit(scr, buf, UI_HOME_FONT_BODY, UI_TOK_TEXT_MUTED,
                                           UI_HOME_HEADER_PAD, y, UI_HOME_INNER_W);
-        y += 22;
+        y += UI_PX(22);
     }
     if(!mmu_runout_concerns_this() && mmu_printing_elsewhere()) {
         s_shown.standby = ui_home_label(scr, view_str(VS_PRINT_STANDBY), UI_HOME_FONT_BODY,
                                         UI_TOK_TEXT_MUTED, UI_HOME_HEADER_PAD, y);
-        y += 22;
+        y += UI_PX(22);
     }
     (void)build_message(scr, &th, y);
 
     s_shown.dim = !mmu_runout_concerns_this();
     s_shown.button = ui_kit_button_r(scr, view_str(VS_PRINT_PAUSE_LOAD), UI_KIT_BTN_PRIMARY,
-                                     UI_HOME_HEADER_PAD, 268, UI_HOME_INNER_W, 40,
+                                     UI_HOME_HEADER_PAD, UI_SCREEN_H - UI_PX(12) - UI_PX(40),
+                                     UI_HOME_INNER_W, UI_PX(40),
                                      s_shown.dim ? view_str(VS_PRINT_NO_RUNOUT) : NULL,
                                      on_pause_load, NULL);
     s_shown.button_label = child_at(s_shown.button, s_shown.dim ? 1 : 0);
@@ -292,7 +299,7 @@ static bool update(void)
     if(strcmp(lv_label_get_text(s_shown.label), t.label) != 0) {
         /* the sublabel sits after the tool label, so it moves with it */
         lv_obj_set_x(s_shown.sublabel,
-                     56 + ui_home_text_w(t.label, UI_HOME_FONT_LABEL) + 8);
+                     UI_PX(56) + ui_home_text_w(t.label, UI_HOME_FONT_LABEL) + UI_PX(8));
         ui_update_text(s_shown.label, t.label);
     }
     if(mmu_printing_elsewhere()) vs_unit_spool(mmu_unit_name(unit), slot, buf, sizeof buf);
@@ -300,12 +307,12 @@ static bool update(void)
     ui_update_text(s_shown.sublabel, buf);
 
     material_line(&t, buf, sizeof buf);
-    ui_update_text_fit(s_shown.line, buf, UI_HOME_FONT_BODY, 320);
+    ui_update_text_fit(s_shown.line, buf, UI_HOME_FONT_BODY, MATERIAL_W);
     if(s_shown.grams) ui_update_text(s_shown.grams, t.grams_text);
 
     ui_update_arc(s_shown.ring, t.pct < 0 ? 0 : t.pct, t.low ? UI_TOK_WARN : UI_TOK_ACCENT);
     if(s_shown.pct && strcmp(lv_label_get_text(s_shown.pct), t.pct_text) != 0) {
-        lv_obj_set_x(s_shown.pct, (48 - ui_home_text_w(t.pct_text, UI_HOME_FONT_META)) / 2);
+        lv_obj_set_x(s_shown.pct, (UI_PX(48) - ui_home_text_w(t.pct_text, UI_HOME_FONT_META)) / 2);
         ui_update_text(s_shown.pct, t.pct_text);
     }
 
@@ -317,7 +324,7 @@ static bool update(void)
                        th.message.tone == VIEW_TONE_ERROR ? UI_HOME_ICON_ERROR : UI_HOME_ICON_INFO);
         ui_update_text_color(s_shown.message_icon, ui_home_tone_color(th.message.tone));
         ui_update_text_fit(s_shown.message_text, th.message.text, UI_HOME_FONT_BODY,
-                           UI_HOME_INNER_W - 40 - 12);
+                           UI_HOME_INNER_W - UI_PX(40) - UI_PX(12));
     }
     return true;
 }

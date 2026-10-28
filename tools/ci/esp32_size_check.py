@@ -70,7 +70,9 @@ def main():
 
     data = json.loads(text[start:])
     mem = {m["name"]: m for m in data["layout"]}
-    dram = mem["DRAM"]
+    # The ESP32's data RAM is DRAM; the ESP32-S3's (the ES3C50P board) is one
+    # region shared with instructions, DIRAM.
+    dram = mem["DRAM"] if "DRAM" in mem else mem["DIRAM"]
     iram = mem["IRAM"]
     image_size = data["total_size"]
 

@@ -24,20 +24,20 @@
 /* Tile-local geometry. The design size is 108x150; the ring is anchored to the
  * bottom, and the rows above it stack from the measured line heights, so the
  * anatomy survives a caller asking for a different height. */
-#define PAD_X      10
-#define PAD_TOP    6
-#define PAD_BOT    6
-#define BORDER     2
-#define ROW_GAP    2
+#define PAD_X      UI_PX(10)
+#define PAD_TOP    UI_PX(6)
+#define PAD_BOT    UI_PX(6)
+#define BORDER     UI_PX(2)
+#define ROW_GAP    UI_PX(2)
 
-#define RING_S     52
-#define RING_STROKE 4
+#define RING_S     UI_PX(52)
+#define RING_STROKE UI_PX(4)
 
-#define BADGE_H    22
-#define BADGE_PAD  6
+#define BADGE_H    UI_PX(22)
+#define BADGE_PAD  UI_PX(6)
 
-#define TAG_H      20
-#define TAG_PAD    7
+#define TAG_H      UI_PX(20)
+#define TAG_PAD    UI_PX(7)
 
 /* U+221E, as a byte string so the source stays plain ASCII. */
 #define TILE_INF_MARK "\xE2\x88\x9E"
@@ -161,7 +161,7 @@ static void build_rfid(lv_obj_t *tile, const view_tile_t *t, int w)
 
     l = ui_home_label(tile, UI_ICON_NFC_VARIANT, UI_HOME_FONT_ICON,
                       t->dim ? UI_TOK_TEXT_FAINT : ink_of(t, t->dim), w - PAD_X - gw,
-                      PAD_TOP + 2);
+                      PAD_TOP + UI_PX(2));
     lv_obj_set_style_text_align(l, LV_TEXT_ALIGN_RIGHT, 0);
 }
 
@@ -181,7 +181,7 @@ static void build_name_rows(lv_obj_t *tile, const view_tile_t *t, int w, int y, 
 
     if(name[0]) {
         ui_home_label_fit(tile, name, UI_HOME_FONT_BODY, col, PAD_X, y, content_w);
-        y += lh_name + 1;
+        y += lh_name + UI_PX(1);
     }
 
     meta[0] = '\0';
@@ -290,7 +290,7 @@ static void build_ring(lv_obj_t *tile, const view_tile_t *t, int w, int h)
         lv_obj_t *chip;
         lv_obj_t *l;
 
-        if(tw > cw - 4) tw = cw - 4;
+        if(tw > cw - UI_PX(4)) tw = cw - UI_PX(4);
         chip = box(tile, (cw - tw) / 2, ry + (RING_S - TAG_H) / 2, tw, TAG_H);
         lv_obj_set_style_bg_color(chip, tag_bg(t->tag_tone), 0);
         lv_obj_set_style_bg_opa(chip, LV_OPA_COVER, 0);
@@ -326,8 +326,8 @@ lv_obj_t *ui_tile_bay(lv_obj_t *parent, const view_tile_t *t, int x, int y, int 
     /* The tool, or "?" for a bay no group has claimed (4, "Tile label"). */
     ui_home_label_fit(tile, t->label, UI_HOME_FONT_LABEL, on, PAD_X, y_row, content_w);
     /* The spare badge sits next to the tool label, as on the web. */
-    build_spare(tile, t, PAD_X + ui_home_text_w(t->label, UI_HOME_FONT_LABEL) + 6);
-    y_row += lh_label + 1;
+    build_spare(tile, t, PAD_X + ui_home_text_w(t->label, UI_HOME_FONT_LABEL) + UI_PX(6));
+    y_row += lh_label + UI_PX(1);
 
     if(t->has_sublabel) {
         ui_home_label_fit(tile, t->sublabel, UI_HOME_FONT_META,
@@ -336,7 +336,7 @@ lv_obj_t *ui_tile_bay(lv_obj_t *parent, const view_tile_t *t, int x, int y, int 
     }
     y_row += lh_sub + ROW_GAP;
 
-    build_name_rows(tile, t, w, y_row, ring_top - 2);
+    build_name_rows(tile, t, w, y_row, ring_top - UI_PX(2));
     build_rfid(tile, t, w);
     build_ring(tile, t, w, h);
     return tile;

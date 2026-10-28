@@ -18,6 +18,12 @@ Two modes:
                                           sizes), the three CJK languages'
                                           faces, and the two severity glyphs,
                                           into new files, plus ui_fonts_home.h.
+    python3 tools/gen_fonts.py --set 800x480
+                                          every face of both modes at 1.5x, for
+                                          the 800x480 UI (MMU_UI_RESOLUTION),
+                                          into src/ui/fonts/800x480/ under the
+                                          same symbols. The headers are shared
+                                          with the 480x320 set and left alone.
     python3 tools/gen_fonts.py --legacy   the Inter and icon faces above. DO NOT
                                           run this casually: every screen that
                                           predates the design system draws with
@@ -71,6 +77,28 @@ CJK_DIR = os.path.join(FONT_DIR, "cjk")
 # generating machine's home directory into the repository.
 REL_FONT_DIR = "assets/fonts"
 REL_OUT_DIR = "src/ui/fonts"
+
+# The UI resolutions (cmake/resolution.cmake). Every face is named for its
+# size on the 480x320 grid the screens are designed on; another resolution's
+# set draws each face at that size times its scale, under the same symbol, in
+# a directory of its own. SCALE and the output directories are switched by
+# --set (use_set()).
+FONT_SETS = {"800x480": 1.5}
+SCALE = 1.0
+
+
+def px(size):
+    """A face's pixel size in the set being generated (half rounds up)."""
+    return int(size * SCALE + 0.5)
+
+
+def use_set(name):
+    global SCALE, OUT_DIR, REL_OUT_DIR
+    if name not in FONT_SETS:
+        sys.exit("error: unknown font set %r (known: %s)" % (name, ", ".join(sorted(FONT_SETS))))
+    SCALE = FONT_SETS[name]
+    OUT_DIR = os.path.join(ROOT, "src", "ui", "fonts", name)
+    REL_OUT_DIR = "src/ui/fonts/" + name
 REL_CJK_DIR = "assets/fonts/cjk"
 REL_ICONS_H = "src/ui/ui_icons.h"
 
@@ -340,7 +368,7 @@ def run_lv_font_conv(font_path, size, symbol, rng, fallback, out_path, bpp=4):
     cmd = [
         lv_font_conv_bin(),
         "--font", font_path,
-        "--size", str(size),
+        "--size", str(px(size)),
         "--bpp", str(bpp),
         "--format", "lvgl",
         "--lv-include", "lvgl.h",
@@ -434,8 +462,8 @@ def relax_line_metrics(out_path, size):
     Only the home faces get this: the Inter faces are correct already, and
     rewriting theirs would move text on every screen that still uses them.
     """
-    line_height = int(round(size * 1.25))
-    base_line = int(round(size * 0.25))
+    line_height = int(round(px(size) * 1.25))
+    base_line = int(round(px(size) * 0.25))
     with open(out_path, encoding="utf-8") as f:
         text = f.read()
     for field, value in (("line_height", line_height), ("base_line", base_line)):
@@ -498,7 +526,7 @@ def write_ui_fonts_home_h(sev_codes, chevron_codes):
         f.write("\n".join(lines))
 
 
-def main_home():
+def main_home(headers=True):
     # lv_font_conv runs from the repository root on relative paths: the Opts:
     # comment it writes into every generated file is the command line it was
     # given, and an absolute path there would name the generating machine.
@@ -548,7 +576,8 @@ def main_home():
     run_lv_font_conv(os.path.relpath(MDI, ROOT), size, symbol,
                      ",".join("0x%X" % c for c in chevron_codes),
                      "lv_font_montserrat_14", os.path.join(REL_OUT_DIR, symbol + ".c"))
-    write_ui_fonts_home_h(codes, chevron_codes)
+    if headers:
+        write_ui_fonts_home_h(codes, chevron_codes)
     print("wrote the home faces to %s" % os.path.relpath(OUT_DIR, ROOT))
 
 
@@ -595,7 +624,7 @@ def declare_slot(out_path, symbol):
         f.write(pattern.sub(lambda _m: replacement, text, count=1))
 
 
-def main_legacy():
+def main_legacy(headers=True):
     os.chdir(ROOT)
     os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -612,13 +641,21 @@ def main_legacy():
         run_lv_font_conv(os.path.relpath(MDI, ROOT), size, symbol, icon_range, fallback,
                          os.path.join(REL_OUT_DIR, symbol + ".c"))
 
-    write_ui_fonts_h()
-    write_ui_icons(codepoints)
+    if headers:
+        write_ui_fonts_h()
+        write_ui_icons(codepoints)
     print("wrote %s and %s" % (os.path.relpath(OUT_DIR, ROOT), os.path.relpath(ICONS_H, ROOT)))
 
 
 if __name__ == "__main__":
-    if "--legacy" in sys.argv[1:]:
+    args = sys.argv[1:]
+    if "--set" in args:
+        # Both modes' faces, scaled; the headers (the declarations and the
+        # icon macros) are the 480x320 set's and stay as committed.
+        use_set(args[args.index("--set") + 1] if args.index("--set") + 1 < len(args) else "")
+        main_legacy(headers=False)
+        main_home(headers=False)
+    elif "--legacy" in args:
         main_legacy()
     else:
         main_home()

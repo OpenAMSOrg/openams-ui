@@ -9,15 +9,15 @@
 #include "ui/ui_icons.h"
 #include "ui/ui_theme.h"
 
-#define STEP_ROW_H    40
-#define STEP_DOT_X    16
-#define STEP_DOT_SIZE 16
+#define STEP_ROW_H    UI_PX(40)
+#define STEP_DOT_X    UI_PX(16)
+#define STEP_DOT_SIZE UI_PX(16)
 #define STEP_DOT_Y    ((STEP_ROW_H - STEP_DOT_SIZE) / 2)
-#define STEP_LABEL_X  44
-#define STEP_LABEL_W  (UI_SCREEN_W - STEP_LABEL_X - 16)
+#define STEP_LABEL_X  UI_PX(44)
+#define STEP_LABEL_W  (UI_SCREEN_W - STEP_LABEL_X - UI_PX(16))
 
-#define STEP_RAIL_X 23
-#define STEP_RAIL_W 2
+#define STEP_RAIL_X UI_PX(23)
+#define STEP_RAIL_W UI_PX(2)
 
 /* The 16 px circle every state starts from: no theme styles, no interaction. */
 static lv_obj_t *step_dot(lv_obj_t *row)
@@ -63,9 +63,9 @@ static void step_arc(lv_obj_t *row)
     lv_obj_set_size(arc, STEP_DOT_SIZE, STEP_DOT_SIZE);
     lv_arc_set_rotation(arc, 270);
     lv_arc_set_bg_angles(arc, 0, 360);
-    lv_obj_set_style_arc_width(arc, 2, 0);
+    lv_obj_set_style_arc_width(arc, UI_PX(2), 0);
     lv_obj_set_style_arc_color(arc, UI_COL_LINE, 0);
-    lv_obj_set_style_arc_width(arc, 2, LV_PART_INDICATOR);
+    lv_obj_set_style_arc_width(arc, UI_PX(2), LV_PART_INDICATOR);
     lv_obj_set_style_arc_color(arc, UI_COL_ACCENT, LV_PART_INDICATOR);
     lv_obj_set_style_arc_rounded(arc, true, LV_PART_INDICATOR);
     lv_obj_set_style_bg_opa(arc, LV_OPA_TRANSP, LV_PART_KNOB);
@@ -124,7 +124,7 @@ lv_obj_t *ui_step_row(lv_obj_t *parent, int y, const char *label, ui_step_state_
             break;
         case UI_STEP_PENDING:
             dot = step_dot(row);
-            lv_obj_set_style_border_width(dot, 1, 0);
+            lv_obj_set_style_border_width(dot, UI_PX(1), 0);
             lv_obj_set_style_border_color(dot, UI_COL_TEXT_FAINT, 0);
             lv_obj_set_style_border_opa(dot, LV_OPA_COVER, 0);
             label_color = UI_COL_TEXT_FAINT;

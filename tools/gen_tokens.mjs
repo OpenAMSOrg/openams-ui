@@ -125,6 +125,10 @@ function emitCHeader(m) {
     '#define UI_TOKENS_H',
     '',
     '#include "lvgl.h"',
+    '#include "ui/ui_scale.h"',
+    '',
+    '/* Every length is on the 480x320 grid and goes through UI_PX() (ui_scale.h),',
+    ' * which draws it at the build\'s resolution. */',
     '',
     '/* ------------------------------------------------------------- color */',
     '',
@@ -137,22 +141,22 @@ function emitCHeader(m) {
   }
   out.push('', '/* ------------------------------------------------------------ radius */', '');
   for (const [k, v] of Object.entries(m.radius)) {
-    out.push(`#define ${(`UI_TOK_RADIUS_${cIdent(k)} `).padEnd(24)}${v}`);
+    out.push(`#define ${(`UI_TOK_RADIUS_${cIdent(k)} `).padEnd(24)}UI_PX(${v})`);
   }
   out.push('', '/* ------------------------------------------------------------- space */', '');
   for (const [k, v] of Object.entries(m.space)) {
     if (typeof v !== 'number') continue;
-    out.push(`#define ${(`UI_TOK_SPACE_${cIdent(k)} `).padEnd(24)}${v}`);
+    out.push(`#define ${(`UI_TOK_SPACE_${cIdent(k)} `).padEnd(24)}UI_PX(${v})`);
   }
   out.push('', '/* --------------------------------------------- hatch (4c, one disabled look) */', '');
-  out.push(`#define UI_TOK_HATCH_PERIOD${' '.repeat(14)}${m.hatch.period}`);
-  out.push(`#define UI_TOK_HATCH_STRIPE${' '.repeat(13)}${m.hatch.stripe}`);
+  out.push(`#define UI_TOK_HATCH_PERIOD${' '.repeat(14)}UI_PX(${m.hatch.period})`);
+  out.push(`#define UI_TOK_HATCH_STRIPE${' '.repeat(13)}UI_PX(${m.hatch.stripe})`);
   out.push(`#define UI_TOK_HATCH_ALPHA${' '.repeat(14)}${Math.round(m.hatch.alpha.dark * 255)}`);
   out.push('', '/* ------------------------------------------------ type.device sizes */', '');
   out.push('/* The weight is the face tools/gen_fonts.py already generated: 600 is');
   out.push(' * semibold for Geist, 500 medium, 400 regular. */');
   for (const [k, [size, weight]] of Object.entries(m.typeDevice)) {
-    out.push(`#define ${(`UI_TOK_FONT_${cIdent(k)} `).padEnd(24)}${size}`);
+    out.push(`#define ${(`UI_TOK_FONT_${cIdent(k)} `).padEnd(24)}UI_PX(${size})`);
     out.push(`#define ${(`UI_TOK_WEIGHT_${cIdent(k)} `).padEnd(24)}${weight}`);
   }
   out.push('', '#endif /* UI_TOKENS_H */', '');

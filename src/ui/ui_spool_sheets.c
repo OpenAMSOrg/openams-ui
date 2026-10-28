@@ -78,7 +78,7 @@ static void open_stepper_sheet(void)
     vs_format(VS_SS_HOW_FULL, title, sizeof title,
               (vs_arg_t[]){ VS_ARG_T("spool", ui_kit_spool(s_conf_unit, s_conf_slot)) }, 1);
 
-    sheet = ui_sheet_open(title, 200);
+    sheet = ui_sheet_open(title, UI_PX(200));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     body  = ui_sheet_body(sheet);
 
@@ -86,18 +86,18 @@ static void open_stepper_sheet(void)
     row = lv_obj_create(body);
     lv_obj_remove_style_all(row);
     lv_obj_set_width(row, LV_PCT(100));
-    lv_obj_set_height(row, 48);
+    lv_obj_set_height(row, UI_PX(48));
     lv_obj_set_layout(row, LV_LAYOUT_FLEX);
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_SPACE_BETWEEN,
                           LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_set_scrollable(row, false);
-    lv_obj_set_style_pad_left(row,  16, 0);
-    lv_obj_set_style_pad_right(row, 16, 0);
+    lv_obj_set_style_pad_left(row,  UI_PX(16), 0);
+    lv_obj_set_style_pad_right(row, UI_PX(16), 0);
 
     /* "-10%" button */
     btn = lv_button_create(row);
-    lv_obj_set_size(btn, 60, 36);
+    lv_obj_set_size(btn, UI_PX(60), UI_PX(36));
     lv_obj_set_style_bg_color(btn, UI_COL_PANEL_HI, 0);
     {
         lv_obj_t *l = lv_label_create(btn);
@@ -116,7 +116,7 @@ static void open_stepper_sheet(void)
     /* "+10%" button */
     {
         lv_obj_t *b2 = lv_button_create(row);
-        lv_obj_set_size(b2, 60, 36);
+        lv_obj_set_size(b2, UI_PX(60), UI_PX(36));
         lv_obj_set_style_bg_color(b2, UI_COL_PANEL_HI, 0);
         {
             lv_obj_t *l = lv_label_create(b2);
@@ -164,7 +164,7 @@ void ui_spool_confirm_open(int unit, int slot)
               (vs_arg_t[]){ VS_ARG_T("spool", ui_kit_spool(unit, slot)) }, 1);
 
     swatch = (sl->info_source != MMU_INFO_UNKNOWN && sl->color_known) ? (int32_t)sl->color : -1;
-    sheet = ui_sheet_open(title, 160);
+    sheet = ui_sheet_open(title, UI_PX(160));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     ui_sheet_header(sheet, swatch, NULL, false);
 
@@ -209,10 +209,10 @@ static void add_spool_row(lv_obj_t *body, const mmu_spool_t *sp, int spool_idx)
     /* 44 px row with a swatch on the left */
     row = lv_obj_create(body);
     lv_obj_remove_style_all(row);
-    lv_obj_set_size(row, LV_PCT(100), 44);
+    lv_obj_set_size(row, LV_PCT(100), UI_PX(44));
     lv_obj_set_style_bg_color(row, UI_COL_PANEL, 0);
     lv_obj_set_style_bg_opa(row, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(row, 10, 0);
+    lv_obj_set_style_radius(row, UI_PX(10), 0);
     lv_obj_set_style_bg_color(row, UI_COL_PANEL_HI, LV_STATE_PRESSED);
     lv_obj_set_scrollable(row, false);
     lv_obj_set_clickable(row, true);
@@ -222,8 +222,8 @@ static void add_spool_row(lv_obj_t *body, const mmu_spool_t *sp, int spool_idx)
     /* color swatch circle */
     swatch = lv_obj_create(row);
     lv_obj_remove_style_all(swatch);
-    lv_obj_set_pos(swatch, 12, 12);
-    lv_obj_set_size(swatch, 20, 20);
+    lv_obj_set_pos(swatch, UI_PX(12), UI_PX(12));
+    lv_obj_set_size(swatch, UI_PX(20), UI_PX(20));
     lv_obj_set_style_radius(swatch, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(swatch, sp->color_known ? lv_color_hex(sp->color) : UI_COL_TEXT_FAINT, 0);
     lv_obj_set_style_bg_opa(swatch, LV_OPA_COVER, 0);
@@ -232,8 +232,8 @@ static void add_spool_row(lv_obj_t *body, const mmu_spool_t *sp, int spool_idx)
     /* text column */
     text_col = lv_obj_create(row);
     lv_obj_remove_style_all(text_col);
-    lv_obj_set_pos(text_col, 40, 4);
-    lv_obj_set_size(text_col, 380, 36);
+    lv_obj_set_pos(text_col, UI_PX(40), UI_PX(4));
+    lv_obj_set_size(text_col, UI_PX(380), UI_PX(36));
     lv_obj_set_scrollable(text_col, false);
     lv_obj_set_clickable(text_col, false);
 
@@ -243,8 +243,8 @@ static void add_spool_row(lv_obj_t *body, const mmu_spool_t *sp, int spool_idx)
     lv_label_set_long_mode(title_lbl, LV_LABEL_LONG_MODE_DOTS);
     lv_obj_set_style_text_font(title_lbl, UI_FONT_M, 0);
     lv_obj_set_style_text_color(title_lbl, UI_COL_TEXT, 0);
-    lv_obj_set_size(title_lbl, sub[0] ? 290 : 380, 18);
-    lv_obj_set_pos(title_lbl, 0, 2);
+    lv_obj_set_size(title_lbl, sub[0] ? UI_PX(290) : UI_PX(380), UI_PX(18));
+    lv_obj_set_pos(title_lbl, 0, UI_PX(2));
 
     if(sub[0]) {
         sub_lbl = lv_label_create(text_col);
@@ -252,7 +252,7 @@ static void add_spool_row(lv_obj_t *body, const mmu_spool_t *sp, int spool_idx)
         lv_label_set_text(sub_lbl, sub);
         lv_obj_set_style_text_font(sub_lbl, UI_FONT_S, 0);
         lv_obj_set_style_text_color(sub_lbl, UI_COL_TEXT_DIM, 0);
-        lv_obj_set_pos(sub_lbl, 294, 4);
+        lv_obj_set_pos(sub_lbl, UI_PX(294), UI_PX(4));
     }
     else {
         (void)sub_lbl;
@@ -323,7 +323,7 @@ void ui_spool_assign_open(int unit, int slot)
     actions_log("spool list");
 
     vs_format(VS_SS_ASSIGN, title, sizeof title, (vs_arg_t[]){ VS_ARG_T("spool", ui_kit_spool(unit, slot)) }, 1);
-    sheet = ui_sheet_open(title, 220);
+    sheet = ui_sheet_open(title, UI_PX(220));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     body  = ui_sheet_body(sheet);
 

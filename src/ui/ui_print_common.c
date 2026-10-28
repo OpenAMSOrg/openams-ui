@@ -108,8 +108,8 @@ lv_obj_t *print_swatch(lv_obj_t *parent, uint32_t rgb, bool unknown,
     lv_obj_remove_style_all(sw);
     lv_obj_set_style_bg_color(sw, unknown ? UI_COL_PANEL_HI : lv_color_hex(rgb), 0);
     lv_obj_set_style_bg_opa(sw, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(sw, 4, 0);
-    lv_obj_set_style_border_width(sw, 1, 0);
+    lv_obj_set_style_radius(sw, UI_PX(4), 0);
+    lv_obj_set_style_border_width(sw, UI_PX(1), 0);
     lv_obj_set_style_border_color(sw, UI_COL_LINE, 0);
     lv_obj_set_pos(sw, x, y);
     lv_obj_set_size(sw, w, h);
@@ -135,7 +135,7 @@ lv_obj_t *print_ring(lv_obj_t *parent, uint32_t rgb, const char *center,
     lv_obj_set_style_bg_color(ring, UI_COL_PANEL, 0);
     lv_obj_set_style_bg_opa(ring, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(ring, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_border_width(ring, 5, 0);
+    lv_obj_set_style_border_width(ring, UI_PX(5), 0);
     lv_obj_set_style_border_color(ring, lv_color_hex(rgb), 0);
     lv_obj_set_style_border_opa(ring, LV_OPA_COVER, 0);
     lv_obj_set_pos(ring, x, y);
@@ -180,22 +180,22 @@ lv_obj_t *print_slot_chip(lv_obj_t *parent, int unit, int slot,
         lv_obj_set_style_bg_color(stripe, s->color_known ? lv_color_hex(s->color)
                                                          : UI_COL_TEXT_FAINT, 0);
         lv_obj_set_style_bg_opa(stripe, LV_OPA_COVER, 0);
-        lv_obj_set_style_radius(stripe, 2, 0);
-        lv_obj_set_pos(stripe, 2, 2);
-        lv_obj_set_size(stripe, 6, h - 4);
+        lv_obj_set_style_radius(stripe, UI_PX(2), 0);
+        lv_obj_set_pos(stripe, UI_PX(2), UI_PX(2));
+        lv_obj_set_size(stripe, UI_PX(6), h - UI_PX(4));
         lv_obj_set_scrollable(stripe, false);
         lv_obj_set_clickable(stripe, false);
     }
 
     mmu_slot_id(unit, slot, id, sizeof id);
     {
-        lv_obj_t *l = print_label(chip, id, ui_style(UI_STYLE_LABEL), 12, 1, 0);
+        lv_obj_t *l = print_label(chip, id, ui_style(UI_STYLE_LABEL), UI_PX(12), UI_PX(1), 0);
         lv_obj_set_style_text_font(l, UI_FONT_S, 0);
     }
 
     if(s->remaining_pct >= 0) snprintf(buf, sizeof buf, "%d%%", (int)s->remaining_pct);
     else                      snprintf(buf, sizeof buf, "--");
-    print_label(chip, buf, ui_style(UI_STYLE_LABEL_DIM), 12, h - 15, 0);
+    print_label(chip, buf, ui_style(UI_STYLE_LABEL_DIM), UI_PX(12), h - UI_PX(15), 0);
 
     return chip;
 }

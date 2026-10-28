@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "board.h"
 #include "display.h"
 #include "display_cfg_store.h"
 #include "display_power.h"
@@ -21,8 +22,10 @@
 #include "tag_writer.h"
 #endif
 #include "touch.h"
+#if BOARD_TOUCH_NEEDS_CALIBRATION
 #include "touch_calib_store.h"
 #include "touch_calib_ui.h"
+#endif
 #include "ui_diag.h"
 
 #include "app/app.h"
@@ -50,7 +53,9 @@ static const char *TAG = "app_main";
 static TaskHandle_t s_lvgl_task;
 
 /* Onboard RGB LED, active low. Left floating it can power up lit; force
- * all three channels off before anything else runs. */
+ * all three channels off before anything else runs. Only on a board that
+ * has one: on the ES3C50P these pins are the panel's data lines. */
+#if BOARD_HAS_RGB_LED
 #define PIN_LED_R 22
 #define PIN_LED_G 16
 #define PIN_LED_B 17
@@ -67,6 +72,11 @@ static void rgb_led_off(void)
     gpio_set_level(PIN_LED_G, 1);
     gpio_set_level(PIN_LED_B, 1);
 }
+#else
+static void rgb_led_off(void)
+{
+}
+#endif
 
 static uint32_t tick_cb(void)
 {
@@ -357,7 +367,8 @@ void app_main(void)
     lv_display_add_event_cb(disp, refr_event_cb, LV_EVENT_REFR_START, NULL);
     lv_display_add_event_cb(disp, refr_event_cb, LV_EVENT_REFR_READY, NULL);
     const panel_info_t *panel = display_get_panel_info();
-    ESP_LOGI(TAG, "panel: ST7796S id_read_ok=%s", panel->id_read_ok ? "yes" : "no");
+    ESP_LOGI(TAG, "board %s, panel %s, id_read_ok=%s", BOARD_NAME, panel->name,
+             panel->id_read_ok ? "yes" : "no");
 
     if(!touch_init()) {
         ESP_LOGW(TAG, "touch_init() failed — continuing with no touch input");
@@ -410,6 +421,7 @@ void app_main(void)
         ESP_LOGI(TAG, "no Wi-Fi credentials stored — demo mode");
     }
 
+#if BOARD_TOUCH_NEEDS_CALIBRATION
     touch_calib_store_init();
     float coef[6];
     if(touch_calib_store_load(coef)) {
@@ -422,6 +434,7 @@ void app_main(void)
         ESP_LOGW(TAG, "no valid touch calibration in NVS — running the calibration screen");
         touch_calib_run(disp);
     }
+#endif
 
     if(live) app_live_init();
     else app_init(NULL, NULL);

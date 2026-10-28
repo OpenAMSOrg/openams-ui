@@ -64,17 +64,17 @@ static const dry_preset_t s_presets[] = {
 /* ------------------------------------------------------------------ layout */
 
 #define EN_PAD          UI_HOME_HEADER_PAD
-#define EN_CARD_Y       48
-#define EN_CARD_H       74
-#define EN_CHIP_Y       130
-#define EN_CHIP_W       84
-#define EN_CHIP_GAP     9
-#define EN_STEP_Y       168
-#define EN_STEP_H       64
-#define EN_STEP_W       224
-#define EN_INFO_Y       240
-#define EN_BTN_Y        268
-#define EN_BTN_H        40
+#define EN_CARD_Y       UI_PX(48)
+#define EN_CARD_H       UI_PX(74)
+#define EN_CHIP_Y       UI_PX(130)
+#define EN_CHIP_W       ((UI_HOME_INNER_W - (PRESET_COUNT - 1) * EN_CHIP_GAP) / PRESET_COUNT) /* 84: the row spans the band */
+#define EN_CHIP_GAP     UI_PX(9)
+#define EN_STEP_Y       UI_PX(168)
+#define EN_STEP_H       UI_PX(64)
+#define EN_STEP_W       ((UI_HOME_INNER_W - UI_PX(8)) / 2)   /* 224: two columns, 8 apart */
+#define EN_INFO_Y       UI_PX(240)
+#define EN_BTN_Y        UI_PX(268)
+#define EN_BTN_H        UI_PX(40)
 
 /* ------------------------------------------------------------------- state */
 
@@ -194,7 +194,7 @@ static void env_bind(void)
 
 /* ---------------------------------------------------------------- refresh */
 
-#define BAR_W (UI_HOME_INNER_W - 24)
+#define BAR_W (UI_HOME_INNER_W - UI_PX(24))
 
 static void set_text(lv_obj_t *l, const char *t)
 {
@@ -420,7 +420,7 @@ static void open_dry_confirm(void)
     u = &g_mmu.units[s_unit];
     if(!dry_available(u)) return;
 
-    sheet = ui_sheet_open(view_str(VS_ENV_START), 176);
+    sheet = ui_sheet_open(view_str(VS_ENV_START), UI_PX(176));
     if(sheet == NULL) return;
 
     vs_format(VS_ENV_DRY_AT, head, sizeof head,
@@ -443,7 +443,7 @@ static void open_dry_info(const char *reason)
     if(s_unit < 0 || s_unit >= (int)g_mmu.unit_count) return;
     u = &g_mmu.units[s_unit];
 
-    sheet = ui_sheet_open(view_str(VS_ENV_CANNOT), 176);
+    sheet = ui_sheet_open(view_str(VS_ENV_CANNOT), UI_PX(176));
     if(sheet == NULL) return;
 
     vs_format(VS_ENV_HEAD_UNIT, head, sizeof head,
@@ -463,17 +463,17 @@ static void scale_info_row(lv_obj_t *sheet, const char *title, const char *detai
 
     row = lv_obj_create(body);
     lv_obj_remove_style_all(row);
-    lv_obj_set_size(row, UI_SCREEN_W, 48);
+    lv_obj_set_size(row, UI_SCREEN_W, UI_PX(48));
     lv_obj_set_scrollable(row, false);
     lv_obj_set_clickable(row, false);
 
-    l = ui_editenv_label(row, title, UI_STYLE_LABEL, 16, 6);
+    l = ui_editenv_label(row, title, UI_STYLE_LABEL, UI_PX(16), UI_PX(6));
     lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_DOTS);
-    lv_obj_set_width(l, UI_SCREEN_W - 32);
+    lv_obj_set_width(l, UI_SCREEN_W - UI_PX(32));
 
-    l = ui_editenv_label(row, detail, UI_STYLE_LABEL_DIM, 16, 26);
+    l = ui_editenv_label(row, detail, UI_STYLE_LABEL_DIM, UI_PX(16), UI_PX(26));
     lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_DOTS);
-    lv_obj_set_width(l, UI_SCREEN_W - 32);
+    lv_obj_set_width(l, UI_SCREEN_W - UI_PX(32));
 }
 
 static void open_scale(void)
@@ -490,7 +490,7 @@ static void open_scale(void)
     if(s_unit < 0 || s_unit >= (int)g_mmu.unit_count) return;
     u = &g_mmu.units[s_unit];
 
-    sheet = ui_sheet_open(view_str(VS_ENV_SCALE_TITLE), 192);
+    sheet = ui_sheet_open(view_str(VS_ENV_SCALE_TITLE), UI_PX(192));
     if(sheet == NULL) return;
 
     if(u->has_humidity_level && !u->has_humidity_pct) {
@@ -532,10 +532,10 @@ static lv_color_t dryer_color(view_dryer_tone_t t)
 /* One big number with its unit under it, in the readout card. */
 static lv_obj_t *readout(lv_obj_t *c, int x, const char *unit)
 {
-    lv_obj_t *v = ui_home_label(c, "-", UI_HOME_FONT_TITLE, UI_TOK_TEXT, x, 6);
+    lv_obj_t *v = ui_home_label(c, "-", UI_HOME_FONT_TITLE, UI_TOK_TEXT, x, UI_PX(6));
 
-    lv_obj_set_width(v, 56);
-    ui_home_label(c, unit, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, x, 6 + 26);
+    lv_obj_set_width(v, UI_PX(56));
+    ui_home_label(c, unit, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, x, UI_PX(6) + UI_PX(26));
     return v;
 }
 
@@ -548,10 +548,10 @@ static void build_readout(lv_obj_t *scr, const mmu_unit_t *u, bool show_status)
     bool has_hum = (u->has_humidity_pct && u->humidity_pct >= 0) ||
                    (u->has_humidity_level && u->humidity_level >= 0);
 
-    s_ui.humidity = readout(c, 12, view_str((u->has_humidity_level && !u->has_humidity_pct) ? VS_ENV_LEVEL : VS_ENV_RH));
-    if(u->has_temp && u->temp_c > -100) s_ui.temp = readout(c, 84, view_str(VS_ENV_DEGC));
+    s_ui.humidity = readout(c, UI_PX(12), view_str((u->has_humidity_level && !u->has_humidity_pct) ? VS_ENV_LEVEL : VS_ENV_RH));
+    if(u->has_temp && u->temp_c > -100) s_ui.temp = readout(c, UI_PX(84), view_str(VS_ENV_DEGC));
     if(has_hum) {
-        lv_obj_t *q = ui_kit_chip(c, "?", 150, 6, 30, false, on_scale, NULL);
+        lv_obj_t *q = ui_kit_chip(c, "?", UI_PX(150), UI_PX(6), UI_PX(30), false, on_scale, NULL);
 
         (void)q;
     }
@@ -561,25 +561,25 @@ static void build_readout(lv_obj_t *scr, const mmu_unit_t *u, bool show_status)
 
         if(view_unit(&g_mmu, s_unit, &vu) && vu.dryer.present) {
             ui_home_label_fit(c, vu.dryer.text, UI_HOME_FONT_SECTION, dryer_color(vu.dryer.tone),
-                              200, 6, UI_HOME_INNER_W - 200 - 12);
+                              UI_PX(200), UI_PX(6), UI_HOME_INNER_W - UI_PX(200) - UI_PX(12));
         }
 
         {
             lv_obj_t *track = lv_obj_create(c);
 
             lv_obj_remove_style_all(track);
-            lv_obj_set_pos(track, 12, 60);
-            lv_obj_set_size(track, BAR_W, 4);
+            lv_obj_set_pos(track, UI_PX(12), UI_PX(60));
+            lv_obj_set_size(track, BAR_W, UI_PX(4));
             lv_obj_set_scrollable(track, false);
-            lv_obj_set_style_radius(track, 2, 0);
+            lv_obj_set_style_radius(track, UI_PX(2), 0);
             lv_obj_set_style_bg_color(track, UI_TOK_SURFACE_3, 0);
             lv_obj_set_style_bg_opa(track, LV_OPA_COVER, 0);
             s_ui.fill = lv_obj_create(track);
             lv_obj_remove_style_all(s_ui.fill);
             lv_obj_set_pos(s_ui.fill, 0, 0);
-            lv_obj_set_size(s_ui.fill, 0, 4);
+            lv_obj_set_size(s_ui.fill, 0, UI_PX(4));
             lv_obj_set_scrollable(s_ui.fill, false);
-            lv_obj_set_style_radius(s_ui.fill, 2, 0);
+            lv_obj_set_style_radius(s_ui.fill, UI_PX(2), 0);
             lv_obj_set_style_bg_color(s_ui.fill, UI_TOK_HEAT_TEXT, 0);
             lv_obj_set_style_bg_opa(s_ui.fill, LV_OPA_COVER, 0);
         }
@@ -594,24 +594,27 @@ static void build_drying(lv_obj_t *scr, const mmu_unit_t *u)
     s_ui.has_controls = true;
     build_readout(scr, u, true);
 
+    /* spread across the band, so the last chip ends on its edge even when
+     * EN_CHIP_W rounds down (at 480 this is i * 93, chip + gap) */
     for(i = 0; i < PRESET_COUNT; i++)
-        s_ui.chips[i] = ui_kit_chip(scr, s_presets[i].name, EN_PAD + i * (EN_CHIP_W + EN_CHIP_GAP),
+        s_ui.chips[i] = ui_kit_chip(scr, s_presets[i].name,
+                                    EN_PAD + i * (UI_HOME_INNER_W - EN_CHIP_W) / (PRESET_COUNT - 1),
                                     EN_CHIP_Y, EN_CHIP_W, i == s_preset, on_preset,
                                     (void *)(intptr_t)i);
 
     c = card(scr, EN_PAD, EN_STEP_Y, EN_STEP_W, EN_STEP_H);
-    ui_home_label(c, view_str(VS_ENV_TEMPERATURE), UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 12, 6);
-    s_ui.temp_val = ui_kit_stepper(c, 12, 24, EN_STEP_W - 24, "-", on_temp_minus, on_temp_plus);
+    ui_home_label(c, view_str(VS_ENV_TEMPERATURE), UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, UI_PX(12), UI_PX(6));
+    s_ui.temp_val = ui_kit_stepper(c, UI_PX(12), UI_PX(24), EN_STEP_W - UI_PX(24), "-", on_temp_minus, on_temp_plus);
 
     c = card(scr, EN_PAD + UI_HOME_INNER_W - EN_STEP_W, EN_STEP_Y, EN_STEP_W, EN_STEP_H);
-    ui_home_label(c, view_str(VS_ENV_TIME), UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 12, 6);
-    s_ui.hours_val = ui_kit_stepper(c, 12, 24, EN_STEP_W - 24, "-", on_hours_minus, on_hours_plus);
+    ui_home_label(c, view_str(VS_ENV_TIME), UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, UI_PX(12), UI_PX(6));
+    s_ui.hours_val = ui_kit_stepper(c, UI_PX(12), UI_PX(24), EN_STEP_W - UI_PX(24), "-", on_hours_minus, on_hours_plus);
 
     s_ui.info = ui_home_label(scr, "", UI_HOME_FONT_META, UI_TOK_TEXT_FAINT, EN_PAD, EN_INFO_Y);
-    lv_obj_set_width(s_ui.info, 300);
+    lv_obj_set_width(s_ui.info, UI_PX(300));
     s_ui.elapsed = ui_home_label(scr, "", UI_HOME_FONT_META, UI_TOK_TEXT_MUTED,
-                                 EN_PAD + UI_HOME_INNER_W - 140, EN_INFO_Y);
-    lv_obj_set_width(s_ui.elapsed, 140);
+                                 EN_PAD + UI_HOME_INNER_W - UI_PX(140), EN_INFO_Y);
+    lv_obj_set_width(s_ui.elapsed, UI_PX(140));
     lv_obj_set_style_text_align(s_ui.elapsed, LV_TEXT_ALIGN_RIGHT, 0);
 
     {

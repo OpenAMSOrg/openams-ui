@@ -56,7 +56,8 @@ endif()
 idf_component_register(
     SRCS ${tw_sources}
     INCLUDE_DIRS "include"
-    PRIV_INCLUDE_DIRS "src"
+    # ../../../src: the display's ui/ui_scale.h, the grid the pages are laid out on.
+    PRIV_INCLUDE_DIRS "src" "../../../src"
     REQUIRES lvgl
     PRIV_REQUIRES
         esp_driver_spi

@@ -15,10 +15,11 @@
 #include <stdint.h>
 
 #include "lvgl.h"
+#include "ui/ui_scale.h"
 
 /** Smallest and largest visible height of a sheet, in pixels. */
-#define UI_SHEET_MIN_H 60
-#define UI_SHEET_MAX_H 272
+#define UI_SHEET_MIN_H UI_PX(60)
+#define UI_SHEET_MAX_H (UI_SCREEN_H - UI_PX(48))
 
 /** Open a sheet @p h tall (clamped to UI_SHEET_MIN_H..UI_SHEET_MAX_H) with a
  * @p title, over a clickable scrim. @p h is only the height shown before the

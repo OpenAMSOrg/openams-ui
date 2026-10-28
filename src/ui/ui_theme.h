@@ -14,6 +14,7 @@
 #include "lvgl.h"
 
 #include "ui/fonts/ui_fonts.h"
+#include "ui/ui_scale.h" /* UI_SCREEN_W/H and UI_PX(): every length below is on the 480x320 grid */
 
 #include <stdbool.h>
 
@@ -68,25 +69,24 @@
 
 /* ------------------------------------------------------------ spacing tokens */
 
-#define UI_PAD_XS   2
-#define UI_PAD_S    4
-#define UI_PAD_M    6
-#define UI_PAD_L    8
-#define UI_PAD_XL   12
-#define UI_PAD_XXL  16
+#define UI_PAD_XS   UI_PX(2)
+#define UI_PAD_S    UI_PX(4)
+#define UI_PAD_M    UI_PX(6)
+#define UI_PAD_L    UI_PX(8)
+#define UI_PAD_XL   UI_PX(12)
+#define UI_PAD_XXL  UI_PX(16)
 
-#define UI_RADIUS      10
-#define UI_RADIUS_SHEET 16   /* a sheet's top corners (it sits on the bottom edge) */
-#define UI_RADIUS_S    6
+#define UI_RADIUS      UI_PX(10)
+#define UI_RADIUS_SHEET UI_PX(16)   /* a sheet's top corners (it sits on the bottom edge) */
+#define UI_RADIUS_S    UI_PX(6)
 #define UI_RADIUS_PILL LV_RADIUS_CIRCLE
 
-#define UI_SCREEN_W        480
-#define UI_SCREEN_H        320
-#define UI_TOPBAR_H        44
-#define UI_TOPBAR_HOME_H   40 /* home's top bar is taller: no back, room for the pill */
+/* UI_SCREEN_W / UI_SCREEN_H: ui_scale.h. */
+#define UI_TOPBAR_H        UI_PX(44)
+#define UI_TOPBAR_HOME_H   UI_PX(40) /* home's top bar is taller: no back, room for the pill */
 #define UI_BOTTOMNAV_H     0  /* no bottom bar on any screen (UNIFIED_UI 4d) */
-#define UI_ACTIONBAR_H     36 /* the bottom action band that replaces the nav, y 284-320 */
-#define UI_TOUCH_MIN       36
+#define UI_ACTIONBAR_H     UI_PX(36) /* the bottom action band that replaces the nav, y 284-320 */
+#define UI_TOUCH_MIN       UI_PX(36)
 
 /* Modals dim the screen with one black rect at this opacity (179/255). */
 #define UI_SCRIM_OPA       179

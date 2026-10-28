@@ -42,6 +42,19 @@ idf.py flash monitor
 `dependencies.lock` pins the target to `esp32`, and `sdkconfig.defaults`
 carries the board settings (4 MB flash, no PSRAM, 240 MHz).
 
+### The 5 inch board
+
+The ES3C50P ([hardware.md](hardware.md#the-5-inch-board-es3c50p)) is its own
+build: the board picks the chip (ESP32-S3), its settings
+(`sdkconfig.defaults.es3c50p`), its partition table and the 800x480 UI. Give it
+its own build directory:
+
+```sh
+cd platform/esp32
+idf.py -B build-es3c50p -DMMU_BOARD=es3c50p build
+idf.py -B build-es3c50p -DMMU_BOARD=es3c50p flash monitor
+```
+
 After a `git pull`, or after a build that failed, start clean:
 
 ```sh

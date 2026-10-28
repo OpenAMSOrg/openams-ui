@@ -21,23 +21,23 @@
 #define SHEET_HANDLE   0
 #define SHEET_TITLE    1
 
-#define SHEET_TITLE_W  360 /* stops short of a header icon at the right (x 413) */
-#define SHEET_TITLE_Y  20
-#define SHEET_BODY_Y   48
-#define SHEET_TEXT_X   44  /* where a row's icon and text sit */
-#define SHEET_LINE_X2  (UI_SCREEN_W - 16) /* the divider stops level with the header text */
-#define SHEET_CHEVRON_X (UI_SCREEN_W - 34) /* right inset 16, chevron glyph 18 wide */
-#define SHEET_BTN_H    36
+#define SHEET_TITLE_W  (UI_SCREEN_W - UI_PX(120)) /* stops short of a header icon at the right (x 413) */
+#define SHEET_TITLE_Y  UI_PX(20)
+#define SHEET_BODY_Y   UI_PX(48)
+#define SHEET_TEXT_X   UI_PX(44)  /* where a row's icon and text sit */
+#define SHEET_LINE_X2  (UI_SCREEN_W - UI_PX(16)) /* the divider stops level with the header text */
+#define SHEET_CHEVRON_X (UI_SCREEN_W - UI_PX(34)) /* right inset 16, chevron glyph 18 wide */
+#define SHEET_BTN_H    UI_PX(36)
 
 static void cover_apply(int opaque_top);
 static void cover_restore(void);
-#define SHEET_PAD_X    16  /* the strip's side padding */
-#define SHEET_BODY_PAD_B 12 /* bottom padding below the last row/button */
+#define SHEET_PAD_X    UI_PX(16)  /* the strip's side padding */
+#define SHEET_BODY_PAD_B UI_PX(12) /* bottom padding below the last row/button */
 
-#define TOAST_TEXT_MAX_W 360 /* text wraps past this; the pill grows around it */
-#define TOAST_PAD_H    12  /* pad x = 12 */
-#define TOAST_ICON_W   18
-#define TOAST_GAP      8
+#define TOAST_TEXT_MAX_W UI_PX(360) /* text wraps past this; the pill grows around it */
+#define TOAST_PAD_H    UI_PX(12)  /* pad x = 12 */
+#define TOAST_ICON_W   UI_PX(18)
+#define TOAST_GAP      UI_PX(8)
 
 /* ------------------------------------------------------------------ motion */
 
@@ -138,8 +138,8 @@ static void on_scrim_click(lv_event_t *e)
 
 /* --------------------------------------------------------- swipe to dismiss */
 
-#define SHEET_DISMISS_DRAG_PX  50 /* a drag past this far closes on release */
-#define SHEET_DISMISS_FLICK_VY 8  /* a release this fast closes regardless of dy */
+#define SHEET_DISMISS_DRAG_PX  UI_PX(50) /* a drag past this far closes on release */
+#define SHEET_DISMISS_FLICK_VY UI_PX(8)  /* a release this fast closes regardless of dy */
 #define SHEET_DISMISS_MS       120
 #define SHEET_SCRIM_OPA_MIN    60 /* the scrim's dimmest point, dragged a full sheet-height down */
 
@@ -383,14 +383,14 @@ lv_obj_t *ui_sheet_open(const char *title, int h)
      * off-screen; that overhang is deliberate, so the scrim shows overflow. */
     lv_obj_set_overflow_visible(scrim, true);
 
-    sheet = mk_box(scrim, 0, y, UI_SCREEN_W, vis + 16);
+    sheet = mk_box(scrim, 0, y, UI_SCREEN_W, vis + UI_PX(16));
     lv_obj_add_style(sheet, ui_style(UI_STYLE_MODAL_CARD), 0);
     lv_obj_set_clickable(sheet, true); /* a tap here does nothing, only bubbles */
     lv_obj_add_event_cb(sheet, on_sheet_gesture, LV_EVENT_GESTURE, NULL);
 
     {
-        lv_obj_t *handle = mk_box(sheet, (UI_SCREEN_W - 32) / 2, 8, 32, 4);
-        lv_obj_set_style_radius(handle, 2, 0);
+        lv_obj_t *handle = mk_box(sheet, (UI_SCREEN_W - UI_PX(32)) / 2, UI_PX(8), UI_PX(32), UI_PX(4));
+        lv_obj_set_style_radius(handle, UI_PX(2), 0);
         lv_obj_set_style_bg_color(handle, UI_COL_TEXT_FAINT, 0);
         lv_obj_set_style_bg_opa(handle, LV_OPA_COVER, 0);
     }
@@ -424,7 +424,7 @@ lv_obj_t *ui_sheet_open(const char *title, int h)
     ui_nav_modal_add(scrim);
 
     ui_fx_fade_in(scrim, UI_SCRIM_OPA, 120);
-    ui_fx_slide_up_in(sheet, 12, 140);
+    ui_fx_slide_up_in(sheet, UI_PX(12), 140);
     return sheet;
 }
 
@@ -463,7 +463,7 @@ void ui_sheet_fit(lv_obj_t *sheet)
     if(vis < UI_SHEET_MIN_H) vis = UI_SHEET_MIN_H;
     if(vis > UI_SHEET_MAX_H) vis = UI_SHEET_MAX_H;
 
-    lv_obj_set_height(sheet, vis + 16);
+    lv_obj_set_height(sheet, vis + UI_PX(16));
     lv_obj_set_y(sheet, UI_SCREEN_H - vis);
     lv_obj_set_height(body, vis - SHEET_BODY_Y);
     cover_apply(UI_SCREEN_H - vis + UI_RADIUS_SHEET);
@@ -491,15 +491,15 @@ void ui_sheet_header(lv_obj_t *sheet, int32_t swatch_rgb, const char *right_text
 
         ui_filament_gradient((uint32_t)swatch_rgb, &top, &bottom);
 
-        l = mk_box(sheet, UI_PAD_XXL, 24, 10, 10);
-        lv_obj_set_style_radius(l, 2, 0);
+        l = mk_box(sheet, UI_PAD_XXL, UI_PX(24), UI_PX(10), UI_PX(10));
+        lv_obj_set_style_radius(l, UI_PX(2), 0);
         lv_obj_set_style_bg_color(l, top, 0);
         lv_obj_set_style_bg_opa(l, LV_OPA_COVER, 0);
         if(is_dark_filament((uint32_t)swatch_rgb)) {
-            lv_obj_set_style_border_width(l, 1, 0);
+            lv_obj_set_style_border_width(l, UI_PX(1), 0);
             lv_obj_set_style_border_color(l, UI_COL_TEXT_FAINT, 0);
         }
-        if(title) lv_obj_set_x(title, 32); /* the swatch takes the title's spot */
+        if(title) lv_obj_set_x(title, UI_PX(32)); /* the swatch takes the title's spot */
     }
 
     if(right_text == NULL || right_text[0] == '\0') return;
@@ -512,11 +512,11 @@ void ui_sheet_header(lv_obj_t *sheet, int32_t swatch_rgb, const char *right_text
     }
 
     l = mk_text(sheet, right_text, UI_FONT_M, UI_COL_TEXT_DIM);
-    lv_obj_align(l, LV_ALIGN_TOP_RIGHT, -UI_PAD_XXL, 22);
+    lv_obj_align(l, LV_ALIGN_TOP_RIGHT, -UI_PAD_XXL, UI_PX(22));
 
     if(tag_icon) {
         l = mk_text(sheet, UI_ICON_NFC_VARIANT, UI_FONT_ICON, UI_COL_TEXT_DIM);
-        lv_obj_align(l, LV_ALIGN_TOP_RIGHT, -(UI_PAD_XXL + rw + 6), 22);
+        lv_obj_align(l, LV_ALIGN_TOP_RIGHT, -(UI_PAD_XXL + rw + UI_PX(6)), UI_PX(22));
     }
 }
 
@@ -531,10 +531,10 @@ lv_obj_t *ui_sheet_row(lv_obj_t *sheet, const char *icon, const char *label, con
 
     if(!body) return NULL;
 
-    row = mk_box(body, 0, 0, UI_SCREEN_W, enabled ? 44 : 56);
+    row = mk_box(body, 0, 0, UI_SCREEN_W, enabled ? UI_PX(44) : UI_PX(56));
 
     if(body_rows(body) > 0) {
-        l = mk_box(row, SHEET_TEXT_X, 0, SHEET_LINE_X2 - SHEET_TEXT_X, 1);
+        l = mk_box(row, SHEET_TEXT_X, 0, SHEET_LINE_X2 - SHEET_TEXT_X, UI_PX(1));
         lv_obj_set_style_bg_color(l, UI_COL_LINE, 0);
         lv_obj_set_style_bg_opa(l, LV_OPA_COVER, 0);
     }
@@ -561,12 +561,12 @@ lv_obj_t *ui_sheet_row(lv_obj_t *sheet, const char *icon, const char *label, con
     }
     else {
         l = mk_text(row, label, UI_FONT_M, UI_COL_TEXT_FAINT);
-        lv_obj_set_pos(l, SHEET_TEXT_X, 8);
+        lv_obj_set_pos(l, SHEET_TEXT_X, UI_PX(8));
 
         l = mk_text(row, reason, UI_FONT_S, UI_COL_TEXT_DIM);
         lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_DOTS);
         lv_obj_set_width(l, SHEET_LINE_X2 - SHEET_TEXT_X);
-        lv_obj_set_pos(l, SHEET_TEXT_X, 28);
+        lv_obj_set_pos(l, SHEET_TEXT_X, UI_PX(28));
 
         lv_obj_set_clickable(row, false);
     }
@@ -654,14 +654,14 @@ void ui_sheet_menu(void)
 #endif
     };
     const int cols = 4;
-    const int tw = 104;
-    const int th = 64;
-    const int gap = 8;
-    const int x0 = 20;
+    const int th = UI_PX(64);
+    const int gap = UI_PX(8);
+    const int x0 = UI_PX(20);
+    const int tw = (UI_SCREEN_W - 2 * x0 - (cols - 1) * gap) / cols; /* 104 */
     /* Two rows of four; a ninth entry (the ESP32 image's tag writer) opens a
      * third row, and the sheet grows by one row to hold it. */
     const int rows = (int)((sizeof entries / sizeof entries[0] + cols - 1) / cols);
-    lv_obj_t *sheet = ui_sheet_open(view_str(VS_SCREEN_MENU), 200 + (rows - 2) * (th + gap));
+    lv_obj_t *sheet = ui_sheet_open(view_str(VS_SCREEN_MENU), UI_PX(200) + (rows - 2) * (th + gap));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     lv_obj_t *body = ui_sheet_body(sheet);
     lv_obj_t *grid;
@@ -672,7 +672,7 @@ void ui_sheet_menu(void)
     /* The body is a flex column (it carries rows elsewhere), so the grid of
      * tiles is a plain box inside it: only there do explicit positions hold.
      * y = 4 puts the grid's origin at sheet-local y = 52 (SHEET_BODY_Y + 4). */
-    grid = mk_box(body, 0, 4, x0 + cols * tw + (cols - 1) * gap, rows * th + (rows - 1) * gap);
+    grid = mk_box(body, 0, UI_PX(4), x0 + cols * tw + (cols - 1) * gap, rows * th + (rows - 1) * gap);
 
     for(i = 0; i < sizeof entries / sizeof entries[0]; i++) {
         int col = (int)i % cols;
@@ -691,10 +691,10 @@ void ui_sheet_menu(void)
         lv_obj_set_scrollable(t, false);
 
         l = mk_text(t, entries[i].icon, UI_FONT_ICON, UI_COL_TEXT);
-        lv_obj_align(l, LV_ALIGN_CENTER, 0, -10);
+        lv_obj_align(l, LV_ALIGN_CENTER, 0, UI_PX(-10));
 
         l = mk_text(t, view_str(entries[i].label), UI_FONT_S, UI_COL_TEXT);
-        lv_obj_align(l, LV_ALIGN_CENTER, 0, 14);
+        lv_obj_align(l, LV_ALIGN_CENTER, 0, UI_PX(14));
 
         lv_obj_add_event_cb(t, on_menu_pick, LV_EVENT_CLICKED,
                             (void *)(intptr_t)(entries[i].id + 1));
@@ -742,7 +742,7 @@ void ui_sheet_toast(const char *text)
     lv_text_get_size(&sz, text, UI_FONT_M, 0, 0, TOAST_TEXT_MAX_W, LV_TEXT_FLAG_NONE);
 
     w = 2 * TOAST_PAD_H + TOAST_ICON_W + TOAST_GAP + sz.x;
-    if(w < 60) w = 60;
+    if(w < UI_PX(60)) w = UI_PX(60);
     h = sz.y + 2 * UI_PAD_L;
 
     pill = mk_box(lv_layer_top(), 0, 0, w, h);
@@ -751,7 +751,7 @@ void ui_sheet_toast(const char *text)
     lv_obj_set_style_bg_opa(pill, LV_OPA_COVER, 0);
     /* Bottom edge 8 px above the nav's top edge (the nav-showing case; a
      * band screen sits 12 px lower still, per VISUAL_SPEC_480 "Toast"). */
-    lv_obj_align(pill, LV_ALIGN_BOTTOM_MID, 0, -(UI_BOTTOMNAV_H + 8));
+    lv_obj_align(pill, LV_ALIGN_BOTTOM_MID, 0, -(UI_BOTTOMNAV_H + UI_PX(8)));
 
     l = mk_text(pill, UI_ICON_CHECK, UI_FONT_ICON, UI_COL_ACCENT);
     lv_obj_align(l, LV_ALIGN_LEFT_MID, TOAST_PAD_H, 0);
@@ -766,5 +766,5 @@ void ui_sheet_toast(const char *text)
     lv_timer_set_repeat_count(s_toast_timer, 1);
 
     anim_fade_in(pill, 120);
-    ui_fx_slide_up_in(pill, 8, 120);
+    ui_fx_slide_up_in(pill, UI_PX(8), 120);
 }

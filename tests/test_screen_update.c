@@ -409,15 +409,21 @@ static void home_snapshot(const char *scenario)
     check(snapshot_into(lv_screen_active(), s_pixels_a, &s_buf_a), "home: snapshot for the alert slots");
 }
 
+/* Where the alert slots' glyph sits, on the 480x320 grid (432-444, 50-64 and
+ * 14-34) and anchored, like the slots, to the right edge: the same pixels at
+ * either resolution's scale (ui_scale.h). */
+#define SLOT_PROBE_X0 (UI_SCREEN_W - UI_PX(48))
+#define SLOT_PROBE_X1 (UI_SCREEN_W - UI_PX(36))
+
 static void test_home_check_only_when_nothing_alerts(void)
 {
     uint8_t u, i;
 
     /* an error in the message row: no check beside it in its own slot */
     home_snapshot("idle");
-    check(!region_inked(432, 50, 444, 64), "home: no check beside the message row's error (idle)");
+    check(!region_inked(SLOT_PROBE_X0, UI_PX(50), SLOT_PROBE_X1, UI_PX(64)), "home: no check beside the message row's error (idle)");
     home_snapshot("error");
-    check(!region_inked(432, 50, 444, 64), "home: no check beside the message row's error (error)");
+    check(!region_inked(SLOT_PROBE_X0, UI_PX(50), SLOT_PROBE_X1, UI_PX(64)), "home: no check beside the message row's error (error)");
 
     /* the same home with every faulted bay put right: the lane has nothing to
      * report, and its slot rests on the check */
@@ -431,8 +437,8 @@ static void test_home_check_only_when_nothing_alerts(void)
     ui_nav_init();
     ui_nav_goto(UI_SCREEN_HOME);
     check(snapshot_into(lv_screen_active(), s_pixels_a, &s_buf_a), "home: snapshot of the calm home");
-    check(region_inked(432, 50, 444, 64), "home: the check rests in the message row's slot when nothing alerts");
-    check(region_inked(432, 14, 444, 34), "home: and in the header's");
+    check(region_inked(SLOT_PROBE_X0, UI_PX(50), SLOT_PROBE_X1, UI_PX(64)), "home: the check rests in the message row's slot when nothing alerts");
+    check(region_inked(SLOT_PROBE_X0, UI_PX(14), SLOT_PROBE_X1, UI_PX(34)), "home: and in the header's");
 }
 
 /* ---------------------------------------------------------- print: in place */

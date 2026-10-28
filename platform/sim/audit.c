@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "ui/ui_scale.h"
+
 typedef struct {
     const char *where;
     int issues;
@@ -34,9 +36,10 @@ static bool area_overlap(const lv_area_t *a, const lv_area_t *b)
 }
 
 /* Tolerances: text boxes routinely share a row or two with the next line
- * (line height vs glyph height), which is invisible. */
-#define OVERLAP_MIN_PX 3
-#define CLIP_MIN_PX    2
+ * (line height vs glyph height), which is invisible. On the 480x320 grid,
+ * like every length (ui_scale.h). */
+#define OVERLAP_MIN_PX UI_PX(3)
+#define CLIP_MIN_PX    UI_PX(2)
 
 static int32_t overlap_depth(const lv_area_t *a, const lv_area_t *b)
 {

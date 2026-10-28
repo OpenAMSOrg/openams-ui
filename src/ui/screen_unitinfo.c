@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ROW_H 44
+#define ROW_H UI_PX(44)
 
 /* A read-only row: a muted label at the left, the value at the right, and an
  * optional chip immediately left of the value. */
@@ -27,13 +27,13 @@ static lv_obj_t *info_row(lv_obj_t *col, const char *label, const char *value, c
 {
     lv_obj_t *row = ui_kit_row(col, ROW_H, NULL, NULL);
     int vw = ui_home_text_w(value, UI_HOME_FONT_BODY);
-    int inner = UI_HOME_INNER_W - 24;
-    int ly = (ROW_H - 24 - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2;
+    int inner = UI_HOME_INNER_W - UI_PX(24);
+    int ly = (ROW_H - UI_PX(24) - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2;
 
     ui_home_label(row, label, UI_HOME_FONT_BODY, UI_TOK_TEXT_MUTED, 0, ly);
     ui_home_label(row, value, UI_HOME_FONT_BODY, UI_TOK_TEXT, inner - vw, ly);
-    if(chip) ui_kit_tag(row, chip, UI_KIT_TONE_INFO, inner - vw - 8 - ui_kit_tag_w(chip),
-                        (ROW_H - 24 - 20) / 2);
+    if(chip) ui_kit_tag(row, chip, UI_KIT_TONE_INFO, inner - vw - UI_PX(8) - ui_kit_tag_w(chip),
+                        (ROW_H - UI_PX(24) - UI_PX(20)) / 2);
     return row;
 }
 
@@ -46,14 +46,14 @@ static lv_obj_t *build(void)
     int unit = mmu_this_unit();
 
     (void)ui_kit_header(scr, ui_nav_screen_title(UI_SCREEN_UNIT_INFO), true);
-    col = ui_kit_column(scr, UI_HOME_HEADER_H + 2, UI_HOME_H - UI_HOME_HEADER_H - 2);
+    col = ui_kit_column(scr, UI_HOME_HEADER_H + UI_PX(2), UI_HOME_H - UI_HOME_HEADER_H - UI_PX(2));
 
     if(u && view_unit(&g_mmu, unit, u)) {
-        lv_obj_t *hero = ui_kit_row(col, 48, NULL, NULL);
+        lv_obj_t *hero = ui_kit_row(col, UI_PX(48), NULL, NULL);
         int tw = ui_home_text_w(u->title, UI_HOME_FONT_TITLE);
 
-        ui_home_label(hero, u->title, UI_HOME_FONT_TITLE, UI_TOK_TEXT, 0, (48 - 24 - 24) / 2 + 2);
-        ui_home_label(hero, u->subtitle, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, tw + 8, 12);
+        ui_home_label(hero, u->title, UI_HOME_FONT_TITLE, UI_TOK_TEXT, 0, (UI_PX(48) - UI_PX(24) - UI_PX(24)) / 2 + UI_PX(2));
+        ui_home_label(hero, u->subtitle, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, tw + UI_PX(8), UI_PX(12));
 
         if(u->info.present) {
             info_row(col, view_str(VS_UI_SERIAL), "", NULL);   /* no host field carries it yet: the view has none */

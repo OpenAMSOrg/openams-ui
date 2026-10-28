@@ -58,8 +58,8 @@ static void row_divider(lv_obj_t *row, bool first)
     if(first) return;
     l = lv_obj_create(row);
     lv_obj_remove_style_all(l);
-    lv_obj_set_pos(l, 16, 0);
-    lv_obj_set_size(l, 448, 1);
+    lv_obj_set_pos(l, UI_PX(16), 0);
+    lv_obj_set_size(l, UI_SCREEN_W - 2 * UI_PX(16), UI_PX(1));
     lv_obj_set_style_bg_color(l, UI_COL_LINE, 0);
     lv_obj_set_style_bg_opa(l, LV_OPA_COVER, 0);
     lv_obj_set_scrollable(l, false);
@@ -94,7 +94,7 @@ static void group_row(lv_obj_t *sheet, int g, int current, bool first)
     row = lv_obj_create(body);
     lv_obj_remove_style_all(row);
     lv_obj_set_width(row, LV_PCT(100));
-    lv_obj_set_height(row, 44);
+    lv_obj_set_height(row, UI_PX(44));
     lv_obj_set_scrollable(row, false);
     row_divider(row, first);
 
@@ -110,7 +110,7 @@ static void group_row(lv_obj_t *sheet, int g, int current, bool first)
     lv_label_set_text(l, g_mmu.groups[g].name);
     lv_obj_set_style_text_font(l, UI_FONT_M, 0);
     lv_obj_set_style_text_color(l, UI_COL_TEXT, 0);
-    lv_obj_align(l, LV_ALIGN_LEFT_MID, 16, 0);
+    lv_obj_align(l, LV_ALIGN_LEFT_MID, UI_PX(16), 0);
 
     lv_text_get_size(&sz, g_mmu.groups[g].name, UI_FONT_M, 0, 0, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
     vs_format(VS_GP_MEMBERS, count, sizeof count,
@@ -120,7 +120,7 @@ static void group_row(lv_obj_t *sheet, int g, int current, bool first)
     lv_label_set_text(l, count);
     lv_obj_set_style_text_font(l, UI_FONT_S, 0);
     lv_obj_set_style_text_color(l, UI_COL_TEXT_DIM, 0);
-    lv_obj_align(l, LV_ALIGN_LEFT_MID, 16 + (int)sz.x + 8, 0);
+    lv_obj_align(l, LV_ALIGN_LEFT_MID, UI_PX(16) + (int)sz.x + UI_PX(8), 0);
 
     if(is_current) {
         l = lv_label_create(row);
@@ -128,7 +128,7 @@ static void group_row(lv_obj_t *sheet, int g, int current, bool first)
         lv_label_set_text(l, UI_ICON_CHECK);
         lv_obj_set_style_text_font(l, UI_FONT_ICON, 0);
         lv_obj_set_style_text_color(l, UI_COL_ACCENT, 0);
-        lv_obj_align(l, LV_ALIGN_RIGHT_MID, -16, 0);
+        lv_obj_align(l, LV_ALIGN_RIGHT_MID, -UI_PX(16), 0);
     }
     ui_sheet_fit(sheet);
 }
@@ -213,20 +213,20 @@ static void open_new_group(lv_event_t *e)
     lv_obj_t *sheet, *body, *btn, *l;
 
     (void)e;
-    sheet = ui_sheet_open(view_str(VS_GP_NEW), 160);
+    sheet = ui_sheet_open(view_str(VS_GP_NEW), UI_PX(160));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     body = ui_sheet_body(sheet);
     if(!body) return;
 
     s_new_num = step_free(-1, 1);
 
-    s_new_val = ui_stepper(body, 16, 8, 448, "", on_new_minus, on_new_plus, NULL);
+    s_new_val = ui_stepper(body, UI_PX(16), UI_PX(8), UI_SCREEN_W - 2 * UI_PX(16), "", on_new_minus, on_new_plus, NULL);
     set_new_label();
 
     btn = lv_button_create(body);
     lv_obj_remove_style_all(btn);
-    lv_obj_set_pos(btn, 16, 60);
-    lv_obj_set_size(btn, 448, 36);
+    lv_obj_set_pos(btn, UI_PX(16), UI_PX(60));
+    lv_obj_set_size(btn, UI_SCREEN_W - 2 * UI_PX(16), UI_PX(36));
     lv_obj_set_style_radius(btn, UI_RADIUS, 0);
     lv_obj_set_style_bg_color(btn, UI_COL_ACCENT, 0);
     lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
@@ -284,15 +284,15 @@ static void open_remove_confirm(lv_event_t *e)
               (vs_arg_t[]){ VS_ARG_T("spool", ui_kit_spool(s_bay_unit, s_bay_slot)),
                             VS_ARG_T("group", g_mmu.groups[current].name) }, 2);
 
-    sheet = ui_sheet_open(title, 148);
+    sheet = ui_sheet_open(title, UI_PX(148));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     body = ui_sheet_body(sheet);
     if(!body) return;
 
     btn = lv_button_create(body);
     lv_obj_remove_style_all(btn);
-    lv_obj_set_pos(btn, 16, 48);
-    lv_obj_set_size(btn, 448, 36);
+    lv_obj_set_pos(btn, UI_PX(16), UI_PX(48));
+    lv_obj_set_size(btn, UI_SCREEN_W - 2 * UI_PX(16), UI_PX(36));
     lv_obj_set_style_radius(btn, UI_RADIUS, 0);
     lv_obj_set_style_bg_color(btn, UI_COL_PANEL_HI, 0);
     lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
@@ -339,7 +339,7 @@ void ui_group_picker_open(int unit, int slot)
             row = lv_obj_create(body);
             lv_obj_remove_style_all(row);
             lv_obj_set_width(row, LV_PCT(100));
-            lv_obj_set_height(row, 44);
+            lv_obj_set_height(row, UI_PX(44));
             lv_obj_set_scrollable(row, false);
             lv_obj_set_clickable(row, true);
             lv_obj_set_style_bg_color(row, UI_COL_PANEL, LV_STATE_PRESSED);
@@ -352,14 +352,14 @@ void ui_group_picker_open(int unit, int slot)
             lv_label_set_text(l, UI_ICON_PLUS);
             lv_obj_set_style_text_font(l, UI_FONT_ICON, 0);
             lv_obj_set_style_text_color(l, UI_COL_TEXT_DIM, 0);
-            lv_obj_align(l, LV_ALIGN_LEFT_MID, 16, 0);
+            lv_obj_align(l, LV_ALIGN_LEFT_MID, UI_PX(16), 0);
 
             l = lv_label_create(row);
             lv_obj_remove_style_all(l);
             lv_label_set_text(l, view_str(VS_GP_NEW));
             lv_obj_set_style_text_font(l, UI_FONT_M, 0);
             lv_obj_set_style_text_color(l, UI_COL_TEXT, 0);
-            lv_obj_align(l, LV_ALIGN_LEFT_MID, 44, 0);
+            lv_obj_align(l, LV_ALIGN_LEFT_MID, UI_PX(44), 0);
         }
         ui_sheet_fit(sheet);
     }
@@ -372,7 +372,7 @@ void ui_group_picker_open(int unit, int slot)
             row = lv_obj_create(body);
             lv_obj_remove_style_all(row);
             lv_obj_set_width(row, LV_PCT(100));
-            lv_obj_set_height(row, 44);
+            lv_obj_set_height(row, UI_PX(44));
             lv_obj_set_scrollable(row, false);
             lv_obj_set_clickable(row, true);
             lv_obj_set_style_bg_color(row, UI_COL_PANEL, LV_STATE_PRESSED);
@@ -387,7 +387,7 @@ void ui_group_picker_open(int unit, int slot)
             lv_label_set_text(l, title);
             lv_obj_set_style_text_font(l, UI_FONT_M, 0);
             lv_obj_set_style_text_color(l, UI_COL_ERR, 0);
-            lv_obj_align(l, LV_ALIGN_LEFT_MID, 16, 0);
+            lv_obj_align(l, LV_ALIGN_LEFT_MID, UI_PX(16), 0);
         }
         ui_sheet_fit(sheet);
     }

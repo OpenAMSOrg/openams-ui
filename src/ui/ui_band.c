@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 
-#define BAND_RULE_H 20
+#define BAND_RULE_H UI_PX(20)
 #define BAND_TRANSITION_MS 150
 
 /* A band button carries its kind in its own user data, offset by one so that
@@ -73,7 +73,7 @@ static void band_style(lv_obj_t *btn, ui_action_kind_t kind, bool enabled)
 
     /* Accent is the one filled band; the others are told apart from the screen
      * by a hairline at their top edge. */
-    lv_obj_set_style_border_width(btn, accent ? 0 : 1, 0);
+    lv_obj_set_style_border_width(btn, accent ? 0 : UI_PX(1), 0);
     lv_obj_set_style_border_color(btn, UI_COL_LINE, 0);
     lv_obj_set_style_border_side(btn, LV_BORDER_SIDE_TOP, 0);
     lv_obj_set_style_border_opa(btn, LV_OPA_COVER, 0);
@@ -143,8 +143,8 @@ lv_obj_t *ui_action_bar2(lv_obj_t *parent, const char *left, ui_action_kind_t le
     /* 1 px wide, so it sits on the seam between the two halves. */
     rule = lv_obj_create(band);
     lv_obj_remove_style_all(rule);
-    lv_obj_set_size(rule, 1, BAND_RULE_H);
-    lv_obj_set_pos(rule, half - 1, (UI_ACTIONBAR_H - BAND_RULE_H) / 2);
+    lv_obj_set_size(rule, UI_PX(1), BAND_RULE_H);
+    lv_obj_set_pos(rule, half - UI_PX(1), (UI_ACTIONBAR_H - BAND_RULE_H) / 2);
     lv_obj_set_scrollable(rule, false);
     lv_obj_set_style_bg_color(rule, UI_COL_LINE, 0);
     lv_obj_set_style_bg_opa(rule, LV_OPA_COVER, 0);

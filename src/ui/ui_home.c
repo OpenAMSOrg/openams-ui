@@ -82,6 +82,24 @@ lv_color_t ui_home_tone_color(int tone)
  * per row. Tiling starts at the box's left edge either way, so the pixels are
  * the same. The rows follow design/tokens.json's hatch block - period 8,
  * stripe 2, alpha 16% - and have to be redrawn by hand if that block changes. */
+#define HATCH_X4(...)  __VA_ARGS__, __VA_ARGS__, __VA_ARGS__, __VA_ARGS__
+#define HATCH_X20(...) HATCH_X4(__VA_ARGS__), HATCH_X4(__VA_ARGS__), HATCH_X4(__VA_ARGS__), \
+                       HATCH_X4(__VA_ARGS__), HATCH_X4(__VA_ARGS__)
+#define HATCH_X60(...) HATCH_X20(__VA_ARGS__), HATCH_X20(__VA_ARGS__), HATCH_X20(__VA_ARGS__)
+#if defined(MMU_UI_800X480)
+/* The same stripe on the 1.5x grid (ui_scale.h): period 12, stripe 3, three
+ * pixels right per row; 67 periods cover the 800 px screen. */
+#if UI_TOK_HATCH_PERIOD != 12 || UI_TOK_HATCH_STRIPE != 3
+#error "the hatch rows below are drawn for period 12, stripe 3" /* lit-ok */
+#endif
+#define HATCH_ROW0 41, 41, 41,  0,  0,  0,  0,  0,  0,  0,  0,  0
+#define HATCH_ROW1  0,  0,  0, 41, 41, 41,  0,  0,  0,  0,  0,  0
+#define HATCH_ROW2  0,  0,  0,  0,  0,  0, 41, 41, 41,  0,  0,  0
+#define HATCH_ROW3  0,  0,  0,  0,  0,  0,  0,  0,  0, 41, 41, 41
+#define HATCH_ACROSS(...) HATCH_X60(__VA_ARGS__), HATCH_X4(__VA_ARGS__), \
+                          __VA_ARGS__, __VA_ARGS__, __VA_ARGS__
+#define HATCH_W (67 * UI_TOK_HATCH_PERIOD)
+#else
 #if UI_TOK_HATCH_PERIOD != 8 || UI_TOK_HATCH_STRIPE != 2
 #error "the hatch rows below are drawn for period 8, stripe 2" /* lit-ok */
 #endif
@@ -89,16 +107,19 @@ lv_color_t ui_home_tone_color(int tone)
 #define HATCH_ROW1  0,  0, 41, 41,  0,  0,  0,  0
 #define HATCH_ROW2  0,  0,  0,  0, 41, 41,  0,  0
 #define HATCH_ROW3  0,  0,  0,  0,  0,  0, 41, 41
-#define HATCH_X4(...)  __VA_ARGS__, __VA_ARGS__, __VA_ARGS__, __VA_ARGS__
-#define HATCH_X20(...) HATCH_X4(__VA_ARGS__), HATCH_X4(__VA_ARGS__), HATCH_X4(__VA_ARGS__), \
-                       HATCH_X4(__VA_ARGS__), HATCH_X4(__VA_ARGS__)
-#define HATCH_X60(...) HATCH_X20(__VA_ARGS__), HATCH_X20(__VA_ARGS__), HATCH_X20(__VA_ARGS__)
+#define HATCH_ACROSS(...) HATCH_X60(__VA_ARGS__)
 #define HATCH_W (60 * UI_TOK_HATCH_PERIOD)
+#endif
+#define HATCH_FOUR_ROWS HATCH_ACROSS(HATCH_ROW0), HATCH_ACROSS(HATCH_ROW1), \
+                        HATCH_ACROSS(HATCH_ROW2), HATCH_ACROSS(HATCH_ROW3)
 
 static const uint8_t s_hatch_buf[HATCH_W * UI_TOK_HATCH_PERIOD] = {
-    /* the stripe steps two pixels right per row, so it is seamless on both axes */
-    HATCH_X60(HATCH_ROW0), HATCH_X60(HATCH_ROW1), HATCH_X60(HATCH_ROW2), HATCH_X60(HATCH_ROW3),
-    HATCH_X60(HATCH_ROW0), HATCH_X60(HATCH_ROW1), HATCH_X60(HATCH_ROW2), HATCH_X60(HATCH_ROW3),
+    /* the stripe steps one stripe width right per row, so it is seamless on
+     * both axes: four rows, repeated down to the period */
+    HATCH_FOUR_ROWS, HATCH_FOUR_ROWS,
+#if defined(MMU_UI_800X480)
+    HATCH_FOUR_ROWS,
+#endif
 };
 
 static const lv_image_dsc_t s_hatch_dsc = {
@@ -193,7 +214,7 @@ lv_obj_t *ui_home_hatch(lv_obj_t *parent, int w, int h)
 
 void ui_home_alert_none(lv_obj_t *slot)
 {
-    ui_home_label(slot, UI_ICON_CHECK, UI_HOME_FONT_ICON, UI_TOK_TEXT_FAINT, 3,
+    ui_home_label(slot, UI_ICON_CHECK, UI_HOME_FONT_ICON, UI_TOK_TEXT_FAINT, UI_PX(3),
                   (UI_HOME_SLOT_H - lv_font_get_line_height(UI_HOME_FONT_ICON)) / 2);
 }
 
@@ -203,8 +224,8 @@ void ui_home_alert_mark(lv_obj_t *slot, int tone, int count)
     lv_color_t c = ui_home_tone_color(tone);
 
     ui_home_label(slot, tone == VIEW_TONE_ERROR ? UI_HOME_ICON_ERROR : UI_HOME_ICON_INFO,
-                  UI_HOME_FONT_SEV, c, 3, 3);
+                  UI_HOME_FONT_SEV, c, UI_PX(3), UI_PX(3));
     snprintf(text, sizeof text, "%d", count > 99 ? 99 : count);
-    ui_home_label(slot, text, UI_HOME_FONT_BODY, c, 24,
+    ui_home_label(slot, text, UI_HOME_FONT_BODY, c, UI_PX(24),
                   (UI_HOME_SLOT_H - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2);
 }

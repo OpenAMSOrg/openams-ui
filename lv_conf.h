@@ -51,6 +51,14 @@
      * keeps it near 67% of the pool, under the walk's 90% failure threshold
      * with about 20 KB to spare. Re-measure before adding heavy screens. */
     #define LV_MEM_SIZE (96 * 1024)
+
+    /* The ES3C50P (ESP32-S3, platform/esp32/main/board.h) has 8 MB of PSRAM,
+     * and its internal RAM holds code as well as data: the pool is taken from
+     * PSRAM at lv_init() instead of being a static array in internal RAM. */
+    #if defined(MMU_BOARD_ES3C50P)
+        #define LV_MEM_POOL_INCLUDE <esp_heap_caps.h>
+        #define LV_MEM_POOL_ALLOC(size) heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)
+    #endif
 #endif
 
 #define LV_USE_OS LV_OS_NONE
@@ -126,8 +134,15 @@
 #define LV_FONT_MONTSERRAT_8 0
 #define LV_FONT_MONTSERRAT_10 0
 #define LV_FONT_MONTSERRAT_18 0
+/* The tag writer at 800x480 (MMU_UI_800X480) draws its 14/16/20/28 px text at
+ * 1.5x: Montserrat 22 (the nearest to 21), 24, 30 and 42. */
+#if defined(MMU_FEATURE_TAG_WRITER) && defined(MMU_UI_800X480)
+#define LV_FONT_MONTSERRAT_22 1
+#define LV_FONT_MONTSERRAT_24 1
+#else
 #define LV_FONT_MONTSERRAT_22 0
 #define LV_FONT_MONTSERRAT_24 0
+#endif
 #define LV_FONT_MONTSERRAT_26 0
 /* The ESP32 image's spool tag writer (MMU_FEATURE_TAG_WRITER, set for every
  * component by platform/esp32/CMakeLists.txt) titles its pages in Montserrat
@@ -138,13 +153,21 @@
 #else
 #define LV_FONT_MONTSERRAT_28 0
 #endif
+#if defined(MMU_FEATURE_TAG_WRITER) && defined(MMU_UI_800X480)
+#define LV_FONT_MONTSERRAT_30 1
+#else
 #define LV_FONT_MONTSERRAT_30 0
+#endif
 #define LV_FONT_MONTSERRAT_32 0
 #define LV_FONT_MONTSERRAT_34 0
 #define LV_FONT_MONTSERRAT_36 0
 #define LV_FONT_MONTSERRAT_38 0
 #define LV_FONT_MONTSERRAT_40 0
+#if defined(MMU_FEATURE_TAG_WRITER) && defined(MMU_UI_800X480)
+#define LV_FONT_MONTSERRAT_42 1
+#else
 #define LV_FONT_MONTSERRAT_42 0
+#endif
 #define LV_FONT_MONTSERRAT_44 0
 #define LV_FONT_MONTSERRAT_46 0
 #define LV_FONT_MONTSERRAT_48 0

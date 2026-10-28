@@ -299,7 +299,7 @@ static void add_note(lv_obj_t *sheet, const char *text, lv_color_t color)
     row = lv_obj_create(body);
     lv_obj_remove_style_all(row);
     lv_obj_set_width(row, LV_PCT(100));
-    lv_obj_set_height(row, 20);
+    lv_obj_set_height(row, UI_PX(20));
     lv_obj_set_scrollable(row, false);
 
     l = lv_label_create(row);
@@ -308,8 +308,8 @@ static void add_note(lv_obj_t *sheet, const char *text, lv_color_t color)
     lv_obj_set_style_text_font(l, UI_FONT_S, 0);
     lv_obj_set_style_text_color(l, color, 0);
     lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_DOTS);
-    lv_obj_set_width(l, 448);
-    lv_obj_set_pos(l, 16, 2);
+    lv_obj_set_width(l, UI_SCREEN_W - 2 * UI_PX(16));
+    lv_obj_set_pos(l, UI_PX(16), UI_PX(2));
     ui_sheet_fit(sheet);
 }
 
@@ -344,7 +344,7 @@ static void add_group_note(lv_obj_t *sheet, int unit, int slot)
     row = lv_obj_create(body);
     lv_obj_remove_style_all(row);
     lv_obj_set_width(row, LV_PCT(100));
-    lv_obj_set_height(row, 20);
+    lv_obj_set_height(row, UI_PX(20));
     lv_obj_set_scrollable(row, false);
 
     l = lv_label_create(row);
@@ -353,8 +353,8 @@ static void add_group_note(lv_obj_t *sheet, int unit, int slot)
     lv_obj_set_style_text_font(l, UI_FONT_S, 0);
     lv_obj_set_style_text_color(l, UI_COL_TEXT_DIM, 0);
     lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_DOTS);
-    lv_obj_set_width(l, 448);
-    lv_obj_set_pos(l, 16, 2);
+    lv_obj_set_width(l, UI_SCREEN_W - 2 * UI_PX(16));
+    lv_obj_set_pos(l, UI_PX(16), UI_PX(2));
 
     ui_sheet_fit(sheet);
 }
@@ -419,7 +419,7 @@ static void open_slot_sheet(int unit, int slot)
     if(sl->remaining_pct >= 0) vs_pct(sl->remaining_pct, pct, sizeof pct);
     else                       pct[0] = '\0';
 
-    sheet = ui_sheet_open(title, 192);
+    sheet = ui_sheet_open(title, UI_PX(192));
     if(!sheet) return;   /* memory is short: no sheet, nothing to fill */
     ui_sheet_header(sheet, swatch, pct[0] ? pct : NULL, sl->info_source == MMU_INFO_TAG);
     /* What the tile's tag says, first: its detail, then the host's code. */
@@ -686,13 +686,13 @@ static lv_obj_t *want_label(lv_obj_t *tile, int *i)
 
 /* The tile's own numbers, from ui_tile.c: they decide where the rows sit, and
  * a tile that changes one of them is a tile the shape below cannot describe. */
-#define TILE_PAD_X   10
-#define TILE_PAD_TOP 6
-#define TILE_PAD_BOT 6
-#define TILE_ROW_GAP 2
-#define TILE_RING_S  52
-#define TILE_BADGE_PAD 6
-#define TILE_TAG_PAD   7
+#define TILE_PAD_X   UI_PX(10)
+#define TILE_PAD_TOP UI_PX(6)
+#define TILE_PAD_BOT UI_PX(6)
+#define TILE_ROW_GAP UI_PX(2)
+#define TILE_RING_S  UI_PX(52)
+#define TILE_BADGE_PAD UI_PX(6)
+#define TILE_TAG_PAD   UI_PX(7)
 #define TILE_CONTENT_W (UI_HOME_TILE_W - 2 * TILE_PAD_X)
 
 /* U+221E, as a byte string so the source stays plain ASCII: the spare badge's
@@ -723,9 +723,9 @@ static void tile_meta_text(const view_tile_t *t, char *buf, size_t n)
 static bool tile_meta_fits(void)
 {
     int y = TILE_PAD_TOP
-            + lv_font_get_line_height(UI_HOME_FONT_LABEL) + 1
+            + lv_font_get_line_height(UI_HOME_FONT_LABEL) + UI_PX(1)
             + lv_font_get_line_height(UI_HOME_FONT_META) + TILE_ROW_GAP;
-    int avail = UI_HOME_TILE_H - TILE_PAD_BOT - TILE_RING_S - 2;
+    int avail = UI_HOME_TILE_H - TILE_PAD_BOT - TILE_RING_S - UI_PX(2);
 
     return y + lv_font_get_line_height(UI_HOME_FONT_META) <= avail;
 }
@@ -872,7 +872,7 @@ static void update_tile(lv_obj_t *tile, const tile_parts_t *p, const view_tile_t
 
         if(chip_label && strcmp(lv_label_get_text(chip_label), text) != 0) {
             int bw = ui_home_text_w(text, UI_HOME_FONT_MONO) + 2 * TILE_BADGE_PAD;
-            int bx = TILE_PAD_X + ui_home_text_w(t->label, UI_HOME_FONT_LABEL) + 6;
+            int bx = TILE_PAD_X + ui_home_text_w(t->label, UI_HOME_FONT_LABEL) + UI_PX(6);
 
             lv_obj_set_size(p->spare, bw, lv_obj_get_style_height(p->spare, LV_PART_MAIN));
             lv_obj_set_pos(p->spare, bx, TILE_PAD_TOP);
@@ -906,7 +906,7 @@ static void update_tile(lv_obj_t *tile, const tile_parts_t *p, const view_tile_t
         if(tag_label && strcmp(lv_label_get_text(tag_label), t->tag ? t->tag : "") != 0) {
             int tw = ui_home_text_w(t->tag ? t->tag : "", UI_HOME_FONT_BODY) + 2 * TILE_TAG_PAD;
 
-            if(tw > TILE_CONTENT_W - 4) tw = TILE_CONTENT_W - 4;
+            if(tw > TILE_CONTENT_W - UI_PX(4)) tw = TILE_CONTENT_W - UI_PX(4);
             lv_obj_set_size(p->tag, tw, lv_obj_get_style_height(p->tag, LV_PART_MAIN));
             lv_obj_set_x(p->tag, (TILE_CONTENT_W - tw) / 2);
             lv_obj_set_width(tag_label, tw);
@@ -1131,21 +1131,21 @@ static void build_link_status(lv_obj_t *scr)
     lv_obj_remove_style_all(col);
     lv_obj_set_clickable(col, false);
     lv_obj_set_scrollable(col, false);
-    lv_obj_set_size(col, UI_HOME_W - 2 * 32, LV_SIZE_CONTENT);
+    lv_obj_set_size(col, UI_HOME_W - 2 * UI_PX(32), LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(col, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(col, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_row(col, 8, 0);
+    lv_obj_set_style_pad_row(col, UI_PX(8), 0);
     lv_obj_center(col);
 
     badge = lv_obj_create(col);
     lv_obj_remove_style_all(badge);
     lv_obj_set_clickable(badge, false);
     lv_obj_set_scrollable(badge, false);
-    lv_obj_set_size(badge, 64, 64);
+    lv_obj_set_size(badge, UI_PX(64), UI_PX(64));
     lv_obj_set_style_radius(badge, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(badge, UI_TOK_SURFACE_1, 0);
     lv_obj_set_style_bg_opa(badge, LV_OPA_COVER, 0);
-    lv_obj_set_style_margin_bottom(badge, 6, 0);
+    lv_obj_set_style_margin_bottom(badge, UI_PX(6), 0);
     icon = ui_home_label(badge, UI_ICON_SYNC, UI_FONT_ICON_L, UI_TOK_TEXT_MUTED, 0, 0);
     lv_obj_center(icon);
 
@@ -1329,7 +1329,7 @@ static bool update(void)
         int slot_x = UI_HOME_INNER_W - UI_HOME_SLOT_W;
 
         ui_update_text_fit(s_live.msg.label, message_text(&th), UI_HOME_FONT_BODY,
-                           slot_x - 4 - (s_live.msg.icon ? 22 : 0));
+                           slot_x - UI_PX(4) - (s_live.msg.icon ? UI_PX(22) : 0));
         ui_update_text_color(s_live.msg.label, ui_home_tone_color(th.message.tone));
     }
     if(th.alert.present) ui_update_alert_mark(s_live.msg.slot, th.alert.tone, th.alert.count);

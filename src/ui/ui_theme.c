@@ -287,8 +287,8 @@ void ui_theme_init(void)
     s = ui_style(UI_STYLE_PANEL_HI);
     style_base(s);
     lv_style_set_bg_color(s, UI_COL_PANEL_HI);
-    lv_style_set_radius(s, UI_RADIUS + 2);
-    lv_style_set_border_width(s, 1);
+    lv_style_set_radius(s, UI_RADIUS + UI_PX(2));
+    lv_style_set_border_width(s, UI_PX(1));
     lv_style_set_border_color(s, UI_COL_LINE);
     lv_style_set_border_opa(s, LV_OPA_60);
 

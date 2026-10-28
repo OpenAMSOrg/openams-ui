@@ -236,18 +236,18 @@ static lv_obj_t *switch_row(lv_obj_t *col, const char *title, const char *note, 
                             lv_event_cb_t cb, void *user)
 {
     lv_obj_t *row = ui_kit_row(col, 0, NULL, NULL);
-    int text_w = UI_HOME_INNER_W - 24 - 40 - 12;
+    int text_w = UI_HOME_INNER_W - UI_PX(24) - UI_PX(40) - UI_PX(12);
     lv_obj_t *t = ui_kit_text(row, title, UI_HOME_FONT_BODY, UI_TOK_TEXT, 0, 0, text_w);
     lv_obj_t *sw;
 
     if(note && note[0]) {
         lv_obj_t *n = ui_kit_text(row, note, UI_HOME_FONT_META, UI_TOK_TEXT_MUTED, 0, 0, text_w);
 
-        lv_obj_align_to(n, t, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 2);
+        lv_obj_align_to(n, t, LV_ALIGN_OUT_BOTTOM_LEFT, 0, UI_PX(2));
     }
     sw = ui_kit_switch(row, 0, 0, on, cb, user);
     lv_obj_align(sw, LV_ALIGN_RIGHT_MID, 0, 0);
-    lv_obj_set_style_min_height(row, 46, 0);
+    lv_obj_set_style_min_height(row, UI_PX(46), 0);
     return row;
 }
 
@@ -272,13 +272,14 @@ static void nav_row(lv_obj_t *col, const char *title, const char *sub, ui_screen
 static lv_obj_t *stepper_row(lv_obj_t *col, const char *title, const char *value,
                              lv_event_cb_t on_minus, lv_event_cb_t on_plus)
 {
-    lv_obj_t *row = ui_kit_row(col, 46, NULL, NULL);
+    lv_obj_t *row = ui_kit_row(col, UI_PX(46), NULL, NULL);
     lv_obj_t *v;
     lv_obj_t *box;
 
     ui_home_label(row, title, UI_HOME_FONT_BODY, UI_TOK_TEXT, 0,
-                  (46 - 24 - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2);
-    v = ui_kit_stepper(row, UI_HOME_INNER_W - 24 - 140, (46 - 24 - 34) / 2, 140, value,
+                  (UI_PX(46) - UI_PX(24) - lv_font_get_line_height(UI_HOME_FONT_BODY)) / 2);
+    v = ui_kit_stepper(row, UI_HOME_INNER_W - UI_PX(24) - UI_PX(140),
+                       (UI_PX(46) - UI_PX(24) - UI_PX(34)) / 2, UI_PX(140), value,
                        on_minus, on_plus);
     (void)box;
     return v;
@@ -288,14 +289,15 @@ static lv_obj_t *stepper_row(lv_obj_t *col, const char *title, const char *value
 static void chip_row(lv_obj_t *col, const char *title, const char *const *labels, int n,
                      lv_obj_t **out, lv_event_cb_t cb)
 {
-    lv_obj_t *row = ui_kit_row(col, 12 + 20 + 6 + 30 + 12, NULL, NULL);
+    lv_obj_t *row = ui_kit_row(col, UI_PX(12) + UI_PX(20) + UI_PX(6) + UI_PX(30) + UI_PX(12),
+                               NULL, NULL);
     int x = 0;
     int i;
 
     ui_home_label(row, title, UI_HOME_FONT_BODY, UI_TOK_TEXT, 0, 0);
     for(i = 0; i < n; i++) {
-        out[i] = ui_kit_chip(row, labels[i], x, 26, 0, false, cb, (void *)(intptr_t)i);
-        x += ui_home_text_w(labels[i], UI_HOME_FONT_BODY) + 24 + 8;
+        out[i] = ui_kit_chip(row, labels[i], x, UI_PX(26), 0, false, cb, (void *)(intptr_t)i);
+        x += ui_home_text_w(labels[i], UI_HOME_FONT_BODY) + UI_PX(24) + UI_PX(8);
     }
 }
 
@@ -342,7 +344,7 @@ static lv_obj_t *build(void)
     (void)ui_kit_header(scr, view_str(VS_LABEL_SETTINGS), true);
     platform_display_get(&s_disp);
 
-    col = ui_kit_column(scr, UI_HOME_HEADER_H + 2, UI_HOME_H - UI_HOME_HEADER_H - 2);
+    col = ui_kit_column(scr, UI_HOME_HEADER_H + UI_PX(2), UI_HOME_H - UI_HOME_HEADER_H - UI_PX(2));
 
     if(panel) view_panel(&g_mmu, panel);
 

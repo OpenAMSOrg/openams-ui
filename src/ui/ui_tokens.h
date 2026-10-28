@@ -12,6 +12,10 @@
 #define UI_TOKENS_H
 
 #include "lvgl.h"
+#include "ui/ui_scale.h"
+
+/* Every length is on the 480x320 grid and goes through UI_PX() (ui_scale.h),
+ * which draws it at the build's resolution. */
 
 /* ------------------------------------------------------------- color */
 
@@ -38,38 +42,38 @@
 
 /* ------------------------------------------------------------ radius */
 
-#define UI_TOK_RADIUS_CARD      22
-#define UI_TOK_RADIUS_SECTION   16
-#define UI_TOK_RADIUS_TILE      14
-#define UI_TOK_RADIUS_TILE_COMPACT 12
-#define UI_TOK_RADIUS_PILL      999
-#define UI_TOK_RADIUS_CHIP      6
+#define UI_TOK_RADIUS_CARD      UI_PX(22)
+#define UI_TOK_RADIUS_SECTION   UI_PX(16)
+#define UI_TOK_RADIUS_TILE      UI_PX(14)
+#define UI_TOK_RADIUS_TILE_COMPACT UI_PX(12)
+#define UI_TOK_RADIUS_PILL      UI_PX(999)
+#define UI_TOK_RADIUS_CHIP      UI_PX(6)
 
 /* ------------------------------------------------------------- space */
 
-#define UI_TOK_SPACE_CARD_GAP   10
+#define UI_TOK_SPACE_CARD_GAP   UI_PX(10)
 
 /* --------------------------------------------- hatch (4c, one disabled look) */
 
-#define UI_TOK_HATCH_PERIOD              8
-#define UI_TOK_HATCH_STRIPE             2
+#define UI_TOK_HATCH_PERIOD              UI_PX(8)
+#define UI_TOK_HATCH_STRIPE             UI_PX(2)
 #define UI_TOK_HATCH_ALPHA              41
 
 /* ------------------------------------------------ type.device sizes */
 
 /* The weight is the face tools/gen_fonts.py already generated: 600 is
  * semibold for Geist, 500 medium, 400 regular. */
-#define UI_TOK_FONT_TITLE       20
+#define UI_TOK_FONT_TITLE       UI_PX(20)
 #define UI_TOK_WEIGHT_TITLE     600
-#define UI_TOK_FONT_SECTION     15
+#define UI_TOK_FONT_SECTION     UI_PX(15)
 #define UI_TOK_WEIGHT_SECTION   600
-#define UI_TOK_FONT_TILE_LABEL  20
+#define UI_TOK_FONT_TILE_LABEL  UI_PX(20)
 #define UI_TOK_WEIGHT_TILE_LABEL 600
-#define UI_TOK_FONT_BODY        13
+#define UI_TOK_FONT_BODY        UI_PX(13)
 #define UI_TOK_WEIGHT_BODY      500
-#define UI_TOK_FONT_META        12
+#define UI_TOK_FONT_META        UI_PX(12)
 #define UI_TOK_WEIGHT_META      400
-#define UI_TOK_FONT_VALUE_MONO  18
+#define UI_TOK_FONT_VALUE_MONO  UI_PX(18)
 #define UI_TOK_WEIGHT_VALUE_MONO 400
 
 #endif /* UI_TOKENS_H */

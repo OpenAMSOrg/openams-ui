@@ -23,29 +23,35 @@
 #include "ui/fonts/ui_fonts.h"
 #include "ui/fonts/ui_fonts_home.h"
 #include "ui/ui_icons.h"
+#include "ui/ui_scale.h"
 
 #include <stdbool.h>
 
 /* ------------------------------------------------------------- geometry */
 
-#define UI_HOME_W            480
-#define UI_HOME_H            320
+/* Lengths are on the 480x320 grid (UI_PX(), ui_scale.h); the numbers in the
+ * comments are that grid's. */
+#define UI_HOME_W            UI_SCREEN_W
+#define UI_HOME_H            UI_SCREEN_H
 
-#define UI_HOME_HEADER_H     44
-#define UI_HOME_HEADER_PAD   12    /* the left and right margin of every band */
+#define UI_HOME_HEADER_H     UI_PX(44)
+#define UI_HOME_HEADER_PAD   UI_PX(12)    /* the left and right margin of every band */
 
-#define UI_HOME_MSG_Y        (UI_HOME_HEADER_H + 2)   /* 46 */
-#define UI_HOME_MSG_H        22
-
-#define UI_HOME_TILES_Y      (UI_HOME_MSG_Y + UI_HOME_MSG_H + 4)   /* 72 */
-#define UI_HOME_TILE_W       108
-#define UI_HOME_TILE_H       150
-#define UI_HOME_TILE_GAP     8
-#define UI_HOME_TILES_H      UI_HOME_TILE_H
+#define UI_HOME_MSG_Y        (UI_HOME_HEADER_H + UI_PX(2))   /* 46 */
+#define UI_HOME_MSG_H        UI_PX(22)
 
 /** Tiles across, and so bays to a page: a unit with more than this many bays
  *  is paged (ui_chevron.c), a unit with this many or fewer never is. */
 #define UI_HOME_TILE_COLS    4
+
+#define UI_HOME_TILES_Y      (UI_HOME_MSG_Y + UI_HOME_MSG_H + UI_PX(4))   /* 72 */
+#define UI_HOME_TILE_GAP     UI_PX(8)
+/* The row fills the width between the margins: 108 on the grid, and the
+ * wider screen's extra width goes to the tiles. */
+#define UI_HOME_TILE_W       ((UI_HOME_W - 2 * UI_HOME_HEADER_PAD \
+                               - (UI_HOME_TILE_COLS - 1) * UI_HOME_TILE_GAP) / UI_HOME_TILE_COLS)
+#define UI_HOME_TILE_H       UI_PX(150)
+#define UI_HOME_TILES_H      UI_HOME_TILE_H
 
 #define UI_HOME_STRIP_Y      (UI_HOME_TILES_Y + UI_HOME_TILES_H)      /* 222 */
 #define UI_HOME_STRIP_H      (UI_HOME_H - UI_HOME_STRIP_Y)            /* 98 */
@@ -61,9 +67,9 @@
  * and clear of the extruder icon itself, which is at the strip's left end.
  * The strip spans the full width from x 0, so x is the same in both spaces
  * and y is the offset from the strip's top. */
-#define UI_HOME_CHEVRON_S    36  /* UI_TOUCH_MIN (ui_theme.h): the touch target floor */
-#define UI_HOME_CHEVRON_GAP  8
-#define UI_HOME_CHEVRON_Y    30  /* ui_toolhead_strip.c's ICON_Y: one line with the extruder */
+#define UI_HOME_CHEVRON_S    UI_PX(36)  /* UI_TOUCH_MIN (ui_theme.h): the touch target floor */
+#define UI_HOME_CHEVRON_GAP  UI_PX(8)
+#define UI_HOME_CHEVRON_Y    UI_PX(30)  /* ui_toolhead_strip.c's ICON_Y: one line with the extruder */
 
 /** The left edge of chevron @p i: 0 for the one that moves a page left,
  *  1 for the one that moves it right. Right-aligned to the tiles' margin. */
@@ -94,8 +100,8 @@
 #define UI_HOME_FONT_CHEVRON (&ui_font_chevron_36)
 
 /* The alert slot: the severity icon and its count, reserved even when empty. */
-#define UI_HOME_SLOT_W       44
-#define UI_HOME_SLOT_H       22
+#define UI_HOME_SLOT_W       UI_PX(44)
+#define UI_HOME_SLOT_H       UI_PX(22)
 
 /* ----------------------------------------------------------------- parts */
 

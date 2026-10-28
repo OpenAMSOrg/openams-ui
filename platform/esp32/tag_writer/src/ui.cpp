@@ -28,6 +28,26 @@
 #include "spool_store.h"
 #include "tag_service.h"
 #include "taglib.h"
+#include "ui/ui_scale.h"
+
+// The display's grid (src/ui/ui_scale.h): every page here is laid out at
+// 480x320 and drawn at the display's resolution, so each length goes through
+// PX(). At 800x480 a page is the grid at 1.5x (720x480), centred on the
+// screen, and the text is LVGL's Montserrat at the nearest built-in size.
+#define PX(v) UI_PX(v)
+#define PAGE_W PX(480)
+#define PAGE_H PX(320)
+#if defined(MMU_UI_800X480)
+#define TW_FONT_14 (&lv_font_montserrat_22)
+#define TW_FONT_16 (&lv_font_montserrat_24)
+#define TW_FONT_20 (&lv_font_montserrat_30)
+#define TW_FONT_28 (&lv_font_montserrat_42)
+#else
+#define TW_FONT_14 (&lv_font_montserrat_14)
+#define TW_FONT_16 (&lv_font_montserrat_16)
+#define TW_FONT_20 (&lv_font_montserrat_20)
+#define TW_FONT_28 (&lv_font_montserrat_28)
+#endif
 
 namespace ui {
 
@@ -54,8 +74,12 @@ static const uint32_t PALETTE[24] = {
     0x0A2989, 0x5E43B7, 0xF55A74, 0xEC008C, 0x9D2235, 0x847D48, 0xA6A9AA, 0x68724D,
 };
 
-// Onboard RGB LED, active low.
+// Onboard RGB LED, active low. The ES3C50P has none (its GPIO16 is a panel
+// data line and GPIO17 the reader's), so there the LED calls do nothing.
+#if !defined(MMU_BOARD_ES3C50P)
+#define TW_HAS_LED 1
 static const gpio_num_t LED_R = GPIO_NUM_22, LED_G = GPIO_NUM_16, LED_B = GPIO_NUM_17;
+#endif
 
 // ------------------------------------------------------------- state
 
@@ -115,20 +139,26 @@ static bool is_light(uint32_t rgba) {
 }
 
 static void led(bool r, bool g, bool b, uint32_t ms) {
+#if defined(TW_HAS_LED)
     gpio_set_level(LED_R, !r);
     gpio_set_level(LED_G, !g);
     gpio_set_level(LED_B, !b);
+#else
+    (void)r;
+    (void)g;
+    (void)b;
+#endif
     led_off_at = ms ? esp_timer_get_time() + (int64_t)ms * 1000 : 0;
 }
 
 static lv_obj_t *box(lv_obj_t *parent, int x, int y, int w, int h, uint32_t color, int radius) {
     lv_obj_t *o = lv_obj_create(parent);
     lv_obj_remove_style_all(o);
-    lv_obj_set_pos(o, x, y);
-    lv_obj_set_size(o, w, h);
+    lv_obj_set_pos(o, PX(x), PX(y));
+    lv_obj_set_size(o, PX(w), PX(h));
     lv_obj_set_style_bg_color(o, hex(color), 0);
     lv_obj_set_style_bg_opa(o, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(o, radius, 0);
+    lv_obj_set_style_radius(o, PX(radius), 0);
     lv_obj_set_scrollable(o, false);
     return o;
 }
@@ -144,12 +174,12 @@ static lv_obj_t *text(lv_obj_t *parent, const lv_font_t *font, uint32_t color, c
 static lv_obj_t *button(lv_obj_t *parent, int x, int y, int w, int h, const char *label,
                         uint32_t color, lv_event_cb_t cb, void *user = nullptr) {
     lv_obj_t *b = lv_button_create(parent);
-    lv_obj_set_pos(b, x, y);
-    lv_obj_set_size(b, w, h);
+    lv_obj_set_pos(b, PX(x), PX(y));
+    lv_obj_set_size(b, PX(w), PX(h));
     lv_obj_set_style_bg_color(b, hex(color), 0);
-    lv_obj_set_style_radius(b, 10, 0);
+    lv_obj_set_style_radius(b, PX(10), 0);
     lv_obj_set_style_shadow_width(b, 0, 0);
-    lv_obj_t *l = text(b, &lv_font_montserrat_16, C_TEXT, label);
+    lv_obj_t *l = text(b, TW_FONT_16, C_TEXT, label);
     lv_obj_center(l);
     if (cb)
         lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, user);
@@ -167,11 +197,11 @@ static void set_swatch(lv_obj_t *sw, lv_obj_t *hex_label, uint32_t rgba) {
 static lv_obj_t *swatch(lv_obj_t *parent, int x, int y, int size, uint32_t rgba,
                         lv_obj_t **hex_label) {
     lv_obj_t *sw = box(parent, x, y, size, size, rgba >> 8, 12);
-    lv_obj_set_style_border_width(sw, 2, 0);
+    lv_obj_set_style_border_width(sw, PX(2), 0);
     lv_obj_set_style_border_color(sw, hex(C_BORDER), 0);
     if (hex_label) {
-        *hex_label = text(sw, &lv_font_montserrat_14, 0xFFFFFF, "");
-        lv_obj_align(*hex_label, LV_ALIGN_BOTTOM_MID, 0, -8);
+        *hex_label = text(sw, TW_FONT_14, 0xFFFFFF, "");
+        lv_obj_align(*hex_label, LV_ALIGN_BOTTOM_MID, 0, PX(-8));
     }
     set_swatch(sw, hex_label ? *hex_label : nullptr, rgba);
     return sw;
@@ -184,8 +214,10 @@ static lv_obj_t *new_screen() {
     lv_obj_clean(root);
     lv_obj_t *s = lv_obj_create(root);
     lv_obj_remove_style_all(s);
-    lv_obj_set_pos(s, 0, 0);
-    lv_obj_set_size(s, 480, 320);
+    // Centred: a wider screen than the grid at its scale shows the root's
+    // background (the page's colour, set in open()) either side.
+    lv_obj_set_pos(s, (UI_SCREEN_W - PAGE_W) / 2, (UI_SCREEN_H - PAGE_H) / 2);
+    lv_obj_set_size(s, PAGE_W, PAGE_H);
     lv_obj_set_style_bg_color(s, hex(C_BG), 0);
     lv_obj_set_style_bg_opa(s, LV_OPA_COVER, 0);
     lv_obj_set_scrollable(s, false);
@@ -194,8 +226,8 @@ static lv_obj_t *new_screen() {
 
 static lv_obj_t *header(lv_obj_t *scr, const char *title) {
     lv_obj_t *bar = box(scr, 0, 0, 480, 48, C_PANEL, 0);
-    lv_obj_t *l = text(bar, &lv_font_montserrat_20, C_TEXT, title);
-    lv_obj_align(l, LV_ALIGN_LEFT_MID, 16, 0);
+    lv_obj_t *l = text(bar, TW_FONT_20, C_TEXT, title);
+    lv_obj_align(l, LV_ALIGN_LEFT_MID, PX(16), 0);
     return bar;
 }
 
@@ -210,13 +242,13 @@ static void spool_text(lv_obj_t *parent, int x, const char *detail, const char *
                        uint16_t nozzle_min, uint16_t nozzle_max, uint16_t bed, uint16_t dry_c,
                        uint16_t dry_h, const char *code) {
     if (!w_title) {
-        w_title = text(parent, &lv_font_montserrat_28, C_TEXT, "");
-        lv_obj_set_pos(w_title, x, 12);
-        lv_obj_set_width(w_title, 456 - x - 12);
+        w_title = text(parent, TW_FONT_28, C_TEXT, "");
+        lv_obj_set_pos(w_title, PX(x), PX(12));
+        lv_obj_set_width(w_title, PX(456 - x - 12));
         lv_label_set_long_mode(w_title, LV_LABEL_LONG_MODE_DOTS);
         for (int i = 0; i < 3; i++) {
-            w_line[i] = text(parent, &lv_font_montserrat_16, C_MUTED, "");
-            lv_obj_set_pos(w_line[i], x, 56 + i * 28);
+            w_line[i] = text(parent, TW_FONT_16, C_MUTED, "");
+            lv_obj_set_pos(w_line[i], PX(x), PX(56 + i * 28));
         }
     }
     lv_label_set_text(w_title, detail[0] ? detail : "(no name)");
@@ -322,11 +354,11 @@ static void build_home() {
     home_try_uid[0] = 0;
     home_decoding = false;
     lv_obj_t *bar = header(scr, "Spool Tag Writer");
-    lv_obj_align(lv_obj_get_child(bar, 0), LV_ALIGN_LEFT_MID, 58, 0);
+    lv_obj_align(lv_obj_get_child(bar, 0), LV_ALIGN_LEFT_MID, PX(58), 0);
     button(bar, 6, 6, 44, 36, LV_SYMBOL_LEFT, C_BUTTON, on_home_button, (void *)7);
     w_status_dot = box(bar, 316, 19, 10, 10, C_MUTED, LV_RADIUS_CIRCLE);
-    w_status_label = text(bar, &lv_font_montserrat_16, C_MUTED, "");
-    lv_obj_set_pos(w_status_label, 332, 14);
+    w_status_label = text(bar, TW_FONT_16, C_MUTED, "");
+    lv_obj_set_pos(w_status_label, PX(332), PX(14));
     button(bar, 424, 6, 48, 36, LV_SYMBOL_SETTINGS, C_BUTTON, on_home_button, (void *)6);
 
     lv_obj_t *card = box(scr, 12, 56, 456, 150, C_PANEL, 12);
@@ -339,9 +371,9 @@ static void build_home() {
 
     lv_obj_t *tag_bar = box(scr, 12, 214, 456, 40, C_PANEL2, 10);
     w_tag_dot = box(tag_bar, 14, 15, 10, 10, C_MUTED, LV_RADIUS_CIRCLE);
-    w_tag_label = text(tag_bar, &lv_font_montserrat_16, C_MUTED, "");
-    lv_obj_set_pos(w_tag_label, 34, 10);
-    lv_obj_set_width(w_tag_label, 410);
+    w_tag_label = text(tag_bar, TW_FONT_16, C_MUTED, "");
+    lv_obj_set_pos(w_tag_label, PX(34), PX(10));
+    lv_obj_set_width(w_tag_label, PX(410));
     lv_label_set_long_mode(w_tag_label, LV_LABEL_LONG_MODE_DOTS);
 
     // Six actions: edit the spool (Material/Color/Details), then the tag
@@ -351,7 +383,7 @@ static void build_home() {
         uint32_t color = i == 4 ? C_ACCENT : (i == 5 ? 0x2C5AA0 : C_BUTTON);
         lv_obj_t *b = button(scr, 10 + i * 77, 262, 73, 50, labels[i], color, on_home_button,
                              (void *)(intptr_t)i);
-        lv_obj_set_style_text_font(lv_obj_get_child(b, 0), &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_font(lv_obj_get_child(b, 0), TW_FONT_14, 0);
     }
 
     show(scr, HOME);
@@ -388,7 +420,7 @@ static void build_material() {
         lv_obj_t *b = button(scr, x, y, 108, 56, "", i == selected ? C_PANEL2 : C_BUTTON,
                              on_material, (void *)(intptr_t)i);
         if (i == selected) {
-            lv_obj_set_style_border_width(b, 2, 0);
+            lv_obj_set_style_border_width(b, PX(2), 0);
             lv_obj_set_style_border_color(b, hex(C_ACCENT), 0);
         }
         lv_obj_t *placeholder = lv_obj_get_child(b, 0);
@@ -399,11 +431,11 @@ static void build_material() {
             variant += type_length;
         while (*variant == ' ')
             variant++;
-        lv_obj_set_style_pad_all(b, 4, 0);
-        lv_obj_t *t = text(b, &lv_font_montserrat_20, C_TEXT, p.type);
+        lv_obj_set_style_pad_all(b, PX(4), 0);
+        lv_obj_t *t = text(b, TW_FONT_20, C_TEXT, p.type);
         if (*variant) {
-            lv_obj_align(t, LV_ALIGN_TOP_MID, 0, 1);
-            lv_obj_t *v = text(b, &lv_font_montserrat_14, C_MUTED, variant);
+            lv_obj_align(t, LV_ALIGN_TOP_MID, 0, PX(1));
+            lv_obj_t *v = text(b, TW_FONT_14, C_MUTED, variant);
             lv_obj_align(v, LV_ALIGN_BOTTOM_MID, 0, 0);
         } else {
             lv_obj_center(t);
@@ -456,32 +488,32 @@ static void build_color() {
     lv_obj_t *scr = new_screen();
     lv_obj_t *bar = header(scr, "Color");
     w_preview = box(bar, 96, 8, 56, 32, 0, 8);
-    lv_obj_set_style_border_width(w_preview, 2, 0);
+    lv_obj_set_style_border_width(w_preview, PX(2), 0);
     lv_obj_set_style_border_color(w_preview, hex(C_BORDER), 0);
-    w_preview_hex = text(bar, &lv_font_montserrat_16, C_MUTED, "");
-    lv_obj_set_pos(w_preview_hex, 164, 14);
+    w_preview_hex = text(bar, TW_FONT_16, C_MUTED, "");
+    lv_obj_set_pos(w_preview_hex, PX(164), PX(14));
     button(bar, 284, 6, 88, 36, "Cancel", C_BUTTON, on_color_done, (void *)0);
     button(bar, 380, 6, 92, 36, "Done", C_ACCENT, on_color_done, (void *)1);
 
     for (int i = 0; i < 24; i++) {
         lv_obj_t *b = lv_button_create(scr);
-        lv_obj_set_pos(b, 12 + (i % 8) * 58, 58 + (i / 8) * 48);
-        lv_obj_set_size(b, 50, 40);
+        lv_obj_set_pos(b, PX(12 + (i % 8) * 58), PX(58 + (i / 8) * 48));
+        lv_obj_set_size(b, PX(50), PX(40));
         lv_obj_set_style_bg_color(b, hex(PALETTE[i]), 0);
-        lv_obj_set_style_radius(b, 8, 0);
+        lv_obj_set_style_radius(b, PX(8), 0);
         lv_obj_set_style_shadow_width(b, 0, 0);
-        lv_obj_set_style_border_width(b, 1, 0);
+        lv_obj_set_style_border_width(b, PX(1), 0);
         lv_obj_set_style_border_color(b, hex(C_BORDER), 0);
         lv_obj_add_event_cb(b, on_palette, LV_EVENT_CLICKED, (void *)(intptr_t)i);
     }
     static const char *names[3] = {"R", "G", "B"};
     for (int c = 0; c < 3; c++) {
         int y = 216 + c * 34;
-        lv_obj_t *name = text(scr, &lv_font_montserrat_16, C_MUTED, names[c]);
-        lv_obj_set_pos(name, 16, y + 4);
+        lv_obj_t *name = text(scr, TW_FONT_16, C_MUTED, names[c]);
+        lv_obj_set_pos(name, PX(16), PX(y + 4));
         w_slider[c] = lv_slider_create(scr);
-        lv_obj_set_pos(w_slider[c], 48, y + 6);
-        lv_obj_set_size(w_slider[c], 352, 14);
+        lv_obj_set_pos(w_slider[c], PX(48), PX(y + 6));
+        lv_obj_set_size(w_slider[c], PX(352), PX(14));
         lv_slider_set_range(w_slider[c], 0, 255);
         lv_obj_set_style_bg_color(w_slider[c], hex(C_PANEL2), LV_PART_MAIN);
         lv_obj_set_style_bg_opa(w_slider[c], LV_OPA_COVER, LV_PART_MAIN);
@@ -489,8 +521,8 @@ static void build_color() {
         lv_obj_set_style_bg_color(w_slider[c], hex(CHANNEL_COLORS[c]), LV_PART_KNOB);
         lv_obj_set_ext_click_area(w_slider[c], 10);
         lv_obj_add_event_cb(w_slider[c], on_slider, LV_EVENT_VALUE_CHANGED, (void *)(intptr_t)c);
-        w_slider_value[c] = text(scr, &lv_font_montserrat_16, C_TEXT, "");
-        lv_obj_set_pos(w_slider_value[c], 420, y + 4);
+        w_slider_value[c] = text(scr, TW_FONT_16, C_TEXT, "");
+        lv_obj_set_pos(w_slider_value[c], PX(420), PX(y + 4));
     }
     show(scr, COLOR);
     refresh_color(true);
@@ -584,10 +616,10 @@ static void build_details() {
     for (int f = 0; f < F_COUNT; f++) {
         int x = 12 + (f / 4) * 232, y = 56 + (f % 4) * 64;
         lv_obj_t *cell = box(scr, x, y, 224, 56, C_PANEL, 10);
-        lv_obj_t *name = text(cell, &lv_font_montserrat_14, C_MUTED, FIELD_NAMES[f]);
-        lv_obj_set_pos(name, 12, 6);
-        w_field_value[f] = text(cell, &lv_font_montserrat_20, C_TEXT, "");
-        lv_obj_set_pos(w_field_value[f], 12, 26);
+        lv_obj_t *name = text(cell, TW_FONT_14, C_MUTED, FIELD_NAMES[f]);
+        lv_obj_set_pos(name, PX(12), PX(6));
+        w_field_value[f] = text(cell, TW_FONT_20, C_TEXT, "");
+        lv_obj_set_pos(w_field_value[f], PX(12), PX(26));
         for (int dir = 0; dir < 2; dir++) {
             lv_obj_t *b = button(cell, dir ? 172 : 120, 6, 44, 44, dir ? LV_SYMBOL_PLUS
                                                                       : LV_SYMBOL_MINUS,
@@ -797,18 +829,18 @@ static void build_job() {
 
     w_spinner = lv_spinner_create(scr);
     lv_spinner_set_anim_params(w_spinner, 1200, 240);
-    lv_obj_set_size(w_spinner, 72, 72);
-    lv_obj_align(w_spinner, LV_ALIGN_TOP_MID, 0, 64);
+    lv_obj_set_size(w_spinner, PX(72), PX(72));
+    lv_obj_align(w_spinner, LV_ALIGN_TOP_MID, 0, PX(64));
     lv_obj_set_style_arc_color(w_spinner, hex(C_ACCENT), LV_PART_INDICATOR);
     lv_obj_set_style_arc_color(w_spinner, hex(C_PANEL2), 0);
 
-    w_message = text(scr, &lv_font_montserrat_20, C_TEXT, "Hold a tag on the reader");
-    lv_obj_align(w_message, LV_ALIGN_TOP_MID, 0, 150);
+    w_message = text(scr, TW_FONT_20, C_TEXT, "Hold a tag on the reader");
+    lv_obj_align(w_message, LV_ALIGN_TOP_MID, 0, PX(150));
 
     bambu::Spool s;
     spool::get(s);
-    w_sub = text(scr, &lv_font_montserrat_16, C_MUTED, "");
-    lv_obj_align(w_sub, LV_ALIGN_TOP_MID, 0, 184);
+    w_sub = text(scr, TW_FONT_16, C_MUTED, "");
+    lv_obj_align(w_sub, LV_ALIGN_TOP_MID, 0, PX(184));
     if (job_op == tagsvc::OP_WRITE)
         lv_label_set_text_fmt(w_sub, "%s" BULLET "#%06lX" BULLET "%u g", s.detail,
                               (unsigned long)(s.rgba >> 8), s.weight_g);
@@ -827,24 +859,24 @@ static void build_job() {
         lv_label_set_text(w_message, "Place a blank magic tag");
 
     w_bar = lv_bar_create(scr);
-    lv_obj_set_size(w_bar, 360, 18);
-    lv_obj_align(w_bar, LV_ALIGN_TOP_MID, 0, 100);
+    lv_obj_set_size(w_bar, PX(360), PX(18));
+    lv_obj_align(w_bar, LV_ALIGN_TOP_MID, 0, PX(100));
     lv_obj_set_style_bg_color(w_bar, hex(C_PANEL2), 0);
     lv_obj_set_style_bg_color(w_bar, hex(C_ACCENT), LV_PART_INDICATOR);
     lv_obj_set_hidden(w_bar, true);
-    w_progress = text(scr, &lv_font_montserrat_16, C_MUTED, "");
-    lv_obj_align(w_progress, LV_ALIGN_TOP_MID, 0, 186);
+    w_progress = text(scr, TW_FONT_16, C_MUTED, "");
+    lv_obj_align(w_progress, LV_ALIGN_TOP_MID, 0, PX(186));
     lv_obj_set_hidden(w_progress, true);
 
     w_icon = box(scr, 204, 62, 72, 72, C_ACCENT, LV_RADIUS_CIRCLE);
-    w_icon_label = text(w_icon, &lv_font_montserrat_28, C_TEXT, LV_SYMBOL_OK);
+    w_icon_label = text(w_icon, TW_FONT_28, C_TEXT, LV_SYMBOL_OK);
     lv_obj_center(w_icon_label);
     lv_obj_set_hidden(w_icon, true);
-    w_result_title = text(scr, &lv_font_montserrat_28, C_TEXT, "");
-    lv_obj_align(w_result_title, LV_ALIGN_TOP_MID, 0, 146);
+    w_result_title = text(scr, TW_FONT_28, C_TEXT, "");
+    lv_obj_align(w_result_title, LV_ALIGN_TOP_MID, 0, PX(146));
     lv_obj_set_hidden(w_result_title, true);
-    w_result_detail = text(scr, &lv_font_montserrat_16, C_MUTED, "");
-    lv_obj_align(w_result_detail, LV_ALIGN_TOP_MID, 0, 190);
+    w_result_detail = text(scr, TW_FONT_16, C_MUTED, "");
+    lv_obj_align(w_result_detail, LV_ALIGN_TOP_MID, 0, PX(190));
     lv_obj_set_hidden(w_result_detail, true);
 
     w_cancel = button(scr, 160, 252, 160, 52, "Cancel", C_BUTTON, on_job_button, (void *)0);
@@ -975,9 +1007,9 @@ static void build_tag_view() {
     }
     // Header badge: the format when recognized, else the tag type.
     const std::string &badge = vm.recognized ? vm.format : vm.tag_type;
-    lv_obj_t *b = text(bar, &lv_font_montserrat_16,
+    lv_obj_t *b = text(bar, TW_FONT_16,
                        vm.recognized ? C_ACCENT : C_MUTED, badge.c_str());
-    lv_obj_align(b, LV_ALIGN_RIGHT_MID, -16, 0);
+    lv_obj_align(b, LV_ALIGN_RIGHT_MID, PX(-16), 0);
 
     lv_obj_t *card = box(scr, 12, 56, 456, 112, C_PANEL, 12);
     int tx = 16;
@@ -986,20 +1018,20 @@ static void build_tag_view() {
         swatch(card, 12, 12, 84, vm.color_rgba, &hex_label);
         tx = 112;
     }
-    lv_obj_t *t = text(card, &lv_font_montserrat_20, C_TEXT, vm.title.c_str());
-    lv_obj_set_pos(t, tx, 12);
-    lv_obj_set_width(t, 456 - tx - 12);
+    lv_obj_t *t = text(card, TW_FONT_20, C_TEXT, vm.title.c_str());
+    lv_obj_set_pos(t, PX(tx), PX(12));
+    lv_obj_set_width(t, PX(456 - tx - 12));
     lv_label_set_long_mode(t, LV_LABEL_LONG_MODE_DOTS);
     if (!vm.subtitle.empty()) {
-        lv_obj_t *st = text(card, &lv_font_montserrat_16, C_MUTED, vm.subtitle.c_str());
-        lv_obj_set_pos(st, tx, 44);
-        lv_obj_set_width(st, 456 - tx - 12);
+        lv_obj_t *st = text(card, TW_FONT_16, C_MUTED, vm.subtitle.c_str());
+        lv_obj_set_pos(st, PX(tx), PX(44));
+        lv_obj_set_width(st, PX(456 - tx - 12));
         lv_label_set_long_mode(st, LV_LABEL_LONG_MODE_DOTS);
     }
     if (!vm.status.empty()) {
-        lv_obj_t *ss = text(card, &lv_font_montserrat_14,
+        lv_obj_t *ss = text(card, TW_FONT_14,
                             vm.writable ? C_ACCENT : C_MUTED, vm.status.c_str());
-        lv_obj_set_pos(ss, tx, 76);
+        lv_obj_set_pos(ss, PX(tx), PX(76));
     }
 
     // Detail rows (as many as fit above the buttons).
@@ -1008,11 +1040,11 @@ static void build_tag_view() {
     for (const fview::Row &r : vm.rows) {
         if (shown >= 5)
             break;
-        lv_obj_t *lab = text(scr, &lv_font_montserrat_14, C_MUTED, r.label.c_str());
-        lv_obj_set_pos(lab, 16, y);
-        lv_obj_t *val = text(scr, &lv_font_montserrat_14, C_TEXT, r.value.c_str());
-        lv_obj_set_pos(val, 210, y);
-        lv_obj_set_width(val, 258);
+        lv_obj_t *lab = text(scr, TW_FONT_14, C_MUTED, r.label.c_str());
+        lv_obj_set_pos(lab, PX(16), PX(y));
+        lv_obj_t *val = text(scr, TW_FONT_14, C_TEXT, r.value.c_str());
+        lv_obj_set_pos(val, PX(210), PX(y));
+        lv_obj_set_width(val, PX(258));
         lv_label_set_long_mode(val, LV_LABEL_LONG_MODE_DOTS);
         y += 15;
         shown++;
@@ -1058,21 +1090,21 @@ static void build_library() {
     if (!lib)
         lib = new (std::nothrow) Library();
     if (!lib) {
-        lv_obj_t *l = text(scr, &lv_font_montserrat_20, C_MUTED, "Not enough memory");
+        lv_obj_t *l = text(scr, TW_FONT_20, C_MUTED, "Not enough memory");
         lv_obj_align(l, LV_ALIGN_CENTER, 0, 0);
         show(scr, LIBRARY);
         return;
     }
     lib->material_n = taglib::list_materials(lib->materials, 16);
     if (lib->material_n == 0) {
-        lv_obj_t *l = text(scr, &lv_font_montserrat_20, C_MUTED,
+        lv_obj_t *l = text(scr, TW_FONT_20, C_MUTED,
                            "Library empty");
-        lv_obj_align(l, LV_ALIGN_CENTER, 0, -20);
-        lv_obj_t *h = text(scr, &lv_font_montserrat_14, C_MUTED,
+        lv_obj_align(l, LV_ALIGN_CENTER, 0, PX(-20));
+        lv_obj_t *h = text(scr, TW_FONT_14, C_MUTED,
                            "Upload genuine tags from a PC:\n"
                            "tools/tagtool.py libupload --lib <dir> <query>");
         lv_obj_set_style_text_align(h, LV_TEXT_ALIGN_CENTER, 0);
-        lv_obj_align(h, LV_ALIGN_CENTER, 0, 30);
+        lv_obj_align(h, LV_ALIGN_CENTER, 0, PX(30));
         show(scr, LIBRARY);
         return;
     }
@@ -1080,9 +1112,9 @@ static void build_library() {
         int x = 12 + (i % 4) * 116, y = 56 + (i / 4) * 64;
         lv_obj_t *b = button(scr, x, y, 108, 56, "", C_BUTTON, on_lib_material,
                              (void *)(intptr_t)i);
-        lv_obj_set_style_pad_all(b, 4, 0);
+        lv_obj_set_style_pad_all(b, PX(4), 0);
         lv_label_set_text(lv_obj_get_child(b, 0), lib->materials[i]);
-        lv_obj_set_width(lv_obj_get_child(b, 0), 100);
+        lv_obj_set_width(lv_obj_get_child(b, 0), PX(100));
         lv_obj_set_style_text_align(lv_obj_get_child(b, 0), LV_TEXT_ALIGN_CENTER, 0);
     }
     show(scr, LIBRARY);
@@ -1113,27 +1145,27 @@ static void build_library_colors() {
     lib->color_n = taglib::list_colors(lib->material, lib->colors, lib->counts, 64);
 
     lv_obj_t *list = lv_obj_create(scr);
-    lv_obj_set_pos(list, 0, 48);
-    lv_obj_set_size(list, 480, 272);
+    lv_obj_set_pos(list, 0, PX(48));
+    lv_obj_set_size(list, PX(480), PX(272));
     lv_obj_set_style_bg_color(list, hex(C_BG), 0);
     lv_obj_set_style_border_width(list, 0, 0);
-    lv_obj_set_style_pad_all(list, 10, 0);
-    lv_obj_set_style_pad_row(list, 8, 0);
+    lv_obj_set_style_pad_all(list, PX(10), 0);
+    lv_obj_set_style_pad_row(list, PX(8), 0);
     lv_obj_set_flex_flow(list, LV_FLEX_FLOW_COLUMN);
     for (int i = 0; i < lib->color_n; i++) {
         lv_obj_t *b = lv_button_create(list);
         lv_obj_set_width(b, lv_pct(100));
-        lv_obj_set_height(b, 46);
+        lv_obj_set_height(b, PX(46));
         lv_obj_set_style_bg_color(b, hex(C_BUTTON), 0);
-        lv_obj_set_style_radius(b, 10, 0);
+        lv_obj_set_style_radius(b, PX(10), 0);
         lv_obj_set_style_shadow_width(b, 0, 0);
         lv_obj_add_event_cb(b, on_lib_color, LV_EVENT_CLICKED, (void *)(intptr_t)i);
-        lv_obj_t *name = text(b, &lv_font_montserrat_16, C_TEXT, lib->colors[i]);
-        lv_obj_align(name, LV_ALIGN_LEFT_MID, 8, 0);
+        lv_obj_t *name = text(b, TW_FONT_16, C_TEXT, lib->colors[i]);
+        lv_obj_align(name, LV_ALIGN_LEFT_MID, PX(8), 0);
         if (lib->counts[i] > 1) {
-            lv_obj_t *n = text(b, &lv_font_montserrat_14, C_MUTED, "");
+            lv_obj_t *n = text(b, TW_FONT_14, C_MUTED, "");
             lv_label_set_text_fmt(n, "%u tags", lib->counts[i]);
-            lv_obj_align(n, LV_ALIGN_RIGHT_MID, -12, 0);
+            lv_obj_align(n, LV_ALIGN_RIGHT_MID, PX(-12), 0);
         }
     }
     show(scr, LIBRARY_COLORS);
@@ -1159,13 +1191,13 @@ static void build_library_confirm() {
     button(bar, 384, 6, 88, 36, "Back", C_BUTTON, on_lib_confirm, (void *)0);
 
     lv_obj_t *panel = box(scr, 12, 64, 456, 96, C_PANEL, 12);
-    lv_obj_t *what = text(panel, &lv_font_montserrat_20, C_TEXT, "");
-    lv_obj_set_pos(what, 16, 14);
+    lv_obj_t *what = text(panel, TW_FONT_20, C_TEXT, "");
+    lv_obj_set_pos(what, PX(16), PX(14));
     lv_label_set_text_fmt(what, "%s" BULLET "%s", lib->material, lib->colors[lib_pending_color]);
-    lv_obj_t *note = text(panel, &lv_font_montserrat_16, C_MUTED,
+    lv_obj_t *note = text(panel, TW_FONT_16, C_MUTED,
                           "Place a blank magic tag, then tap Write.\n"
                           "The tag is locked after writing (write-once).");
-    lv_obj_set_pos(note, 16, 46);
+    lv_obj_set_pos(note, PX(16), PX(46));
 
     button(scr, 12, 176, 456, 56, LV_SYMBOL_COPY "  Write to tag", C_ACCENT, on_lib_confirm,
            (void *)1);
@@ -1220,8 +1252,8 @@ static void build_settings() {
     tagsvc::Snapshot snap;
     tagsvc::snapshot(snap);
     lv_obj_t *panel = box(scr, 12, 56, 456, 88, C_PANEL, 12);
-    lv_obj_t *info = text(panel, &lv_font_montserrat_16, C_MUTED, "");
-    lv_obj_set_pos(info, 14, 10);
+    lv_obj_t *info = text(panel, TW_FONT_16, C_MUTED, "");
+    lv_obj_set_pos(info, PX(14), PX(10));
     lv_label_set_text_fmt(info,
                           "Reader: " TW_READER_NAME ", version 0x%02X%s\n"
                           "Bambu master key: %s\n"
@@ -1361,16 +1393,19 @@ static void on_root_deleted(lv_event_t *e) {
 
 void open(lv_obj_t *scr, void (*on_exit)(void)) {
     root = scr;
+    lv_obj_set_style_bg_color(root, hex(C_BG), 0);  // the margins beside a centred page
     exit_cb = on_exit;
     exit_wanted = false;
     current = pending = NONE;
     pending_job = tagsvc::OP_NONE;
     clone_stage = CL_OFF;
 
+#if defined(TW_HAS_LED)
     gpio_config_t leds = {};
     leds.pin_bit_mask = (1ULL << LED_R) | (1ULL << LED_G) | (1ULL << LED_B);
     leds.mode = GPIO_MODE_OUTPUT;
     gpio_config(&leds);
+#endif
     led(false, false, false, 0);
 
     tagsvc::acquire();

@@ -44,6 +44,23 @@ jobs:
             | tee smoke.log
           grep -q 'AUDIT TOTAL issues=0' smoke.log
 
+      # The same UI at 800x480, the 5 inch board's resolution: the 480x320 grid
+      # drawn at 1.5x (docs/VISUAL_SPEC_800.md). Only the screens depend on it.
+      - name: Build at 800x480
+        run: |
+          cmake -S . -B build-800 -DCMAKE_BUILD_TYPE=Release -DMMU_UI_RESOLUTION=800x480
+          cmake --build build-800 -j --target openams-ui-sim test_screen_edit test_screen_update
+
+      - name: Smoke + layout audit at 800x480
+        run: |
+          set -o pipefail
+          SDL_VIDEODRIVER=dummy ./build-800/openams-ui-sim --smoke --audit 2>&1 \
+            | tee smoke-800.log
+          grep -q 'AUDIT TOTAL issues=0' smoke-800.log
+
+      - name: Screen tests at 800x480
+        run: ctest --test-dir build-800 --output-on-failure -R '^screen_'
+
       - name: Cache pip (aiohttp)
         uses: actions/cache@v4
         with:
@@ -141,6 +158,11 @@ jobs:
             variant: display-only
             cmake_args: "-DMMU_SPOOL_TAG_WRITER=OFF"
             partitions: partitions.csv
+          # The 5 inch ESP32-S3 board: its own chip, settings and 800x480 UI.
+          - languages: latin
+            variant: es3c50p
+            cmake_args: "-DMMU_BOARD=es3c50p"
+            partitions: partitions_es3c50p.csv
 
     name: esp32 (${{ matrix.languages }}, ${{ matrix.variant }})
     steps:

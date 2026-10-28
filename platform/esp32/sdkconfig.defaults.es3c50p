@@ -1,0 +1,47 @@
+# Added on top of sdkconfig.defaults for the ES3C50P board (MMU_BOARD=es3c50p,
+# main/board.h): LCDWiki / Hosyond 5.0" ESP32-S3-N16R8, 800x480 RGB panel.
+# Generated into sdkconfig.es3c50p.
+
+CONFIG_IDF_TARGET="esp32s3"
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+
+# --- Flash: 16 MB, quad I/O at 80 MHz ---
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+
+# Two OTA slots and the tag library (partitions_es3c50p.csv): 16 MB holds both.
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions_es3c50p.csv"
+
+# --- 8 MB octal PSRAM: the panel's frame buffer, and large heap blocks ---
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_USE_MALLOC=y
+# Allocations up to this size stay in internal RAM (fast, DMA-capable); larger
+# ones go to PSRAM. Wi-Fi and lwIP buffers stay internal.
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=4096
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=65536
+# Code and read-only data run from PSRAM, not flash: the RGB panel keeps
+# scanning out while flash is written (NVS, OTA, the tag library) instead of
+# losing sync for the length of the write.
+CONFIG_SPIRAM_XIP_FROM_PSRAM=y
+
+# Faster PSRAM reads for the frame buffer copy.
+CONFIG_ESP32S3_DATA_CACHE_64KB=y
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
+
+# --- RGB panel ---
+# The bounce-buffer refill runs in the GDMA interrupt; keep it working while
+# the cache is off, and resync the DMA every frame if it ever falls behind.
+CONFIG_LCD_RGB_ISR_IRAM_SAFE=y
+CONFIG_LCD_RGB_RESTART_IN_VSYNC=y
+
+# The tag writer's format codecs report malformed tags by throwing (see
+# sdkconfig.defaults.tagwriter). Always on here: the flash has room, and one
+# sdkconfig then serves the image with or without the tag writer.
+CONFIG_COMPILER_CXX_EXCEPTIONS=y
+CONFIG_COMPILER_CXX_EXCEPTIONS_EMG_POOL_SIZE=512
+
+# The console is UART0 through the board's CH340 (GPIO43/44), as on the ESP32.
+CONFIG_ESP_CONSOLE_UART_DEFAULT=y

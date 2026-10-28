@@ -12,18 +12,19 @@
 
 /* --------------------------------------------------------------- geometry */
 
-#define UI_INPUT_BOX_H      36 /* stepper / chip height; also the touch minimum */
-#define UI_INPUT_SEG_W      36 /* stepper minus / plus segment width */
-#define UI_INPUT_RULE_Y      8
-#define UI_INPUT_RULE_H     20
-#define UI_INPUT_CHIP_MIN   56
-#define UI_INPUT_CHIP_PAD   24 /* 12 px each side of the chip label */
-#define UI_INPUT_TOG_W      40
-#define UI_INPUT_TOG_H      24
-#define UI_INPUT_KNOB       18
-#define UI_INPUT_KNOB_Y      3
-#define UI_INPUT_KNOB_OFF_X  3
-#define UI_INPUT_KNOB_ON_X  19
+#define UI_INPUT_BOX_H      UI_PX(36) /* stepper / chip height; also the touch minimum */
+#define UI_INPUT_SEG_W      UI_PX(36) /* stepper minus / plus segment width */
+#define UI_INPUT_RULE_Y     UI_PX(8)
+#define UI_INPUT_RULE_H     UI_PX(20)
+#define UI_INPUT_CHIP_MIN   UI_PX(56)
+#define UI_INPUT_CHIP_PAD   UI_PX(24) /* 12 px each side of the chip label */
+#define UI_INPUT_TOG_W      UI_PX(40)
+#define UI_INPUT_TOG_H      UI_PX(24)
+#define UI_INPUT_KNOB       UI_PX(18)
+#define UI_INPUT_KNOB_Y     UI_PX(3)
+#define UI_INPUT_KNOB_OFF_X UI_PX(3)
+/* 19: the off inset mirrored, so the knob sits as far from either end */
+#define UI_INPUT_KNOB_ON_X  (UI_INPUT_TOG_W - UI_INPUT_KNOB - UI_INPUT_KNOB_OFF_X)
 #define UI_INPUT_ANIM_MS   120
 
 /* ------------------------------------------------------------------ helpers */
@@ -100,11 +101,11 @@ lv_obj_t *ui_stepper(lv_obj_t *parent, int x, int y, int w, const char *value,
     lv_obj_set_style_text_align(val, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(val, LV_ALIGN_CENTER, 0, 0);
 
-    rule = mk_plain(box, UI_INPUT_SEG_W, UI_INPUT_RULE_Y, 1, UI_INPUT_RULE_H);
+    rule = mk_plain(box, UI_INPUT_SEG_W, UI_INPUT_RULE_Y, UI_PX(1), UI_INPUT_RULE_H);
     lv_obj_set_style_bg_color(rule, UI_COL_LINE, 0);
     lv_obj_set_style_bg_opa(rule, LV_OPA_COVER, 0);
 
-    rule = mk_plain(box, w - UI_INPUT_SEG_W - 1, UI_INPUT_RULE_Y, 1, UI_INPUT_RULE_H);
+    rule = mk_plain(box, w - UI_INPUT_SEG_W - UI_PX(1), UI_INPUT_RULE_Y, UI_PX(1), UI_INPUT_RULE_H);
     lv_obj_set_style_bg_color(rule, UI_COL_LINE, 0);
     lv_obj_set_style_bg_opa(rule, LV_OPA_COVER, 0);
 
@@ -118,7 +119,7 @@ lv_obj_t *ui_stepper_captioned(lv_obj_t *parent, int x, int y, int w, const char
     lv_obj_t *cap = mk_label(parent, caption, UI_FONT_S, UI_COL_TEXT_DIM);
 
     lv_obj_set_pos(cap, x, y);
-    return ui_stepper(parent, x, y + 16, w, value, on_minus, on_plus, user);
+    return ui_stepper(parent, x, y + UI_PX(16), w, value, on_minus, on_plus, user);
 }
 
 /* ------------------------------------------------------------------- chip */
@@ -167,7 +168,7 @@ static lv_obj_t *chip_build(lv_obj_t *parent, const char *text, int w, bool sele
     lv_obj_set_scrollable(chip, false);
     lv_obj_set_clickable(chip, true);
     lv_obj_set_style_radius(chip, UI_RADIUS, 0);
-    lv_obj_set_style_border_width(chip, 1, 0);
+    lv_obj_set_style_border_width(chip, UI_PX(1), 0);
     lv_obj_set_style_bg_opa(chip, LV_OPA_COVER, 0);
     lv_obj_set_style_bg_color(chip, UI_COL_PANEL_HI, LV_STATE_PRESSED);
     lv_obj_center(l);

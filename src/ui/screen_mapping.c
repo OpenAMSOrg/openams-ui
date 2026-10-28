@@ -23,13 +23,13 @@
 #include <string.h>
 
 #define MAP_PROJ_COUNT 4
-#define MAP_COL_X      12
-#define MAP_COL_Y      48
-#define MAP_COL_W      456
-#define MAP_COL_H      228          /* viewport y 48-276 */
-#define MAP_ROW_GAP    6
-#define MAP_ROW_MIN_H  52
-#define MAP_CHIP_H     22
+#define MAP_COL_X      UI_PX(12)
+#define MAP_COL_Y      UI_PX(48)
+#define MAP_COL_W      (UI_SCREEN_W - 2 * MAP_COL_X)   /* 456 */
+#define MAP_COL_H      UI_PX(228)   /* viewport y 48-276 */
+#define MAP_ROW_GAP    UI_PX(6)
+#define MAP_ROW_MIN_H  UI_PX(52)
+#define MAP_CHIP_H     UI_PX(22)
 
 typedef struct {
     const char *material;
@@ -123,7 +123,7 @@ static void on_confirm(lv_event_t *e)
 
 /* ------------------------------------------------------------------- rows */
 
-#define ROW_H 60
+#define ROW_H UI_PX(60)
 
 static lv_obj_t *build_row(lv_obj_t *col, int p)
 {
@@ -133,27 +133,27 @@ static lv_obj_t *build_row(lv_obj_t *col, int p)
     lv_obj_t *row = ui_kit_row(col, ROW_H, editable ? on_row_click : NULL, UI_ENC(p, 0));
     bool ready = group_has_ready(group);
     char buf[64];
-    int x = 24;
-    int rx = UI_HOME_INNER_W - 24;
+    int x = UI_PX(24);
+    int rx = UI_HOME_INNER_W - UI_PX(24);
 
-    ui_kit_swatch(row, 0, 4, 14, proj->color, false);
+    ui_kit_swatch(row, 0, UI_PX(4), UI_PX(14), proj->color, false);
     snprintf(buf, sizeof buf, "T%d \xC2\xB7 %s", p, proj->material);
     ui_home_label(row, buf, UI_HOME_FONT_BODY,
-                  ((g_mmu.job_short >> p) & 1u) ? UI_TOK_WARN : UI_TOK_TEXT, 24, 0);
+                  ((g_mmu.job_short >> p) & 1u) ? UI_TOK_WARN : UI_TOK_TEXT, UI_PX(24), 0);
 
     {
         const char *st = view_str(ready ? VS_GROUP_READY : VS_MAP_NO_SPOOL);
         int tw = ui_kit_tag_w(st);
 
         ui_kit_tag(row, st, ready ? UI_KIT_TONE_ACCENT : UI_KIT_TONE_ERROR, rx - tw, 0);
-        rx -= tw + 8;
+        rx -= tw + UI_PX(8);
     }
 
     /* the group's bays: this unit's in the text color, another unit's dimmed
      * with its unit named */
     if(group < 0 || g_mmu.groups[group].count == 0) {
         ui_home_label(row, view_str(group < 0 ? VS_MAP_NO_GROUP : VS_MAP_EMPTY), UI_HOME_FONT_META, UI_TOK_TEXT_FAINT,
-                      24, 22);
+                      UI_PX(24), UI_PX(22));
     }
     else {
         const mmu_group_t *g = &g_mmu.groups[group];
@@ -169,8 +169,8 @@ static lv_obj_t *build_row(lv_obj_t *col, int p)
             if(mine) snprintf(buf, sizeof buf, "%s", t->sublabel);
             else     vs_unit_spool(mmu_unit_name(u), sl, buf, sizeof buf);
             if(x + ui_home_text_w(buf, UI_HOME_FONT_META) > rx) break;
-            ui_home_label(row, buf, UI_HOME_FONT_META, mine ? UI_TOK_TEXT : UI_TOK_TEXT_MUTED, x, 22);
-            x += ui_home_text_w(buf, UI_HOME_FONT_META) + 14;
+            ui_home_label(row, buf, UI_HOME_FONT_META, mine ? UI_TOK_TEXT : UI_TOK_TEXT_MUTED, x, UI_PX(22));
+            x += ui_home_text_w(buf, UI_HOME_FONT_META) + UI_PX(14);
         }
         free(t);
     }
@@ -188,7 +188,7 @@ static lv_obj_t *build(void)
     int p;
 
     (void)ui_kit_header(scr, view_str(VS_SCREEN_MAPPING), true);
-    col = ui_kit_column(scr, UI_HOME_HEADER_H + 2, 268 - UI_HOME_HEADER_H - 2 - 8);
+    col = ui_kit_column(scr, UI_HOME_HEADER_H + UI_PX(2), UI_PX(268) - UI_HOME_HEADER_H - UI_PX(2) - UI_PX(8));
     for(p = 0; p < MAP_PROJ_COUNT; p++) {
         build_row(col, p);
         if(first_missing < 0 && !group_has_ready(group_for_tool(p))) first_missing = p;
@@ -197,8 +197,8 @@ static lv_obj_t *build(void)
     /* Confirm reads dimmed while any tool has no spool ready, and says which. */
     reason[0] = '\0';
     if(first_missing >= 0) vs_format(VS_MAP_MISSING, reason, sizeof reason, (vs_arg_t[]){ VS_ARG_N("n", first_missing) }, 1);
-    ui_kit_button_r(scr, view_str(VS_BTN_CONFIRM), UI_KIT_BTN_PRIMARY, UI_HOME_HEADER_PAD, 268, UI_HOME_INNER_W,
-                    40, reason, on_confirm, NULL);
+    ui_kit_button_r(scr, view_str(VS_BTN_CONFIRM), UI_KIT_BTN_PRIMARY, UI_HOME_HEADER_PAD, UI_PX(268), UI_HOME_INNER_W,
+                    UI_PX(40), reason, on_confirm, NULL);
     return scr;
 }
 

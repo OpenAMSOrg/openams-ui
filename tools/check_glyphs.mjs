@@ -102,17 +102,26 @@ export function main(args = process.argv.slice(2), root = process.cwd()) {
     for (const point of sorted(readCharacters(code))) console.log(label(point));
     return 0;
   }
-  const fontsDirectory = join(root, 'src/ui/fonts');
-  const sizes = geistSizes(fontsDirectory);
-  if (!sizes.length) throw new Error('No Geist faces in src/ui/fonts');
+  // The 480x320 set and each other resolution's (src/ui/fonts/<resolution>/,
+  // tools/gen_fonts.py --set): a language must be covered by every set, or one
+  // build draws blanks.
+  const baseDirectory = join(root, 'src/ui/fonts');
+  const fontsDirectories = [baseDirectory, ...readdirSync(baseDirectory, { withFileTypes: true })
+    .filter(entry => entry.isDirectory())
+    .map(entry => join(baseDirectory, entry.name))];
+  for (const fontsDirectory of fontsDirectories) {
+    if (!geistSizes(fontsDirectory).length) throw new Error(`No Geist faces in ${fontsDirectory}`);
+  }
   const files = new Set(readdirSync(stringsDirectory));
   let failed = false;
   for (const language of LANGUAGES.filter(language => files.has(`${language}.json`))) {
     const characters = readCharacters(language);
     const missing = new Set();
-    for (const size of sizes) {
-      const covered = coverageAt(fontsDirectory, size, language);
-      for (const point of characters) if (!covered.has(point)) missing.add(point);
+    for (const fontsDirectory of fontsDirectories) {
+      for (const size of geistSizes(fontsDirectory)) {
+        const covered = coverageAt(fontsDirectory, size, language);
+        for (const point of characters) if (!covered.has(point)) missing.add(point);
+      }
     }
     if (mode === '--report') {
       const points = sorted(missing);
