@@ -1,0 +1,3 @@
+# The repo ignores out/ (build output); here it holds the printable files.
+!out/
+out/mesh/
