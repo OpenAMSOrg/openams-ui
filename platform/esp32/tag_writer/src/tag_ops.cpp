@@ -815,8 +815,8 @@ Result clone(Card &card, const uint8_t image[1024], Progress progress) {
         return r;
 
     // Verify as the AMS will: the tag must now select by the genuine UID and
-    // read back every block under the derived key A. A field reset lets gen2
-    // / gen3 chips start advertising the UID we just wrote.
+    // read back every block under its key A. A field reset lets gen2 / gen3
+    // chips start advertising the UID we just wrote.
     reader->stop_crypto();
     reader->halt();
     reader->antenna(false);
@@ -833,14 +833,18 @@ Result clone(Card &card, const uint8_t image[1024], Progress progress) {
         return result(false, Reader::NO_CARD, 0xFF, "clone did not take (UID mismatch)");
     written.uid = uid;
     written.kind = CUSTOM;
-    bambu::derive_keys(master_key, image, 4, written.keys);
+    // The keys the tag now has are the image's own: key A of each sector
+    // trailer. For a genuine tag's image they are the keys the master key
+    // derives, but reading them from the image needs no master key, so a clone
+    // from the library verifies on a display that has none.
+    for (uint8_t sector = 0; sector < bambu::SECTORS; sector++)
+        memcpy(written.keys[sector], image + (sector * 4 + 3) * 16, bambu::KEY_SIZE);
 
-    KeyChoice key = KEY_DERIVED;
     uint8_t data[16];
     for (uint8_t sector = 0; sector < bambu::SECTORS; sector++) {
-        if (open_sector(written, sector, key, false) != Reader::OK) {
+        if (reader->authenticate(sector * 4 + 3, written.keys[sector], written.uid) != Reader::OK) {
             finish();
-            return result(false, Reader::AUTH_FAILED, sector, "verify: derived key rejected");
+            return result(false, Reader::AUTH_FAILED, sector, "verify: the tag's key A rejected");
         }
         for (uint8_t i = 0; i < 3; i++) {
             uint8_t block = sector * 4 + i;
