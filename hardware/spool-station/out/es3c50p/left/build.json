@@ -1,0 +1,15 @@
+{
+ "board": "es3c50p",
+ "side": "left",
+ "rake": 20.0,
+ "readers": [
+  "pn5180",
+  "rc522"
+ ],
+ "checks": "PASS",
+ "footprint": [
+  156.0,
+  240.9
+ ],
+ "height": 109.4
+}

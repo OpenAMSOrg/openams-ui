@@ -1,0 +1,15 @@
+{
+ "board": "e32r40t",
+ "side": "right",
+ "rake": 20.0,
+ "readers": [
+  "pn5180",
+  "rc522"
+ ],
+ "checks": "PASS",
+ "footprint": [
+  130.1,
+  223.8
+ ],
+ "height": 90.2
+}

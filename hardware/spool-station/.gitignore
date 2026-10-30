@@ -1,3 +1,10 @@
 # The repo ignores out/ (build output); here it holds the printable files.
 !out/
-out/mesh/
+# What the pictures and the 3D model are made from, and the pictures of your own builds.
+out/**/mesh*/
+out/**/pictures/
+out/**/*.glb
+# make.py's choices (python make.py menuconfig).
+station.config
+# Python's cache, when make.py loads print_check.py.
+__pycache__/
