@@ -52,10 +52,10 @@
      * with about 20 KB to spare. Re-measure before adding heavy screens. */
     #define LV_MEM_SIZE (96 * 1024)
 
-    /* The ES3C50P (ESP32-S3, platform/esp32/main/board.h) has 8 MB of PSRAM,
-     * and its internal RAM holds code as well as data: the pool is taken from
-     * PSRAM at lv_init() instead of being a static array in internal RAM. */
-    #if defined(MMU_BOARD_ES3C50P)
+    /* The ES3C50P and ES3C43P (ESP32-S3, platform/esp32/main/board.h) have 8 MB
+     * of PSRAM, and their internal RAM holds code as well as data: the pool is
+     * taken from PSRAM at lv_init() instead of being a static array in internal RAM. */
+    #if defined(MMU_BOARD_ES3C50P) || defined(MMU_BOARD_ES3C43P)
         #define LV_MEM_POOL_INCLUDE <esp_heap_caps.h>
         #define LV_MEM_POOL_ALLOC(size) heap_caps_malloc(size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)
     #endif

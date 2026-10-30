@@ -1,6 +1,6 @@
 # AMS clip screen — 800×480
 
-Build target: 800×480 landscape, LVGL 9, 16-bit colour, capacitive touch, ESP32-S3 with PSRAM (the ES3C50P board, `-DMMU_BOARD=es3c50p`). The simulator builds the same UI with `-DMMU_UI_RESOLUTION=800x480`.
+Build target: 800×480 landscape, LVGL 9, 16-bit colour, capacitive touch, ESP32-S3 with PSRAM (the ES3C50P and ES3C43P boards, `-DMMU_BOARD=es3c50p` or `es3c43p`). The simulator builds the same UI with `-DMMU_UI_RESOLUTION=800x480`.
 
 There is no second design. Every screen is still laid out on the 480×320 grid of `VISUAL_SPEC_480.md`, and this file only says how that grid is drawn on the larger panel. If this file and `VISUAL_SPEC_480.md` disagree about a screen, `VISUAL_SPEC_480.md` wins.
 

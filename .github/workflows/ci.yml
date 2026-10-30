@@ -168,6 +168,11 @@ jobs:
             variant: es3c50p-board-library
             cmake_args: "-DMMU_BOARD=es3c50p -DMMU_TAG_LIBRARY=board"
             partitions: partitions_es3c50p.csv
+          # The 4.3 inch ESP32-S3 board: the 5 inch board's settings and UI.
+          - languages: latin
+            variant: es3c43p
+            cmake_args: "-DMMU_BOARD=es3c43p"
+            partitions: partitions_es3c50p.csv
 
     name: esp32 (${{ matrix.languages }}, ${{ matrix.variant }})
     steps:

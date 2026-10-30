@@ -104,7 +104,9 @@ class Choices:
         c = read_config()
         on = lambda name: c.get(name) == "y"  # noqa: E731
 
-        self.board = given.get("BOARD") or ("es3c50p" if on("CONFIG_BOARD_ES3C50P") else "e32r40t")
+        self.board = given.get("BOARD") or (
+            "es3c50p" if on("CONFIG_BOARD_ES3C50P") else "es3c43p" if on("CONFIG_BOARD_ES3C43P")
+            else "e32r40t")
         self.tag_writer = given.get("TAG_WRITER") or ("ON" if on("CONFIG_TAG_WRITER") else "OFF")
         self.reader = given.get("TAG_READER") or (
             "MFRC522" if on("CONFIG_TAG_READER_MFRC522") else "PN5180")
@@ -120,9 +122,10 @@ class Choices:
         self.port = "" if WINDOWS and port.startswith("/dev/") else port
         self.baud = given.get("BAUD") or "460800"
         # Where the tag writer's library is: openams (served by the printer
-        # host) or board (its own flash, 5 inch only).
+        # host) or board (its own flash, 5 and 4.3 inch only).
         self.library_source = given.get("LIBRARY_SOURCE") or (
-            "board" if self.board == "es3c50p" and on("CONFIG_TAG_LIBRARY_BOARD") else "openams")
+            "board" if self.board in ("es3c50p", "es3c43p") and on("CONFIG_TAG_LIBRARY_BOARD")
+            else "openams")
         # The board's own Bambu Lab tag library, written by flash when the
         # menu says so (LIB=<dir> says where the checkout is).
         self.tag_library = given.get("TAG_LIBRARY") or (
@@ -273,7 +276,7 @@ def show(ch):
 
 
 def one_board(board):
-    # One board with the other choices: make es3c50p, make e32r40t.
+    # One board with the other choices: make es3c50p, make es3c43p, make e32r40t.
     def target(ch):
         build(Choices(dict(ch.given, BOARD=board)))
     return target
@@ -285,7 +288,7 @@ def libflash(ch):
     # image that keeps its own library has one to write.
     if ch.library_source != "board":
         raise Stop("this image takes its tag library from OpenAMS; menuconfig -> Tag "
-                   "library -> On the board (5 inch only) keeps one on the board")
+                   "library -> On the board (5 and 4.3 inch only) keeps one on the board")
     library(ch)
     tagtool(ch, "--force")
 
@@ -307,7 +310,7 @@ def help_(ch):
             ("size", "how much of the flash and RAM it uses"),
             ("idf-menuconfig", "ESP-IDF's own settings for this board"),
             ("clean", "delete " + ch.build_dir),
-            ("e32r40t", "build that board (or es3c50p) with the other choices"),
+            ("e32r40t", "build that board (or es3c50p, es3c43p) with the other choices"),
             ("libflash", "the Bambu Lab tag library into the board now, for an image that "
                          "keeps its own (flash writes it when it changed, if the menu says so)"),
             ("libupdate", "the newest tags into the library checkout"),
@@ -323,6 +326,7 @@ TARGETS = {
     "build": build, "flash": flash, "monitor": monitor, "size": size,
     "idf-menuconfig": idf_menuconfig, "clean": clean, "menuconfig": menuconfig, "show": show,
     "e32r40t": one_board("e32r40t"), "es3c50p": one_board("es3c50p"),
+    "es3c43p": one_board("es3c43p"),
     "library": library, "libflash": libflash, "libupdate": libupdate, "help": help_,
 }
 

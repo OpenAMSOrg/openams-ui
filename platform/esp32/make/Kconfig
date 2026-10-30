@@ -16,6 +16,8 @@ choice BOARD
         bool "4 inch E32R40T (ESP32, 480x320 SPI panel, resistive touch)"
     config BOARD_ES3C50P
         bool "5 inch ES3C50P (ESP32-S3, 800x480 RGB panel, capacitive touch)"
+    config BOARD_ES3C43P
+        bool "4.3 inch ES3C43P (ESP32-S3, 800x480 RGB panel, capacitive touch)"
 endchoice
 
 config TAG_WRITER
@@ -53,8 +55,8 @@ choice TAG_LIBRARY_SOURCE
             first use) to the display, over the printer link. Nothing is
             stored on the board.
     config TAG_LIBRARY_BOARD
-        bool "On the board (5 inch only)"
-        depends on BOARD_ES3C50P
+        bool "On the board (5 and 4.3 inch only)"
+        depends on BOARD_ES3C50P || BOARD_ES3C43P
         help
             The library lives in the board's own flash, so it works without
             the printer. It is filled over USB (make libflash, or the option
@@ -98,8 +100,8 @@ choice LANGUAGES
     config LANGUAGES_ZH_HANS
         bool "Simplified Chinese and English"
     config LANGUAGES_ALL
-        bool "Every language (5 inch board only)"
-        depends on BOARD_ES3C50P
+        bool "Every language (5 and 4.3 inch boards only)"
+        depends on BOARD_ES3C50P || BOARD_ES3C43P
         help
             Every language's strings and fonts: too large for the 4 inch
             board's app partition.

@@ -27,11 +27,13 @@
 
 static const char *TAG = "tag_writer";
 
-#if defined(MMU_BOARD_ES3C50P)
+#if defined(MMU_BOARD_ES3C50P) || defined(MMU_BOARD_ES3C43P)
 // The ES3C50P (5" ESP32-S3) has two free GPIOs, 17 and 18, on its "Expand"
 // connectors, and 18 also reaches the touch controller's interrupt through
 // R16, a 0R link removed for the reader (docs/guide/tag-writer.md, which also
-// has R12 to 0R for the PN5180's 5 V; main/touch_gt911.c leaves IO18 alone). The bus is the one on the "SPI"
+// has R12 to 0R for the PN5180's 5 V; main/touch_gt911.c leaves IO18 alone).
+// The ES3C43P (4.3") is wired the same, with R21 as the link and R20 as the
+// 10K in the 5 V. The bus is the one on the "SPI"
 // connector, shared with the microSD slot (SCK IO12, MOSI IO11, MISO IO13; the
 // slot must stay empty), whose own chip select, IO19, is the touch
 // controller's I2C data. So IO17 is the reader's chip select and IO18 the

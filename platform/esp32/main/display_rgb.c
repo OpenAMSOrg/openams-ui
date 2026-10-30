@@ -2,7 +2,8 @@
  * @file display_rgb.c
  * The ES3C50P's panel (main/board.h): an ST7282E 800x480 on the ESP32-S3's
  * 16-bit RGB bus, driven by esp_lcd's RGB panel driver, plus the LVGL display
- * on top of it. Implements display.h.
+ * on top of it. Implements display.h. The ES3C43P's ST7265 800x480 is wired
+ * the same and runs with the same timing.
  *
  * Pins, from the LCDWiki ES3C50P specification ("ESP32-S3 Pin Assignment"):
  * DE 40, VSYNC 41, HSYNC 39, PCLK 42; R0-R4 45 48 47 21 14; G0-G5 5 6 7 15
@@ -124,7 +125,7 @@ static void flush_cb(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 
 void display_set_contrast(uint8_t contrast)
 {
-    /* The ST7282E has no gamma registers to reach over this bus. */
+    /* The panel has no gamma registers to reach over this bus. */
     (void)contrast;
 }
 
@@ -168,7 +169,7 @@ void display_exit_calibration_mode(lv_display_t *disp)
 
 lv_display_t *display_init(void)
 {
-    s_panel_info.name = "ST7282E (RGB)";
+    s_panel_info.name = BOARD_PANEL_NAME " (RGB)";
     s_panel_info.id_read_ok = true; /* nothing to read: the RGB bus is one-way */
 
     backlight_init(PIN_BL); /* duty 0 — stays off until display_set_brightness() is called */

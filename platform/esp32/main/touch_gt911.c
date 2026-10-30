@@ -1,7 +1,7 @@
 /**
  * @file touch_gt911.c
- * The ES3C50P's capacitive touch (main/board.h): a Goodix GT911 on I2C (SDA19,
- * SCL20, INT18, RST38, from the LCDWiki ES3C50P specification), exposed to
+ * The ES3C50P's and ES3C43P's capacitive touch (main/board.h): a Goodix GT911 on
+ * I2C (SDA19, SCL20, INT18, RST38, from the LCDWiki specifications), exposed to
  * LVGL as a pointer indev. Implements touch.h; a capacitive panel reports
  * panel coordinates, so the calibration entry points of the resistive board
  * have no counterpart here.
@@ -9,8 +9,9 @@
  * The GT911 picks its I2C address from INT's level as RST is released: low
  * gives 0x5D. INT is then only an output of the chip, unused: the indev polls.
  * With the tag writer IO18 is the reader's (tag_writer/src/tag_writer.cpp):
- * R16, the 0R link to INT, is removed and the reset leaves IO18 alone, so the
- * chip picks either address, and init looks for both.
+ * the 0R link to INT (R16 on the ES3C50P, R21 on the ES3C43P) is removed and
+ * the reset leaves IO18 alone, so the chip picks either address, and init
+ * looks for both.
  */
 #include "touch.h"
 #include "board.h"

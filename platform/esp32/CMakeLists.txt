@@ -46,18 +46,20 @@ if(NOT MMU_TAG_READER MATCHES "^(PN5180|MFRC522)$")
     message(FATAL_ERROR "MMU_TAG_READER is \"${MMU_TAG_READER}\"; it takes PN5180 or MFRC522")
 endif()
 # The display board (main/board.h): the default E32R40T (LCDWiki 4.0" ESP32,
-# 480x320 SPI panel, resistive touch) or ES3C50P (LCDWiki / Hosyond 5.0"
-# ESP32-S3 N16R8, 800x480 RGB panel, capacitive touch). The board picks the
+# 480x320 SPI panel, resistive touch), ES3C50P (LCDWiki / Hosyond 5.0"
+# ESP32-S3 N16R8, 800x480 RGB panel, capacitive touch) or ES3C43P (the same
+# board at 4.3": the same module, pins and 800x480 panel). The board picks the
 # chip, so -DMMU_BOARD=es3c50p is all a build needs.
-set(MMU_BOARD "e32r40t" CACHE STRING "The display board: e32r40t or es3c50p")
-set_property(CACHE MMU_BOARD PROPERTY STRINGS e32r40t es3c50p)
-if(NOT MMU_BOARD MATCHES "^(e32r40t|es3c50p)$")
-    message(FATAL_ERROR "MMU_BOARD is \"${MMU_BOARD}\"; it takes e32r40t or es3c50p")
+set(MMU_BOARD "e32r40t" CACHE STRING "The display board: e32r40t, es3c50p or es3c43p")
+set_property(CACHE MMU_BOARD PROPERTY STRINGS e32r40t es3c50p es3c43p)
+if(NOT MMU_BOARD MATCHES "^(e32r40t|es3c50p|es3c43p)$")
+    message(FATAL_ERROR "MMU_BOARD is \"${MMU_BOARD}\"; it takes e32r40t, es3c50p or es3c43p")
 endif()
 # A build directory belongs to one chip. Building the other board in it would
 # stop deep in ESP-IDF, with advice to delete the sdkconfig file, which is not
-# the problem; say what is.
-if(MMU_BOARD STREQUAL "es3c50p")
+# the problem; say what is. The two ESP32-S3 boards share the rest too: the
+# ESP-IDF settings, the partition table and the 800x480 UI.
+if(MMU_BOARD MATCHES "^(es3c50p|es3c43p)$")
     set(mmu_board_chip "esp32s3")
 else()
     set(mmu_board_chip "esp32")
@@ -75,20 +77,22 @@ endif()
 
 # Where the tag writer's library of genuine tags lives: on OpenAMS, which
 # serves it from the printer host (the default), or on the board, in a flash
-# partition of its own, which only the 5 inch board has room for.
+# partition of its own, which only the ESP32-S3 boards (5 and 4.3 inch) have
+# room for.
 set(MMU_TAG_LIBRARY "openams" CACHE STRING
-    "The tag writer's tag library: openams (served by the printer host) or board (5 inch only)")
+    "The tag writer's tag library: openams (served by the printer host) or board (5 and 4.3 inch only)")
 set_property(CACHE MMU_TAG_LIBRARY PROPERTY STRINGS openams board)
 if(NOT MMU_TAG_LIBRARY MATCHES "^(openams|board)$")
     message(FATAL_ERROR "MMU_TAG_LIBRARY is \"${MMU_TAG_LIBRARY}\"; it takes openams or board")
 endif()
-if(MMU_TAG_LIBRARY STREQUAL "board" AND NOT MMU_BOARD STREQUAL "es3c50p")
-    message(FATAL_ERROR "Only the 5 inch board has room for the tag library; the ${MMU_BOARD} "
+if(MMU_TAG_LIBRARY STREQUAL "board" AND NOT mmu_board_chip STREQUAL "esp32s3")
+    message(FATAL_ERROR "Only the 5 and 4.3 inch boards have room for the tag library; the ${MMU_BOARD} "
         "takes it from OpenAMS (-DMMU_TAG_LIBRARY=openams).")
 endif()
 
-# The UI's resolution follows the panel (cmake/resolution.cmake).
-if(MMU_BOARD STREQUAL "es3c50p")
+# The UI's resolution follows the panel (cmake/resolution.cmake): both
+# ESP32-S3 boards' panels are 800x480.
+if(mmu_board_chip STREQUAL "esp32s3")
     set(MMU_UI_RESOLUTION "800x480" CACHE STRING "The UI's resolution: 480x320 or 800x480" FORCE)
 else()
     set(MMU_UI_RESOLUTION "480x320" CACHE STRING "The UI's resolution: 480x320 or 800x480" FORCE)
@@ -96,13 +100,15 @@ endif()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../cmake")
 include(resolution)
 
-if(MMU_BOARD STREQUAL "es3c50p")
+if(mmu_board_chip STREQUAL "esp32s3")
     # 16 MB of flash holds two OTA slots and the tag library, and C++
     # exceptions are always on, so one generated sdkconfig serves the image
-    # with or without the tag writer.
+    # with or without the tag writer. The 4.3 inch board has the 5 inch
+    # board's module, so it takes the same settings (sdkconfig.defaults.es3c50p)
+    # into a generated file of its own.
     set(IDF_TARGET "esp32s3" CACHE STRING "IDF Build Target")
     if(NOT DEFINED SDKCONFIG)
-        set(SDKCONFIG "${CMAKE_CURRENT_LIST_DIR}/sdkconfig.es3c50p")
+        set(SDKCONFIG "${CMAKE_CURRENT_LIST_DIR}/sdkconfig.${MMU_BOARD}")
     endif()
     if(NOT DEFINED SDKCONFIG_DEFAULTS)
         set(SDKCONFIG_DEFAULTS "sdkconfig.defaults;sdkconfig.defaults.es3c50p")
@@ -133,7 +139,7 @@ foreach(def IN LISTS MMU_UI_DEFINES)
 endforeach()
 # The component manager records the chip in its lock file: each chip keeps its
 # own, so building one board does not rewrite the other's.
-if(MMU_BOARD STREQUAL "es3c50p")
+if(mmu_board_chip STREQUAL "esp32s3")
     idf_build_set_property(DEPENDENCIES_LOCK "${CMAKE_CURRENT_LIST_DIR}/dependencies.lock.esp32s3")
 endif()
 

@@ -15,7 +15,7 @@
 PYTHON ?= python
 
 TARGETS := build flash monitor size idf-menuconfig clean menuconfig show help \
-	e32r40t es3c50p library libflash libupdate
+	e32r40t es3c50p es3c43p library libflash libupdate
 CHOICES := BOARD TAG_WRITER TAG_READER LANGUAGES PORT BAUD LIBRARY_SOURCE TAG_LIBRARY \
 	LIB CMAKE_DEFS IDF_PY
 

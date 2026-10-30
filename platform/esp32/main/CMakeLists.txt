@@ -24,7 +24,7 @@ endif()
 
 # The board's own panel and touch drivers (main/board.h); both implement
 # display.h and touch.h. Only the resistive panel needs the calibration screen.
-if(MMU_BOARD STREQUAL "es3c50p")
+if(MMU_BOARD MATCHES "^(es3c50p|es3c43p)$")
     set(MMU_BOARD_SOURCES "display_rgb.c" "touch_gt911.c")
 else()
     set(MMU_BOARD_SOURCES "display.c" "touch.c" "touch_calib_store.c" "touch_calib_ui.c")
@@ -93,19 +93,19 @@ endif()
 # writer is an optional requirement: linked when its component is in the build.
 idf_component_optional_requires(PRIVATE tag_writer)
 
-# The ES3C50P's one layout carries the OTA slots and room for the tag library
-# (MMU_TAG_LIBRARY=board), and its
+# The ESP32-S3 boards' one layout (ES3C50P and ES3C43P) carries the OTA slots
+# and room for the tag library (MMU_TAG_LIBRARY=board), and their
 # sdkconfig always has C++ exceptions (sdkconfig.defaults.es3c50p).
-if(MMU_BOARD STREQUAL "es3c50p")
+if(MMU_BOARD MATCHES "^(es3c50p|es3c43p)$")
     if(NOT CONFIG_IDF_TARGET_ESP32S3
        OR NOT CONFIG_PARTITION_TABLE_CUSTOM_FILENAME STREQUAL "partitions_es3c50p.csv")
-        message(FATAL_ERROR "MMU_BOARD is es3c50p but ${SDKCONFIG} was generated for another "
+        message(FATAL_ERROR "MMU_BOARD is ${MMU_BOARD} but ${SDKCONFIG} was generated for another "
                             "board: delete that file (or pass its own -DSDKCONFIG=...) and "
                             "build again")
     endif()
 elseif(CONFIG_PARTITION_TABLE_CUSTOM_FILENAME STREQUAL "partitions_es3c50p.csv")
-    message(FATAL_ERROR "MMU_BOARD is ${MMU_BOARD} but ${SDKCONFIG} was generated for the "
-                        "ES3C50P: delete that file and build again")
+    message(FATAL_ERROR "MMU_BOARD is ${MMU_BOARD} but ${SDKCONFIG} was generated for an "
+                        "ESP32-S3 board: delete that file and build again")
 # An image with the tag writer needs its partition table (one app partition
 # the size of the flash) and C++ exceptions, one without it the two OTA slots. Each has its own generated
 # sdkconfig (sdkconfig.tagwriter / sdkconfig), so this only trips when a build

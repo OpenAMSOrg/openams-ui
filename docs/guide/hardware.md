@@ -110,6 +110,28 @@ a tag writer image leaves IO18 alone when it resets the touch controller. The
 PN5180 takes its 5 V from UART0 pin 1, with R12 replaced by 0 Ω. Wiring and the
 rework: [tag-writer.md](tag-writer.md#the-5-inch-board-es3c50p).
 
+## The 4.3 inch board (ES3C43P)
+
+The LCDWiki "4.3inch ESP32-S3 display" ES3C43P (sold as Hosyond), capacitive
+version, is the 5 inch board's smaller twin, built with `-DMMU_BOARD=es3c43p`
+([flash-and-setup.md](flash-and-setup.md#the-5-inch-board)). It has the same
+module (ESP32-S3 N16R8), the same GPIOs for the panel, touch, microSD and
+backlight, the same connectors, and the same code and 800x480 UI. Its panel,
+an ST7265 (95.04 x 53.86 mm active), runs with the 5 inch panel's timing. What
+differs:
+
+| | 5 inch ES3C50P | 4.3 inch ES3C43P |
+|---|---|---|
+| Board, mounting holes | 137 x 84 mm, 130 x 77 mm apart | 123 x 74 mm, 116 x 67 mm apart |
+| Touch INT's 0 Ω link (IO18) | R16 | R21 (R16 here is the BOOT button's pull-up) |
+| UART0 pin 1's 5 V, through 10 kΩ | R12 | R20 |
+| Expand connectors (GND, 3.3V, IO17, IO18) | P5 and P6 | P5 only |
+| Speaker amplifier | NS4168 (not used) | none |
+| Image | turned 180 degrees (`BOARD_ROTATED_180`) | the same |
+
+The tag writer's reader is wired as on the 5 inch board, with R21 off and R20
+at 0 Ω: [tag-writer.md](tag-writer.md#the-43-inch-board-es3c43p).
+
 ## Requirements
 
 - A USB cable and a computer with a USB serial driver for the board.

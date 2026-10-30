@@ -15,15 +15,16 @@ screens on an ESP32 display, a desktop simulator and a Vue 2 web panel.
 > The display and the Mainsail panel read the `openams_ui <unit>` objects that only the current OpenAMS publishes. With `klipper_openams` the display connects but shows nothing about your units ("The printer shows no OpenAMS unit"), and the panel stays empty.
 > Moving over is one installer run, keeps your `oams.cfg`, and every G-code command keeps working: [Moving from klipper_openams](https://github.com/OpenAMSOrg/openams/blob/main/docs/guide/install.md#moving-from-klipper_openams).
 
-The display firmware runs on two boards, chosen when you build it (see
+The display firmware runs on three boards, chosen when you build it (see
 [ESP32 firmware](#esp32-firmware)):
 
 | Board | Chip and memory | Panel and touch |
 |---|---|---|
 | LCDWiki 4.0 inch ESP32-32E (E32R40T), the default | ESP32-WROOM-32E: 520 KB SRAM, no PSRAM, 4 MB flash | 480x320 ST7796S over SPI, XPT2046 resistive touch |
 | LCDWiki / Hosyond 5.0 inch ESP32-S3 (ES3C50P), capacitive version | ESP32-S3 N16R8: 512 KB SRAM, 8 MB PSRAM, 16 MB flash | 800x480 ST7282E over 16-bit RGB, GT911 capacitive touch |
+| LCDWiki / Hosyond 4.3 inch ESP32-S3 (ES3C43P), capacitive version | ESP32-S3 N16R8: 512 KB SRAM, 8 MB PSRAM, 16 MB flash | 800x480 ST7265 over 16-bit RGB, GT911 capacitive touch |
 
-Both show the same screens: the 5 inch board draws the 480x320 layout at 1.5x
+All three show the same screens: the 5 and 4.3 inch boards draw the 480x320 layout at 1.5x
 ([VISUAL_SPEC_800.md](docs/VISUAL_SPEC_800.md)). Pins and panel options are
 in [the hardware page](docs/guide/hardware.md).
 
@@ -96,22 +97,23 @@ work by hand:
 ```sh
 idf.py build flash monitor                                        # 4 inch E32R40T
 idf.py -B build-es3c50p -DMMU_BOARD=es3c50p build flash monitor   # 5 inch ES3C50P
+idf.py -B build-es3c43p -DMMU_BOARD=es3c43p build flash monitor   # 4.3 inch ES3C43P
 ```
 
 | Option | Default | Effect |
 |---|---|---|
-| `MMU_BOARD` | `e32r40t` | `es3c50p` for the 5 inch board: the chip (ESP32-S3), its settings (`sdkconfig.defaults.es3c50p`), its partition table and the 800x480 UI. Give it its own build directory. |
+| `MMU_BOARD` | `e32r40t` | `es3c50p` for the 5 inch board, `es3c43p` for the 4.3 inch: the chip (ESP32-S3), its settings (`sdkconfig.defaults.es3c50p`, the same for both), its partition table and the 800x480 UI. Give each board its own build directory. |
 | `MMU_SPOOL_TAG_WRITER` | `ON` | `OFF` builds the display alone |
 | `MMU_TAG_READER` | `PN5180` | `MFRC522` for the original reader |
 | `MMU_LANGUAGES` | `latin` | the languages the image carries ([Language builds](#language-builds)) |
 | `MMU_APP_VERSION` | `1.0.0` | the base of the app version |
-| `MMU_TAG_LIBRARY` | `openams` | where the tag writer's library is: served by OpenAMS on the printer host, or `board` (5 inch only) in its own flash |
+| `MMU_TAG_LIBRARY` | `openams` | where the tag writer's library is: served by OpenAMS on the printer host, or `board` (5 and 4.3 inch only) in its own flash |
 
 | Image | Partition table | App | Room for a tag library |
 |---|---|---|---|
 | 4 inch with the tag writer | `partitions_tagwriter.csv` | one 3.94 MB partition, updated over USB | none: it comes from OpenAMS |
 | 4 inch, display alone | `partitions.csv` | two 1.94 MB OTA slots | none |
-| 5 inch | `partitions_es3c50p.csv` | two 4 MB OTA slots | 7,475 tags (with `MMU_TAG_LIBRARY=board`) |
+| 5 and 4.3 inch | `partitions_es3c50p.csv` | two 4 MB OTA slots | 7,475 tags (with `MMU_TAG_LIBRARY=board`) |
 
 Flashing and first setup: [docs/guide/flash-and-setup.md](docs/guide/flash-and-setup.md).
 

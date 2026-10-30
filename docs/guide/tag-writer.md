@@ -108,6 +108,22 @@ each pin.
 | 3.3V | Expand (P5) pin 2 | 3V3 |
 | GND | Expand (P5) pin 1 | GND |
 | PN5180: 5V | UART0 (P1) pin 1, with R12 at 0 Ω | 5V |
+
+### The 4.3 inch board (ES3C43P)
+
+The 4.3 inch board is wired exactly as the 5 inch board above, with the same
+connectors and pins. Only the two resistors have other names:
+
+- **R21** is the 0 Ω link from IO18 to the touch controller's interrupt: lift
+  it off. R22 and R23 beside it are the touch controller's I2C pull-ups (4.7
+  kΩ): leave them. R16 on this board is the BOOT button's pull-up, not the
+  link: leave it too.
+- **R20**, 10 kΩ, feeds UART0 (P1) pin 1's 5 V, next to R18 and R19 (100 Ω,
+  the UART lines): make it 0 Ω.
+
+Check each with a meter before you change it: R21 reads about 0 Ω and R20
+about 10 kΩ. The board has one Expand connector, P5, so the reader's chip
+select, BUSY (or reset), 3.3V and GND all go to it.
 | PN5180: RST | tied to 3.3V on the module | |
 | IRQ (and the PN5180's GPIO, AUX, REQ) | not connected | |
 
@@ -135,7 +151,7 @@ idf.py build flash monitor
 |---|---|---|
 | `MMU_SPOOL_TAG_WRITER` | `ON` | `OFF` builds the display alone |
 | `MMU_TAG_READER` | `PN5180` | `MFRC522` for the original reader |
-| `MMU_TAG_LIBRARY` | `openams` | `board` keeps the [tag library](#the-tag-library) in the board's own flash (5 inch only) |
+| `MMU_TAG_LIBRARY` | `openams` | `board` keeps the [tag library](#the-tag-library) in the board's own flash (5 and 4.3 inch only) |
 
 `MMU_LANGUAGES` works as for every image (see the [README](../../README.md)).
 `make menuconfig` has the same choices in a menu
@@ -147,8 +163,8 @@ flash instead of the two OTA slots, which the image does not fit. So **a 4
 inch image with the tag writer is updated over USB**, not with `ota`. Its
 settings live in a separate generated `sdkconfig.tagwriter`, so switching the
 option needs no clean-up. Flashing over USB from one layout to the other keeps
-your Wi-Fi, Moonraker and touch settings (NVS does not move). The 5 inch board
-has one layout for every image, with its two OTA slots.
+your Wi-Fi, Moonraker and touch settings (NVS does not move). The 5 and 4.3
+inch boards have one layout for every image, with its two OTA slots.
 
 ## First use
 
@@ -238,9 +254,9 @@ stored on the board, so the 4 inch board gets the whole library too.
   for it, a few seconds at most when the printer does not answer, and then
   says why the list is empty.
 
-### On the board (5 inch only)
+### On the board (5 and 4.3 inch only)
 
-The 5 inch board can keep the library in its own flash (7,475 tags, enough
+The 5 and 4.3 inch boards can keep the library in their own flash (7,475 tags, enough
 for all of it), to clone without the printer: **Tag library → On the board** in
 `make menuconfig`, or `-DMMU_TAG_LIBRARY=board`. Fill it from a checkout of
 the library over USB:

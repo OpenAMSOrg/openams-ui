@@ -67,7 +67,7 @@ command line overrides the menu (`make BOARD=es3c50p flash`), and `make help`
 lists the rest: `make size`, `make clean`, and `make idf-menuconfig` for
 ESP-IDF's own settings of the chosen board. **Tag library** says where the
 tag writer's library of genuine tags comes from: OpenAMS on the printer host
-(the default), or, on the 5 inch board, the board's own flash, which `make
+(the default), or, on the 5 and 4.3 inch boards, the board's own flash, which `make
 flash` can also fill ([tag-writer.md](tag-writer.md#the-tag-library)).
 
 A build directory that another ESP-IDF Python or another checkout set up (after
@@ -99,6 +99,13 @@ With `idf.py`, give it its own build directory:
 cd platform/esp32
 idf.py -B build-es3c50p -DMMU_BOARD=es3c50p build
 idf.py -B build-es3c50p -DMMU_BOARD=es3c50p flash monitor
+```
+
+The 4.3 inch ES3C43P ([hardware.md](hardware.md#the-43-inch-board-es3c43p)) is
+the same, with `es3c43p`: `make BOARD=es3c43p flash monitor`, or
+
+```sh
+idf.py -B build-es3c43p -DMMU_BOARD=es3c43p build flash monitor
 ```
 
 After a `git pull`, or after a build that failed, start clean (`make clean`
@@ -237,7 +244,7 @@ On the 4 inch board an image with the spool tag writer (the default build)
 has no second app slot: it does not fit one, so update it over USB with
 `idf.py flash` ([tag-writer.md](tag-writer.md)). Build with
 `-DMMU_SPOOL_TAG_WRITER=OFF` for a 4 inch display that updates over the air.
-The 5 inch board updates over the air with or without it.
+The 5 and 4.3 inch boards update over the air with or without it.
 
 There is nothing to uninstall on the printer. Reflash the board, or erase it
 with `idf.py erase-flash`, which also clears the stored settings.

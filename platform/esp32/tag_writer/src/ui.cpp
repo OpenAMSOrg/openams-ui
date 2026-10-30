@@ -74,9 +74,9 @@ static const uint32_t PALETTE[24] = {
     0x0A2989, 0x5E43B7, 0xF55A74, 0xEC008C, 0x9D2235, 0x847D48, 0xA6A9AA, 0x68724D,
 };
 
-// Onboard RGB LED, active low. The ES3C50P has none (its GPIO16 is a panel
-// data line and GPIO17 the reader's), so there the LED calls do nothing.
-#if !defined(MMU_BOARD_ES3C50P)
+// Onboard RGB LED, active low. The ES3C50P and ES3C43P have none (their GPIO16
+// is a panel data line and GPIO17 the reader's), so there the LED calls do nothing.
+#if !defined(MMU_BOARD_ES3C50P) && !defined(MMU_BOARD_ES3C43P)
 #define TW_HAS_LED 1
 static const gpio_num_t LED_R = GPIO_NUM_22, LED_G = GPIO_NUM_16, LED_B = GPIO_NUM_17;
 #endif
