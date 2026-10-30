@@ -3,8 +3,8 @@
 A stand for an OpenAMS display, a PN5180 or RC522 tag reader and a 5 kg load cell, made
 to stand beside an AMS 2 Pro, on either side. A spool sits on two rollers to be weighed,
 and turns freely on them. Its tag passes the reader in the fin, and the screen runs
-openams-ui. It takes either display the firmware builds for: the 5" ES3C50P or the 4"
-E32R40T.
+openams-ui. It takes any display the firmware builds for: the 5" ES3C50P, the 4.3"
+ES3C43P or the 4" E32R40T.
 
 ![The spool station with a spool on its rollers](images/station.png)
 
@@ -26,13 +26,14 @@ platform for each reader:
 | Display | Right of the AMS | Left of the AMS | Base |
 |---|---|---|---|
 | 5" ES3C50P | `out/es3c50p/right/` | `out/es3c50p/left/` | 156 x 254 mm (right), 156 x 241 mm (left) |
+| 4.3" ES3C43P | `out/es3c43p/right/` | `out/es3c43p/left/` | 148 x 247 mm (right), 148 x 239 mm (left) |
 | 4" E32R40T | `out/e32r40t/right/` | `out/e32r40t/left/` | 130 x 224 mm |
 
 For another tilt, or one reader only, make your own (next).
 
-| 5" ES3C50P | 4" E32R40T |
-|---|---|
-| ![The 5" station](images/station.png) | ![The 4" station](images/e32r40t/station.png) |
+| 5" ES3C50P | 4.3" ES3C43P | 4" E32R40T |
+|---|---|---|
+| ![The 5" station](images/station.png) | ![The 4.3" station](images/es3c43p/station.png) | ![The 4" station](images/e32r40t/station.png) |
 
 ## Make your own: the menu
 
@@ -101,7 +102,7 @@ FreeCAD AppImage works if you give its path (`FREECAD=~/FreeCAD.AppImage`).
 
 | Choice | Options | What changes |
 |---|---|---|
-| `BOARD` | `es3c50p`, `e32r40t` | The display. The case's width and the screen pod follow it; the cradle, rollers and fin are the same. |
+| `BOARD` | `es3c50p`, `es3c43p`, `e32r40t` | The display. The case's width and the screen pod follow it; the cradle, rollers and fin are the same. |
 | `READER` | `pn5180`, `rc522`, `both` | The platform and fin cap are made for that reader (its ledges sit at its own height). `both` makes one of each. |
 | `SIDE` | `right`, `left` | Which side of the AMS 2 Pro. The left-hand station is the right-hand one mirrored. |
 | `RAKE` | 10 to 40 degrees | How far the screen leans back from vertical. |
@@ -116,14 +117,16 @@ longer. On a 256 mm bed (Bambu Lab X1, P1, A1):
 | Display | Right of the AMS | Left of the AMS |
 |---|---|---|
 | 5" ES3C50P | 14 to 20 degrees | 10 to 31 degrees |
+| 4.3" ES3C43P | 12 to 27 degrees | 10 to 38 degrees |
 | 4" E32R40T | 10 to 40 degrees | 10 to 40 degrees |
 
 A 280 mm bed takes the 5" station to 40 degrees on the left of the AMS and to 34 on the
-right; beyond 34 the right-hand one needs 320 mm (`BED=320`). Where the pod's ceiling is
+right; beyond 34 the right-hand one needs 320 mm (`BED=320`). It takes the 4.3" station
+to 40 on the left and 36 on the right; beyond 36 the right-hand one needs 320 mm too. Where the pod's ceiling is
 too low for the board (see [The screen](#the-screen)), the board moves up the face half a
 millimetre at a time and the bezel's border grows with it, the same above and below:
 the build prints the border it chose. Beyond 40 degrees the board doesn't fit behind the
-face, and below 10 (14 for the 5" right-hand station) the face passes in front of the
+face, and below 10 (14 for the 5" right-hand station, 12 for the 4.3") the face passes in front of the
 cradle's arc; the build says so and stops.
 
 ### The pictures and the 3D model
@@ -187,7 +190,7 @@ bezel's rim by 0.4 mm. Where it doesn't, the board moves up the face, and both b
 grow with it. That is why the 5" right-hand station's border is wider.
 
 What reaches above the ceiling only in places, the plugs along the board's top edge on
-the right-hand stations and the 5" board's microSD card, gets a pocket of its own in the
+the right-hand stations and the 5" and 4.3" boards' microSD card, gets a pocket of its own in the
 crown, 1 mm wider than it, under a 45-degree gable 2.5 mm under the crown's top. Each pocket starts
 with a flat 3 mm deep, level with the bezel's top end, which prints as a short bridge
 between the pocket's sides. The script picks the smallest crown whose pockets clear their
@@ -201,8 +204,15 @@ with Settings, Display, Rotate 180°.
 |---|---|---|---|---|---|
 | 5" ES3C50P | Right-hand | Rotated 180 degrees from LCDWiki's drawing, as the firmware's `BOARD_ROTATED_180` expects | Top edge, sideways, in pockets in the crown | 20.0 mm | 9.25 mm |
 | 5" ES3C50P | Left-hand | The right way up | Bottom edge | 15.3 mm | 6 mm |
+| 4.3" ES3C43P | Right-hand | Rotated 180 degrees from LCDWiki's drawing, as the firmware's `BOARD_ROTATED_180` expects | Top edge, sideways, in pockets in the crown; UART0 sideways by the USB-C | 19.9 mm | 10.5 mm |
+| 4.3" ES3C43P | Left-hand | The right way up | Bottom edge; UART0 sideways by the USB-C | 20.1 mm | 6 mm |
 | 4" E32R40T | Right-hand | USB-C on the right | From behind, along the top edge | 9.7 mm | 6 mm |
 | 4" E32R40T | Left-hand | USB-C on the left | From behind, along the bottom edge | 9.7 mm | 6 mm |
+
+The 4.3" board's UART0 connector, which gives the PN5180 its 5 V, is on its USB-C edge,
+and its plug goes in sideways toward the outer wall. So that case leaves 12.5 mm beside
+the board on each side, not 9.5, and the screw column next to the plug has a notch for
+it, its roof rising at 45 degrees so it prints.
 
 The 4" board's panel is as wide as its board, so its bezel is narrower. Its reader's
 plugs (SPI, I2C and the IO35 input) go into vertical headers on its back; the pod leaves
@@ -355,7 +365,7 @@ The wiki's guide links where to buy each.
 
 | Part | Qty | Where |
 |---|---|---|
-| Display: ES3C50P 5" (capacitive) or E32R40T 4" (resistive) | 1 | Behind the bezel. The 5" board needs R16 removed and R12 bridged, as in [the tag writer guide](../../docs/guide/tag-writer.md); the 4" one needs no rework. |
+| Display: ES3C50P 5" or ES3C43P 4.3" (capacitive), or E32R40T 4" (resistive) | 1 | Behind the bezel. The 5" board needs R16 removed and R12 bridged, the 4.3" board R21 removed and R20 bridged, as in [the tag writer guide](../../docs/guide/tag-writer.md); the 4" one needs no rework. |
 | PN5180 or RC522 module, right-angle header | 1 | In the fin |
 | Load cell, 5 kg bar, 75 x 12.7 x 12.7 mm | 1 | Under the cradle |
 | NAU7802 breakout | 1 | On the pad in the pod, with foam tape |
@@ -376,6 +386,8 @@ The wiki's guide links where to buy each.
    side: on the right when the bezel faces you on a right-hand station, on the left on a
    left-hand one. Screw it down with the four M3 x 6. On the 4" board, plug the reader's
    cables into its back now (SPI, I2C and the IO35 input; leave the microSD slot empty).
+   On the 4.3" board, plug in the UART0 cable for the PN5180's 5 V now too, by the USB-C:
+   its plug sits in the notch in the column when the bezel goes on.
 2. **Load cell.** Its fixed end is the one the cable leaves, with its holes closer to
    the potting. Bolt it to the block on the base floor, with the M4 screws up through the
    counterbores underneath. The free end, with its holes farther from the potting, is the
@@ -432,7 +444,7 @@ parts, then build again.
 
 | Parameter | Now | What it sets |
 |---|---|---|
-| `BOARDS` | The two displays | Each display's board, glass, visible area, holes, USB-C and plugs. The 5" board's are from LCDWiki's drawing (`5inch_ESP32S3_Size.pdf`, V1.0, ±0.2 mm); the 4" board's from its drawing (`E32R40T_Size.pdf`, V1.0) and LCDWiki's STEP model of it. |
+| `BOARDS` | The three displays | Each display's board, glass, visible area, holes, USB-C and plugs. The 5" board's are from LCDWiki's drawing (`5inch_ESP32S3_Size.pdf`, V1.0, ±0.2 mm); the 4.3" board's from its drawing (`4.3inch_ESP32S3_IPS-模型.pdf`, V1.0), which a board matched where it was measured (the glass's place on the PCB, the active area's in the glass, and 7.9 mm from the glass's front to the PCB's back); the 4" board's from its drawing (`E32R40T_Size.pdf`, V1.0) and LCDWiki's STEP model of it. |
 | `TAG_R` | 52 mm | Distance from the spool's axis to its tag's centre: just outside a refill's cardboard core, measured from a photo with the filament's strands as the scale. It sets the reader's height. |
 | `READERS` | See [The reader](#the-reader) | The boards: measured from a photo, scaled by the RC522's calipered size, so about ±0.5 mm. `front` is the tallest part on the component side: the RC522's crystal is taken as 4.6 mm. |
 | `STANDOFF` | 2.2 mm | The board's back off the fin's wall: the header's solder joints. |

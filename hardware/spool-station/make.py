@@ -40,9 +40,10 @@ RAKE_RANGE = (10.0, 40.0)       # the tilts the build's checks pass, given a bed
 STATION = [
     ("BOARD", "Display board", {
         "es3c50p": '5" ES3C50P (ESP32-S3, 800x480, capacitive touch)',
+        "es3c43p": '4.3" ES3C43P (ESP32-S3, 800x480, capacitive touch)',
         "e32r40t": '4" E32R40T (ESP32, 480x320, resistive touch)',
     }, "es3c50p",
-     "The OpenAMS display the case holds: one of the two boards the display firmware builds "
+     "The OpenAMS display the case holds: one of the three boards the display firmware builds "
      "for (platform/esp32, `make menuconfig` there). The case's width and the screen pod "
      "follow the board; the cradle, the rollers and the reader's fin are the same."),
     ("READER", "Tag reader", {
@@ -65,7 +66,8 @@ STATION = [
      "elbow height; more tilts the screen up toward you, for a low shelf. The crown over "
      "the screen and the case's depth follow it: further back, the base is longer. On a "
      "256 mm bed the 5\" station takes 14 to 20 degrees on the right of the AMS and 10 to "
-     "31 on the left, the 4\" one 10 to 40 on either side; past that the 5\" needs a bigger bed."),
+     "31 on the left, the 4.3\" one 12 to 27 and 10 to 38, the 4\" one 10 to 40 on either "
+     "side; past that the 5\" and 4.3\" need a bigger bed."),
     ("BED", "Print bed (mm, square)", (150.0, 1000.0), "256",
      "Your printer's bed. The base is the longest part and must fit it: the build checks. "
      "256 for Bambu Lab's X1, P1 and A1; 350 for the H2D."),
@@ -520,7 +522,7 @@ HELP = """targets:
   show           the choices, and where the files go
   help           this
 choices on the command line, for this run only (the menu's names):
-  BOARD=es3c50p|e32r40t  READER=pn5180|rc522|both  SIDE=right|left  RAKE=10..40  BED=256
+  BOARD=es3c50p|es3c43p|e32r40t  READER=pn5180|rc522|both  SIDE=right|left  RAKE=10..40  BED=256
   FREECAD=path  BLENDER=path  SLICER=path  DEVICE=auto|OPTIX|CUDA|HIP|METAL|ONEAPI|CPU  SAMPLES=64
   SIZE=100  OUT=dir  SHOTS=station,side,...  VERBOSE=1
 """

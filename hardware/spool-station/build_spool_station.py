@@ -1,4 +1,4 @@
-"""Parametric printable spool station: an OpenAMS display (the 5" ES3C50P or the 4" E32R40T),
+"""Parametric printable spool station: an OpenAMS display (the 5" ES3C50P, the 4.3" ES3C43P or the 4" E32R40T),
 a PN5180 or RC522 reader and a 5 kg bar load cell under a spool cradle, to stand beside an AMS.
 
 The easy way to run it is the menu, `python make.py menuconfig` (see README.md). By hand,
@@ -7,7 +7,7 @@ with FreeCAD's command-line interpreter (FreeCAD 0.21+):
     freecadcmd -c "exec(open('build_spool_station.py').read())"
 
 These choose what it builds:
-    STATION_BOARD=es3c50p|e32r40t     the display (es3c50p is the default)
+    STATION_BOARD=es3c50p|es3c43p|e32r40t   the display (es3c50p is the default)
     STATION_READER=pn5180|rc522|both  the platform and fin cap for that reader, or one of each
     STATION_SIDE=right|left           which side of the AMS the station stands on
     STATION_RAKE=20                   the screen's lean back from vertical, 10 to 40 degrees
@@ -55,7 +55,7 @@ def choice(name, default, allowed):
     return value
 
 
-# --- The display boards: the two the firmware builds for (platform/esp32, MMU_BOARD) -----
+# --- The display boards: the three the firmware builds for (platform/esp32, MMU_BOARD) ---
 # (a, b) from the installed board's bottom-left corner, seen from the front, its USB-C on
 # the right edge (a = the PCB's width), toward the fin and the USB opening in the right wall.
 #   pcb: width, height, thickness; holes: the four mounting holes, M3
@@ -64,10 +64,12 @@ def choice(name, default, allowed):
 #   back_parts: the tallest part behind the PCB; usb: the USB-C's b on the right edge, and
 #     its receptacle's centre behind the PCB's back face
 #   edge_plugs: a of the 1.25 mm headers on the top edge whose plugs go in sideways, up
-#     the slope; back_plugs: (a0, a1, b0, b1) of those whose plugs go in from behind, the
-#     ones the reader and scale use
+#     the slope; side_plugs: b of those on the right edge, by the USB-C, whose plugs go in
+#     sideways toward the right wall; back_plugs: (a0, a1, b0, b1) of those whose plugs go
+#     in from behind, the ones the reader and scale use
 #   sd: a of the microSD slot on the top edge, None where the card must stay out
 #   touch_flex: where the touch panel's flex leaves the glass, None if behind it
+#   side: the case's width beyond the PCB, each side (the board sits centred)
 #   s0: the board's bottom edge, up the slope from the face's lower edge, per side (see
 #     BOARD_UP): the plugs it has on its top edge set it, since the crown over the bezel
 #     must cover them
@@ -85,10 +87,37 @@ BOARDS = {
         back_parts=6.45,
         usb=(42.0, 1.65),                           # centred
         edge_plugs=[71.70, 86.56, 101.42, 114.50, 125.26],   # P3..P6, and P1
+        side_plugs=[],
         back_plugs=[],
         sd=53.40,
         touch_flex=(2.15, 6.55, 13.5, 12.15),      # beside the glass, bottom-left
+        side=9.5,
         s0=dict(right=8.0, left=4.0),
+    ),
+    # LCDWiki ES3C43P, 4.3inch_ESP32S3_IPS-模型.pdf V1.0 (+/-0.2), turned 180 degrees like the
+    # 5". The board on the bench matches it (the glass 8.6 in from the short edges and 3 from
+    # the long ones, the active area 4.5 under the glass's top edge, 7.9 from the glass's
+    # front to the PCB's back); the drawing in the specification PDF doesn't. Its 1.25 mm headers are side entry: P3 (SPI), P4 (UART1)
+    # and P5 (Expand) on the top edge, and P1 (UART0, the PN5180's 5 V) on the right edge
+    # above the USB-C, whose plug needs the wider sides. The touch flex goes through a slot
+    # in the PCB, behind the glass.
+    "es3c43p": dict(
+        title='4.3" ES3C43P (ESP32-S3, 800x480 RGB panel, capacitive touch)',
+        pcb=(123.0, 74.0, 1.6),
+        holes=[(3.5, 3.5), (119.5, 3.5), (3.5, 70.5), (119.5, 70.5)],   # 116 x 67
+        glass=(8.43, 3.13, 114.47, 70.87),          # 106.04 x 67.74
+        glass_t=4.78,                               # touch 1.78 + LCM 3.0
+        face_to_pcb=6.27,                           # with 1.5 of tape behind the LCM
+        va=(13.43, 7.22, 109.47, 61.58),            # 96.04 x 54.36
+        back_parts=3.4,
+        usb=(33.72, 1.65),
+        edge_plugs=[73.52, 92.57, 107.05],          # P3, P4, P5
+        side_plugs=[50.62],                         # P1
+        back_plugs=[],
+        sd=51.20,
+        touch_flex=None,
+        side=12.5,
+        s0=dict(right=8.0, left=8.0),
     ),
     # LCDWiki E32R40T, E32R40T_Size.pdf V1.0 and its STEP model (E32R40T_3D.zip). The panel
     # is portrait and driven landscape: a runs from the ESP32 module's end (its antenna
@@ -107,11 +136,13 @@ BOARDS = {
         back_parts=5.1,                             # 5.09 on the drawing
         usb=(30.44, 1.09),                          # centred
         edge_plugs=[],
+        side_plugs=[],
         back_plugs=[(14.62, 21.37, 56.17, 60.37),   # I2C: 3.3 V, GND, RST
                     (37.62, 44.37, 56.17, 60.37),   # SPI
                     (79.55, 83.80, 56.18, 60.38)],  # IO35/IO39
         sd=None,
         touch_flex=None,
+        side=9.5,
         s0=dict(right=8.0, left=8.0),
     ),
 }
@@ -128,13 +159,14 @@ PCB_HOLES = B["holes"]
 GLASS, GLASS_T, FACE_TO_PCB, VA = B["glass"], B["glass_t"], B["face_to_pcb"], B["va"]
 BACK_PARTS = B["back_parts"]
 USB_B, USB_W = B["usb"]
-EDGE_PLUGS, BACK_PLUGS, SD_A, TOUCH_FLEX = B["edge_plugs"], B["back_plugs"], B["sd"], B["touch_flex"]
+EDGE_PLUGS, SIDE_PLUGS, BACK_PLUGS = B["edge_plugs"], B["side_plugs"], B["back_plugs"]
+SD_A, TOUCH_FLEX = B["sd"], B["touch_flex"]
 BOARD_UP = 1 if SIDE == "right" else -1   # -1: the board's top edge is down the slope (see above)
 BOARD_S0 = B["s0"][SIDE]
 PLUG_BACK = 10.0          # a 1.25 mm plug in a vertical header, and its wires' turn, behind the PCB
 
 # --- Bezel -------------------------------------------------------------------------
-W = PCB_W + 2 * 9.5       # case width; the board sits centred, 9.5 mm in from each side
+W = PCB_W + 2 * B["side"]   # case width; the board sits centred
 Z_F = 14.0                # height of the face's lower front edge
 HEADROOM = 2.0            # from the board, its plugs and its microSD card to the pod roof's inside
 T_PLATE = 2.5
@@ -462,6 +494,9 @@ def access_envelopes():
     for a in EDGE_PLUGS:
         u, s = board_uv(a, PCB_H)
         env[f"header plug at {a:.1f}"] = plate_box(u - 3.5, u + 3.5, s - up, s + 9 * up, wb, wb + 5.5)
+    for b in SIDE_PLUGS:
+        u, s = board_uv(PCB_W, b)
+        env[f"side plug at {b:.1f}"] = plate_box(u - 1, u + 9, s - 3.5, s + 3.5, wb, wb + 5.5)
     for a0, a1, b0, b1 in BACK_PLUGS:
         u0, u1, s0, s1 = board_rect(a0 - 0.5, b0 - 0.5, a1 + 0.5, b1 + 0.5)
         env[f"header plug at {(a0 + a1) / 2:.1f}"] = plate_box(u0, u1, s0, s1, wb, wb + PLUG_BACK)
@@ -747,6 +782,15 @@ def make_base():
         for x0, x1 in ((0, COL_W), (W - COL_W, W)):
             y = min(y0, ub.YMin - 1) if x1 > ub.XMin and y0 < ub.YMax and y1 > ub.YMin else y0
             base = base.fuse(box(x0, x1, max(y, 0), min(y1, Y_POD - WALL), 0, Z_TOP).common(outer))
+    # A plug on the board's right edge (the 4.3" board's UART0, by the USB-C) reaches into the
+    # column beside it: a notch for it, its roof rising 45 degrees to the pod so it prints.
+    for name, env in access_envelopes().items():
+        if name.startswith("side plug"):
+            eb = env.BoundBox
+            x0 = W - COL_W - 0.5
+            pts = [(x0, eb.YMin, eb.ZMin), (eb.XMax, eb.YMin, eb.ZMin), (eb.XMax, eb.YMin, eb.ZMax),
+                   (x0, eb.YMin, eb.ZMax + eb.XMax - x0)]
+            base = base.cut(poly_face(pts).extrude(V(0, eb.YMax - eb.YMin, 0)))
     base = base.cut(cradle_cut(R_CRADLE)).cut(crown_cut())
     # Room round the bezel's board bosses: the upper ones reach into the base under the crown.
     # These and the screws' pilots run nearly level, so they come to a point at the top.
@@ -1362,7 +1406,9 @@ def check(case, readers):
                 for pname, p in parts.items():
                     v = overlap(e, p)
                     if v > 1e-3:
-                        print(f"[access] {ename} blocked by {pname}: {v:.3f} mm3")
+                        bb = e.common(p).BoundBox
+                        print(f"[access] {ename} blocked by {pname}: {v:.3f} mm3 at x {bb.XMin:.1f}..{bb.XMax:.1f}, "
+                              f"y {bb.YMin:.1f}..{bb.YMax:.1f}, z {bb.ZMin:.1f}..{bb.ZMax:.1f}")
                         ok = False
         pairs = [("base", "bezel"), ("base", "platform"), ("bezel", "platform"), ("platform", "fin cap"), ("platform", "RF mark")]
         for a, b in pairs if reader == first else pairs[3:4]:
