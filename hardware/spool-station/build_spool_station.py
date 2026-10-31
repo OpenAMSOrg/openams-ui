@@ -287,9 +287,9 @@ AMS = dict(w=372.0, d=280.0, h=226.0, base_h=11.7, base_in_front=7.0, base_in_si
 # plugs and lets the wires straight down into the base. The antenna's centre is under the
 # spool's axis, TAG_R below it, where the tag passes. A cap closes the slot from the top:
 # the slot's ends flare out there and the cap's shoulders rest on them, so it sits flush,
-# just over the board, with or without one. The boards' antennas sit at different
-# heights on them, so the platform is built for each reader; only the slot and the cap
-# differ.
+# clear of the board, with or without one, and a bead along it snaps into the outer
+# wall. The boards' antennas sit at different heights on them, so the platform is built
+# for each reader; only the slot and the cap differ.
 # Measured from an overhead photo of both boards, scaled by the RC522's calipered size.
 # w x l: the board, l from the header edge; ant: the antenna loop's centre from the header
 # edge; header: its centre from the board's left edge (component side up, header at the
@@ -312,9 +312,14 @@ FIN_OUT = 2.5
 FIN_END = 6.0             # end walls past the slot
 FIN_R = 6.0               # fin top corners
 FIN_FILLET = 6.0          # round in the corners where the fin rises from the rail
-CAP_MIN = 5.0             # cap over the boards
+CAP_CLR = 2.4             # the cap's underside over the board's top edge: room for a board a little longer than measured
+CAP_MIN = 4.6             # the cap, over the taller board
 CAP_GAP = 0.15
 CAP_CATCH = 2.0           # the slot's ends flare out 45 degrees over its top CAP_CATCH mm, where the cap's shoulders rest
+# The cap's snap: a bead along the middle of its outside, 45-degree flanks, that clicks into
+# a groove in the slot's outer wall as the fin's thin inner wall gives. Its height, length,
+# crest, and the crest's centre under the fin's top.
+SNAP = (0.6, 14.0, 0.4, 2.6)
 TAG_R = 52.0              # the tag's centre from the spool's axis: just outside a refill's cardboard core (from a photo)
 # Contactless mark on the fin's outside, a flush inlay in a second colour: depth into the
 # wall (three 0.4 mm lines, as it sits on a vertical face), stroke, arc radii.
@@ -733,7 +738,7 @@ SLOT_W = BOARD_W + 2 * SLOT_CLR
 Y_FIN = (Y_C - SLOT_W / 2 - FIN_END, Y_C + SLOT_W / 2 + FIN_END)
 Y_TAG = Y_C                               # the antenna's centre, under the spool's axis
 Z_TAG = SPOOL_Z - TAG_R
-FIN_TOP = Z_TAG + max(r["l"] - r["ant"] for r in READERS.values()) + CAP_MIN
+FIN_TOP = Z_TAG + max(r["l"] - r["ant"] for r in READERS.values()) + CAP_CLR + CAP_MIN
 
 
 # --- Base ----------------------------------------------------------------------------
@@ -1026,6 +1031,25 @@ def catch_flare(g=0.0):
     return yz_prism([(Y_C - hw, z0), (Y_C + hw, z0), (Y_C + out, z1), (Y_C - out, z1)], SLOT_X[0] + g, SLOT_X[1] - g)
 
 
+def snap_bead(grow=0.0, back=0.2):
+    """The cap's bead (SNAP) on its outside, the cap centred in the slot; grow: the groove's
+    room all round it, square-ended and 1 mm longer each way. back: the section runs that
+    far back into the cap, or for the groove, into the slot."""
+    h, l, f, d = SNAP
+    x0, zc = SLOT_X[1] - CAP_GAP, FIN_TOP - d
+    zf, zb = f + grow, f + h + 2 * grow + back           # the crest's half and, at x0 - back, the base's
+    xt = x0 + h + grow
+    pts = [(x0 - back, zc - zb), (xt, zc - zf), (xt, zc + zf), (x0 - back, zc + zb)]
+    if grow:
+        y0, y1 = Y_C - l / 2 - 1, Y_C + l / 2 + 1
+        return poly_face([(x, y0, z) for x, z in pts]).extrude(V(0, y1 - y0, 0))
+    y0, y1 = Y_C - l / 2 - back, Y_C + l / 2 + back
+    bead = poly_face([(x, y0, z) for x, z in pts]).extrude(V(0, y1 - y0, 0))
+    ends = poly_face([(x0 - back, y0, zc - zb), (xt, y0 + h + back, zc - zb), (xt, y1 - h - back, zc - zb),
+                      (x0 - back, y1, zc - zb)]).extrude(V(0, 0, 2 * zb))      # 45 degrees in plan
+    return bead.common(ends)
+
+
 def reader_slot(reader):
     """The slot from the fin's top, less the ribs, and the plug pocket below the board,
     between the ledges, open through the platform's bottom."""
@@ -1034,7 +1058,7 @@ def reader_slot(reader):
     slot = box(SLOT_X[0], SLOT_X[1], Y_C - hw, Y_C + hw, zb, FIN_TOP + 1)
     for sgn in (-1, 1):
         slot = slot.cut(box(SLOT_X[0] - 1, X_BACK, Y_C + sgn * hw, Y_C + sgn * (hw - RIB_W), zb - 1, FIN_TOP + 2))
-    slot = slot.fuse(catch_flare())
+    slot = slot.fuse(catch_flare()).fuse(snap_bead(CAP_GAP, 1.0))
     pw = pocket_w(reader) / 2
     return slot.fuse(box(SLOT_X[0], SLOT_X[1], Y_C - pw, Y_C + pw, Z_PB - 1, zb + 0.01)).removeSplitter()
 
@@ -1067,14 +1091,15 @@ def make_mark():
 
 def make_cap(reader):
     """Plug for the reader's slot, flush with the fin's top: its 45-degree shoulders rest on
-    the slot's flared ends (catch_flare), so the platform holds it, SLOT_CLR over the
-    board's top edge. Its ends carry the fin's top round on. Prints as it stands."""
+    the slot's flared ends (catch_flare), so the platform holds it, CAP_CLR over the
+    board's top edge, and its bead (snap_bead) snaps into the outer wall. Its ends carry
+    the fin's top round on. Prints as it stands."""
     g = CAP_GAP
     _, zt = board_z(reader)
     hw = SLOT_W / 2
-    cap = box(SLOT_X[0] + g, SLOT_X[1] - g, Y_C - hw + g, Y_C + hw - g, zt + SLOT_CLR, FIN_TOP)
-    cap = cap.fuse(catch_flare(g).common(box(SLOT_X[0], SLOT_X[1], Y_C - 50, Y_C + 50, zt + SLOT_CLR, FIN_TOP)))
-    cap = cap.common(fin_body())
+    cap = box(SLOT_X[0] + g, SLOT_X[1] - g, Y_C - hw + g, Y_C + hw - g, zt + CAP_CLR, FIN_TOP)
+    cap = cap.fuse(catch_flare(g).common(box(SLOT_X[0], SLOT_X[1], Y_C - 50, Y_C + 50, zt + CAP_CLR, FIN_TOP)))
+    cap = cap.common(fin_body()).fuse(snap_bead())
     for sgn in (-1, 1):                                # round the ribs, up to their chamfered tops
         rib = box(SLOT_X[0], X_BACK + g, Y_C + sgn * hw, Y_C + sgn * (hw - RIB_W - g), zt - 1, FIN_TOP + 1)
         cap = cap.cut(rib.cut(catch_flare()))
@@ -1439,7 +1464,7 @@ def check(case, readers):
         zb, zt = board_z(reader)
         ledge = (SLOT_W - pocket_w(reader)) / 2 - SLOT_CLR
         print(f"{reader}: board z {zb:.1f}..{zt:.1f}, antenna {SPOOL_Z - Z_TAG:.1f} mm under the spool's axis and "
-              f"{FIN_IN + STANDOFF + READERS[reader]['t']:.1f} mm behind the fin's face; on {ledge:.1f} mm ledges, cap {FIN_TOP - zt - SLOT_CLR:.1f} mm on {CAP_CATCH:g} mm catches")
+              f"{FIN_IN + STANDOFF + READERS[reader]['t']:.1f} mm behind the fin's face; on {ledge:.1f} mm ledges, cap {FIN_TOP - zt - CAP_CLR:.1f} mm, {CAP_CLR:g} mm over the board, on {CAP_CATCH:g} mm catches")
         ok &= ledge >= 1.0
     print("held parts and access:", "all clear" if ok else "see above")
     platform = readers[first][0]
