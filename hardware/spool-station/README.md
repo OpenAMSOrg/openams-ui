@@ -269,7 +269,9 @@ wires go straight down into the base:
   antenna there: the PN5180's are 10 mm lower than the RC522's, which is why each reader
   has its own platform. Between the ledges, a pocket open at the bottom takes the Dupont
   plugs, and the wires go straight on down.
-- **Top:** the reader's fin cap closes the slot and holds the board down.
+- **Top:** the reader's fin cap closes the slot. The slot's ends flare out at 45 degrees
+  at the top, and the cap's shoulders rest on them: it sits flush with the fin, board or
+  no board, 0.4 mm over the board's top edge, and its ends carry the fin's round on.
 
 The fin stands in the outer rail, under the spool's axis, with a 6 mm fillet where it
 rises from the rail at each end. It is 112 mm tall.
@@ -415,7 +417,8 @@ The wiki's guide links where to buy each.
 3. **Reader.** Plug its wires onto the header and feed them down the fin's slot, out of
    the pocket at the bottom. Slide the board in after them, header down and its back
    toward the spool, until it sits on the ledges. A strip of foam tape on its back holds
-   it to the ribs. Press the reader's cap in on top.
+   it to the ribs. Drop the reader's cap in on top, grip notch to the back: it rests on
+   its shoulders, flush with the fin.
 4. **Platform.** Set the platform on the cell's free end and screw it on from the
    cradle. It must float: there is 1.5 mm of air above the base walls all round, and
    2 mm at the pod's back wall. Those gaps are also the overload stop.
