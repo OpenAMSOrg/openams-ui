@@ -39,7 +39,7 @@ For another tilt, or one reader only, make your own (next).
 
 `make.py` asks what to build, the way `make menuconfig` does for the display firmware,
 and runs FreeCAD to build it. It needs only FreeCAD; the pictures also need Blender,
-and the print check PrusaSlicer.
+and the print check PrusaSlicer, which the pictures use too when it's there.
 
 1. **Install FreeCAD** 0.21 or newer from [freecad.org](https://www.freecad.org/downloads.php),
    and **Python 3** if you don't have it (Windows: FreeCAD's own `python.exe`, in its
@@ -140,6 +140,25 @@ Both run Blender in the background. `DEVICE` picks the card it renders on (`auto
 the first GPU it finds), `SAMPLES` the quality, `SIZE=50` a quicker, smaller set, and
 `SHOTS=station,side` only those pictures. The pictures here come from the 5" right-hand
 station.
+
+The printed parts in the pictures are drawn as they come off the printer, not as
+modelled. Before it renders, `make.py render` runs `toolpaths.py`, which slices each
+part with PrusaSlicer, as it lies in its STL (0.2 mm layers, a 0.4 mm nozzle, three
+perimeters, 15 % gyroid infill), and turns the G-code back into geometry: every
+extrusion a bead of the width and height PrusaSlicer gives it, flat on top and
+underneath and round at the sides. It keeps the beads that can be seen: the outer walls,
+the top skins, bridges and overhangs, the first layer, and whatever the next layer
+doesn't cover. Then it puts each part back where it sits in the station, or where it
+floats in the exploded view. In the cut pictures every bead near the cut is kept and cut
+off there, so the cut shows the walls and the infill inside. PrusaSlicer's own "Export
+toolpaths as OBJ" does much the same, but only from its window. Without PrusaSlicer, or
+with `LOOK=smooth`, the parts are drawn as modelled.
+
+![Close by the fin: the layers of the platform and the reader's cap, and the RF mark in a second colour, set into the fin's face](images/detail.png)
+
+`python3 toolpaths.py out/es3c50p/right` runs it on its own, after a build; the beads go
+to `toolpaths/` in each folder of meshes, and `render_blender.py` uses them when they are
+there.
 
 ### By hand
 
@@ -310,8 +329,8 @@ Each build's folder holds:
 | `build.json` | What the folder was built for: display, side, tilt, readers, and whether the checks passed. |
 
 The scripts: `make.py` is the menu, `build_spool_station.py` the FreeCAD script that
-makes the parts, `render_blender.py` the pictures, `make_glb.py` the 3D model and
-`print_check.py` the print check.
+makes the parts, `render_blender.py` the pictures, `toolpaths.py` the printed parts in
+them, `make_glb.py` the 3D model and `print_check.py` the print check.
 
 ## Printing
 

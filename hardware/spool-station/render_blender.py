@@ -7,6 +7,9 @@ out/<board>/<side>/mesh (and mesh_exploded, mesh_cut/...); the cameras follow th
 size and side. `python make.py render` runs this for every set. SHOTS=a,b renders only those
 views. RENDER_DEVICE picks the card: AUTO (the first GPU there is, else the CPU; the
 default), OPTIX, CUDA, HIP, METAL, ONEAPI or CPU. RES_PERCENT=50 renders smaller.
+
+The printed parts are drawn as printed, bead by bead, where toolpaths.py has sliced them
+(MESH_DIR/toolpaths/<part>.ply); LOOK=smooth draws them as modelled.
 """
 
 import json
@@ -26,6 +29,7 @@ RES = (1800, 1350)
 HDRI = os.path.join(os.path.dirname(bpy.app.binary_path), "%d.%d" % bpy.app.version[:2],
                     "datafiles", "studiolights", "world", "studio.exr")
 VIEW = json.load(open(os.path.join(MESH_DIR, "view.json")))
+PRINTED = os.environ.get("LOOK", "printed") != "smooth"
 LEFT = VIEW["side"] == "left"
 W = VIEW["W"]
 
@@ -48,6 +52,7 @@ CRADLE = ("platform", "cap", "mark", "reader", "rollers", "bearings", "washers",
 SHOTS = {
     "station": (35, 24, 760, ("ams",), "station"),          # from the front, on the fin's side
     "side": (90, 12, 720, ("spool", "ams"), "station"),     # the fin's side
+    "detail": (62, 16, 300, ("ams",), "fin"),               # close by the fin's RF mark: the parts as printed
     "with_ams": (22, 24, 1250, (), "whole"),
     "top": (0, 90, 1150, (), "floor"),
     "cradle": (235, 42, 480, ("spool", "ams"), "cradle"),   # the rollers, from behind on the AMS's side
@@ -77,6 +82,15 @@ def material(name, rgb, rough=0.5, metal=0.0, alpha=1.0, glow=0.0):
 def load_stl(name, mat):
     if not os.path.exists(os.path.join(MESH_DIR, name + ".stl")):
         return None
+    beads = os.path.join(MESH_DIR, "toolpaths", name + ".ply")
+    if PRINTED and os.path.exists(beads):
+        # The sliced part: its beads carry their own normals, round at the sides.
+        bpy.ops.object.select_all(action="DESELECT")
+        bpy.ops.wm.ply_import(filepath=beads, global_scale=S)
+        o = bpy.context.selected_objects[0]
+        o.name = name
+        o.data.materials.append(mat)
+        return o
     bpy.ops.object.select_all(action="DESELECT")
     bpy.ops.wm.stl_import(filepath=os.path.join(MESH_DIR, name + ".stl"), global_scale=S)
     o = bpy.context.selected_objects[0]

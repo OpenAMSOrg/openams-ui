@@ -1516,10 +1516,13 @@ def write_3mf(path, parts, name):
 
 
 def export_two_colour(platform, mark, reader):
-    """Platform plus the mark's inlay in the platform's print orientation, sharing one shift."""
+    """Platform plus the mark's inlay in the platform's print orientation, sharing one shift.
+    Returns the matrix from the mark's STL back to the station (see export())."""
     import Import
     shapes = [platform.copy(), mark.copy()]
     bb = tight(shapes[0])
+    back = App.Matrix()
+    back.move(V(bb.XMin, bb.YMin, bb.ZMin))
     for s in shapes:
         s.translate(V(-bb.XMin, -bb.YMin, -bb.ZMin))
     os.makedirs(OUT, exist_ok=True)
@@ -1538,13 +1541,18 @@ def export_two_colour(platform, mark, reader):
     mb, pb = tight(shapes[1]), tight(shapes[0])
     print(f"RF mark: {len(shapes[1].Solids)} bodies, {shapes[1].Volume:.1f} mm3, "
           f"x {mb.XMin:.2f}..{mb.XMax:.2f} in print orientation (platform x {pb.XMin:.2f}..{pb.XMax:.2f})")
+    return back
 
 
 def export(name, shape, placement=None):
+    """The part as it prints, on the bed at the origin. Returns the matrix from its STL back
+    to `shape`'s frame, for toolpaths.py, which puts the sliced part where it sits."""
     s = shape.copy()
-    if placement is not None:
-        s.transformShape(placement.toMatrix())
+    m = placement.toMatrix() if placement is not None else App.Matrix()
+    s.transformShape(m)
     bb = tight(s)
+    back = App.Matrix()
+    back.move(V(bb.XMin, bb.YMin, bb.ZMin))
     s.translate(V(-bb.XMin, -bb.YMin, -bb.ZMin))
     os.makedirs(OUT, exist_ok=True)
     s.exportStep(os.path.join(OUT, name + ".step"))
@@ -1553,6 +1561,15 @@ def export(name, shape, placement=None):
     bb = tight(s)
     print(f"{name}: {bb.XLength:.1f} x {bb.YLength:.1f} x {bb.ZLength:.1f} mm, "
           f"volume {s.Volume / 1000:.1f} cm3, valid {s.isValid()}, solids {len(s.Solids)}")
+    return m.inverse().multiply(back)
+
+
+def mesh_folder(d):
+    """A folder for the pictures' meshes, without the sliced parts of an earlier build."""
+    import shutil
+    shutil.rmtree(os.path.join(d, "toolpaths"), ignore_errors=True)
+    os.makedirs(d, exist_ok=True)
+    return d
 
 
 def write_mesh(path, shape, deflection=0.05, angular=0.4):
@@ -1569,13 +1586,14 @@ print(f"footprint {W:.1f} x {Y_END:.1f} mm, notch for the AMS left of x {X_CUT:.
 ok = check({"base": base, "bezel": bezel, "RF mark": mark}, readers)
 
 flip = App.Placement(V(0, 0, 0), App.Rotation(V(1, 0, 0), 180))
-export("spool_station_base", placed(base))
-export("spool_station_bezel", placed(bezel), flip.multiply(PLATE_PL.inverse()))   # face down
+frames = {}                                              # each STL back to the station (toolpaths.py)
+frames["base"] = export("spool_station_base", placed(base))
+frames["bezel"] = export("spool_station_bezel", placed(bezel), flip.multiply(PLATE_PL.inverse()))   # face down
 for reader, (platform, cap) in readers.items():
-    export(f"spool_station_platform_{reader}", placed(platform))    # single colour: the mark stays engraved
-    export_two_colour(placed(platform), placed(mark), reader)
-    export(f"spool_station_fin_cap_{reader}", placed(cap))          # as it stands
-export("spool_station_roller", make_roller())            # standing on its end; print two
+    frames["platform_" + reader] = export(f"spool_station_platform_{reader}", placed(platform))   # single colour: the mark stays engraved
+    frames["mark"] = export_two_colour(placed(platform), placed(mark), reader)
+    frames["cap_" + reader] = export(f"spool_station_fin_cap_{reader}", placed(cap))              # as it stands
+frames["roller"] = export("spool_station_roller", make_roller())            # standing on its end; print two
 with open(os.path.join(OUT, "build.json"), "w") as f:    # what these files are
     json.dump({"board": BOARD, "side": SIDE, "rake": RAKE, "readers": list(readers), "checks": "PASS" if ok else "FAIL",
                "footprint": [round(W, 1), round(Y_END, 1)], "height": round(CROWN_C[1] + CROWN_R, 1)}, f, indent=1)
@@ -1588,8 +1606,7 @@ assembly = [base, bezel, platform, cap, mark, held["PCB"], held["glass"], cell_m
 Part.Compound([placed(s) for s in assembly]).exportStep(os.path.join(OUT, "spool_station_assembly.step"))
 # Meshes for the pictures (render_blender.py), in the station's frame, and what the cameras
 # need to know, in the build's.
-mesh_dir = os.path.join(OUT, "mesh")
-os.makedirs(mesh_dir, exist_ok=True)
+mesh_dir = mesh_folder(os.path.join(OUT, "mesh"))
 for name, shape in (("base", base), ("bezel", bezel), ("platform", platform), ("cap", cap), ("mark", mark), ("pcb", held["PCB"]),
                     ("glass", held["glass"]), ("cell", cell_model()), ("reader", reader_model(READER)), ("spool", spool_model()),
                     ("ams", ams_model()), ("rollers", rollers_model()), ("fasteners", fasteners)):
@@ -1603,8 +1620,7 @@ with open(os.path.join(mesh_dir, "view.json"), "w") as f:
 built = dict(base=base, bezel=bezel, platform=platform, cap=cap, mark=mark)
 boom = exploded(READER, built)
 Part.Compound([placed(s) for k, s in boom.items() if not k.startswith("guides")]).exportStep(os.path.join(OUT, "spool_station_exploded.step"))
-boom_dir = os.path.join(OUT, "mesh_exploded")
-os.makedirs(boom_dir, exist_ok=True)
+boom_dir = mesh_folder(os.path.join(OUT, "mesh_exploded"))
 for name, shape in boom.items():
     write_mesh(os.path.join(boom_dir, name + ".stl"), shape, angular=0.3)
 with open(os.path.join(boom_dir, "view.json"), "w") as f:
@@ -1614,26 +1630,53 @@ with open(os.path.join(boom_dir, "view.json"), "w") as f:
                    ROLLER_C=[(xa + xb) / 2 - 45, Y_C - ROLLER_Y, Z_ROLL + EXPLODE["platform"] + EXPLODE["rollers"] - 10]), f)
 
 
-def cut_set(d, cutter, reader):
-    """The pictures' meshes with everything in `cutter` cut away."""
+def flat(m):
+    return [m.A11, m.A12, m.A13, m.A14, m.A21, m.A22, m.A23, m.A24, m.A31, m.A32, m.A33, m.A34, m.A41, m.A42, m.A43, m.A44]
+
+
+# The printed parts for toolpaths.py, which renders them sliced, bead by bead: each one's STL,
+# the matrix from it to the station, and its move in the exploded view, in the station's frame.
+mirror = App.Matrix(-1, 0, 0, W, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) if SIDE == "left" else App.Matrix()
+moves = {}
+for kind, _, move in pieces(READER, built):
+    moves.setdefault(kind, []).append([-move.x if SIDE == "left" else move.x, move.y, move.z])
+printed = [dict(kind="base", stl="spool_station_base.stl", matrix=flat(frames["base"]), move=moves["base"][0]),
+           dict(kind="bezel", stl="spool_station_bezel.stl", matrix=flat(frames["bezel"]), move=moves["bezel"][0]),
+           dict(kind="mark", stl="spool_station_platform_mark.stl", matrix=flat(frames["mark"]), move=moves["mark"][0])]
+for r in readers:
+    printed += [dict(kind="platform", reader=r, stl=f"spool_station_platform_{r}.stl", matrix=flat(frames["platform_" + r]),
+                     move=moves["platform"][0]),
+                dict(kind="cap", reader=r, stl=f"spool_station_fin_cap_{r}.stl", matrix=flat(frames["cap_" + r]), move=moves["cap"][0])]
+x0 = roller_ends()[0]
+for y, move in zip(roller_ys(), moves["rollers"]):
+    tube = mirror.multiply(App.Matrix(0, 0, 1, x0, 0, 1, 0, y, -1, 0, 0, Z_ROLL, 0, 0, 0, 1)).multiply(frames["roller"])
+    printed.append(dict(kind="rollers", stl="spool_station_roller.stl", matrix=flat(tube), move=move))
+with open(os.path.join(mesh_dir, "print.json"), "w") as f:
+    json.dump({"parts": printed}, f, indent=1)
+
+
+def cut_set(d, cutter, reader, cut_x):
+    """The pictures' meshes with everything in `cutter` cut away: all on the AMS's side of x =
+    cut_x, in the build's frame."""
     platform, cap = readers[reader]
-    os.makedirs(d, exist_ok=True)
+    mesh_folder(d)
     for name, shape in (("base", base), ("bezel", bezel), ("platform", platform), ("cap", cap), ("mark", mark),
                         ("pcb", held["PCB"]), ("glass", held["glass"]), ("cell", cell_model()), ("reader", reader_model(reader)),
                         ("spool", spool_model()), ("rollers", rollers_model()), ("fasteners", fasteners)):
         s = shape.cut(cutter)
         if s.Volume > 1e-6:
             write_mesh(os.path.join(d, name + ".stl"), s)
-    with open(os.path.join(d, "view.json"), "w") as f:
-        json.dump(dict(view, reader=reader), f)
+    with open(os.path.join(d, "view.json"), "w") as f:     # CUT: the plane, and the side kept, in the station's frame
+        json.dump(dict(view, reader=reader, CUT=dict(x=W - cut_x, keep=-1) if SIDE == "left" else dict(x=cut_x, keep=1)), f)
 
 
 if os.environ.get("STATION_CUTS") == "1":
     # Cut along the load cell's axis, everything on the AMS's side of it gone; and through
     # the fin at the reader's back, everything on the spool's side gone (one per reader).
-    cut_set(os.path.join(OUT, "mesh_cut", "cell"), box(X_C - 1000, X_C, -500, 500, -500, 500), READER)
+    cut_set(os.path.join(OUT, "mesh_cut", "cell"), box(X_C - 1000, X_C, -500, 500, -500, 500), READER, X_C)
     for r in readers:
-        cut_set(os.path.join(OUT, "mesh_cut", "fin_" + r), box(X_BACK - 0.5 - 1000, X_BACK - 0.5, -500, 500, -500, 500), r)
+        cut_set(os.path.join(OUT, "mesh_cut", "fin_" + r), box(X_BACK - 0.5 - 1000, X_BACK - 0.5, -500, 500, -500, 500), r,
+                X_BACK - 0.5)
 if os.environ.get("STATION_PARTS") == "1":
     # Every part on its own, in place, and its move in the exploded view: for the 3D model
     # (make_glb.py), which plays the station coming apart.

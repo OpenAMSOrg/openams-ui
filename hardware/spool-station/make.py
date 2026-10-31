@@ -32,6 +32,7 @@ BUILD = os.path.join(HERE, "build_spool_station.py")
 RENDER = os.path.join(HERE, "render_blender.py")
 GLB = os.path.join(HERE, "make_glb.py")
 CHECK = os.path.join(HERE, "print_check.py")
+TOOLPATHS = os.path.join(HERE, "toolpaths.py")
 WINDOWS = os.name == "nt"
 RAKE_RANGE = (10.0, 40.0)       # the tilts the build's checks pass, given a bed big enough
 
@@ -99,10 +100,11 @@ TOOLS = [
 ]
 OPTIONS = STATION + TOOLS
 # Choices only the command line gives: VERBOSE=1 shows FreeCAD's and Blender's own output,
-# SHOTS=station,side renders only those pictures.
-EXTRA = ("VERBOSE", "SHOTS")
+# SHOTS=station,side renders only those pictures, LOOK=smooth draws the printed parts as
+# modelled rather than sliced.
+EXTRA = ("VERBOSE", "SHOTS", "LOOK")
 SHOTS = {                       # the pictures, by the meshes they are rendered from
-    "mesh": ("station", "side", "with_ams", "top", "cradle"),
+    "mesh": ("station", "side", "detail", "with_ams", "top", "cradle"),
     "mesh_exploded": ("exploded", "rollers", "screen"),
     "mesh_cut/cell": ("cutaway",),
     "mesh_cut/fin_*": ("fin",),
@@ -444,7 +446,18 @@ def render(ch):
     blender = find_blender(ch["BLENDER"])
     pictures = os.path.join(out, "pictures")
     want = set(ch["SHOTS"].split(",")) if ch.get("SHOTS") else None
-    env = {"RENDER_DEVICE": ch["DEVICE"].upper(), "RES_PERCENT": ch["SIZE"]}
+    look = ch.get("LOOK") or "printed"
+    if look not in ("printed", "smooth"):
+        raise Stop(f"LOOK is printed or smooth, not {look!r}")
+    if look == "printed":
+        # The printed parts as they come off the printer: sliced, bead by bead (toolpaths.py).
+        given = ["--slicer", ch["SLICER"]] if ch["SLICER"] else []
+        if not find_slicer(ch["SLICER"], quiet=True):
+            print("make: no PrusaSlicer, so the parts are drawn as modelled, not as printed")
+            look = "smooth"
+        elif subprocess.call([sys.executable, TOOLPATHS] + given + [out]):
+            raise Stop("toolpaths.py stopped (see above); LOOK=smooth renders without it")
+    env = {"RENDER_DEVICE": ch["DEVICE"].upper(), "RES_PERCENT": ch["SIZE"], "LOOK": look}
     done = 0
     for meshes, shots in SHOTS.items():
         shots = [s for s in shots if want is None or s in want]
@@ -514,7 +527,8 @@ def show(ch):
 HELP = """targets:
   menuconfig     the menu (config does the same)
   build          the printable files, STEP and STL, into out/<board>/<side>/ (the default)
-  render         the pictures of the last build, into its pictures/ folder (Blender)
+  render         the pictures of the last build, into its pictures/ folder (Blender); the
+                 printed parts are sliced first (PrusaSlicer) and drawn bead by bead
   all            build and render
   glb            build, and the 3D model of the station coming apart (spool_station.glb)
   check          slice the last build's parts (PrusaSlicer): do they print without support?
@@ -524,7 +538,7 @@ HELP = """targets:
 choices on the command line, for this run only (the menu's names):
   BOARD=es3c50p|es3c43p|e32r40t  READER=pn5180|rc522|both  SIDE=right|left  RAKE=10..40  BED=256
   FREECAD=path  BLENDER=path  SLICER=path  DEVICE=auto|OPTIX|CUDA|HIP|METAL|ONEAPI|CPU  SAMPLES=64
-  SIZE=100  OUT=dir  SHOTS=station,side,...  VERBOSE=1
+  SIZE=100  OUT=dir  SHOTS=station,side,...  LOOK=printed|smooth  VERBOSE=1
 """
 
 
