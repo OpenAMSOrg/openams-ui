@@ -108,7 +108,8 @@ test("a known bay's Load is unchanged, in both cores", async () => {
   }
 });
 
-test('Load on an unknown bay is dimmed with the Edit spool reason, in both cores', async () => {
+test('without Spoolman an unknown bay\'s Load is the plain load, in both cores', async () => {
+  // Spoolman is optional: a bay with no tag and no Spoolman must still load.
   const cases: [string, boolean, boolean, string][] = [
     ['no edit endpoint', false, true, 'Spoolman is not set up'],
     ['Spoolman offline', true, false, 'Spoolman is offline'],
@@ -117,9 +118,10 @@ test('Load on an unknown bay is dimmed with the Edit spool reason, in both cores
     const p = await setup(edit, online);
     for (const core of [p.c, p.ts]) {
       const a = loadOf(core, 1);
-      assert.equal(a.enabled, false, name);
-      assert.equal(a.reason, reason, name);
-      assert.equal(a.reason, tiles(core)[1].actions.find((x) => x.id === 'edit_spool')!.reason, name);
+      assert.equal(a.enabled, true, name);
+      assert.ok(!a.form, name);
+      assert.equal(a.line, 'load oams12', name);
+      assert.equal(tiles(core)[1].actions.find((x) => x.id === 'edit_spool')!.reason, reason, name);
     }
   }
 });

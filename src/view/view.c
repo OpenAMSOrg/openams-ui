@@ -829,7 +829,11 @@ bool view_tile_actions(const mmu_model_t *m, int unit_idx, int bay, view_actions
 
     /* A fixed set in a fixed order; enabled and reason come from the one
      * predicate (actions_check), which dims what does not apply now. */
-    if(bay_is_unknown(m, unit_idx, bay)) add_save_and_load_action(out, m, unit_idx, bay, s, slot_id);
+    /* A bay nobody has identified asks for its spool first, when there is a
+     * Spoolman to save the answer to. Spoolman is optional: without it the bay's
+     * Load is the plain load. */
+    if(bay_is_unknown(m, unit_idx, bay) && m->spoolman_edit && m->spoolman_online)
+        add_save_and_load_action(out, m, unit_idx, bay, s, slot_id);
     else act_simple(out, m, "load", VS_ACTION_LOAD, VIEW_STYLE_NORMAL, "load %s", slot_id);
     /* the bay's own unload line: the mapper resolves it to the unit's lane, and
      * only a loaded bay passes its predicate (the toolhead's card sends the lane's). */

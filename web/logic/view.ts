@@ -476,11 +476,9 @@ function addSaveAndLoadAction(list: ActionList, m: Model, unitIdx: number, bay: 
   /* The row that sends it says what it will do, not what it is called: a
    * "Load" row whose dialog offers "Save and load". */
   a.form = { fields: editFields(m, unitIdx, bay, true), submit_label: str('SAVE_AND_LOAD'), require_change: true };
-  // The row is dimmed only while the edit cannot be taken at all (no endpoint,
-  // Spoolman offline), with the reason Edit spool gives. The unanswered material
-  // is not that: it is the dialog's own required field, and dimming the row for
-  // it would hide the dialog that asks. So the dry run is the editor's, with a
-  // material that is an answer.
+  // The unanswered material is the dialog's own required field, and dimming the
+  // row for it would hide the dialog that asks. So the dry run is the editor's,
+  // with a material that is an answer.
   check(a, editResolved(id, m, unitIdx, bay, editDefaults(m, unitIdx, bay).material === 0 ? 1 : 0, true), m);
   // ... and then the load itself has its own rules (a bay in no tool, a busy
   // lane): what would refuse the plain Load refuses this one, in its words, so
@@ -574,9 +572,12 @@ function tileActions(m: Model, unitIdx: number, bay: number): ViewAction[] {
   const id = cut(slotId(m, unitIdx, bay), ID);
   const list = new ActionList();
 
-  // A bay nobody has identified asks for its spool before it is loaded.
-  if (bayIsUnknown(m, unitIdx, bay)) addSaveAndLoadAction(list, m, unitIdx, bay, id);
-  else simple(list, m, 'load', str('ACTION_LOAD'), 'normal', `load ${id}`);
+  // A bay nobody has identified asks for its spool before it is loaded, when
+  // there is a Spoolman to save the answer to. Spoolman is optional: without it
+  // the bay's Load is the plain load.
+  if (bayIsUnknown(m, unitIdx, bay) && m.spoolmanEdit && m.spoolmanOnline) {
+    addSaveAndLoadAction(list, m, unitIdx, bay, id);
+  } else simple(list, m, 'load', str('ACTION_LOAD'), 'normal', `load ${id}`);
   // The bay's own unload line: the mapper resolves it to the unit's lane, and
   // only a loaded bay passes its predicate.
   const unload = simple(list, m, 'unload', str('ACTION_UNLOAD'), 'normal', `unload ${id}`);
