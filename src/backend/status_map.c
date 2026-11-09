@@ -962,6 +962,27 @@ static bool map_lane(mmu_model_t *m, mmu_toolhead_t *th, const cJSON *lane)
     return cJSON_IsBool(ms);
 }
 
+/* `lanes_by_fps.<l>.toolchange_fault` (C2 4.2): present only while a
+ * toolchange or unload on the lane failed and is not finished. Anything but an
+ * object clears it, so the field going away is the fault being over. */
+static void map_toolchange_fault(mmu_toolhead_t *th, const cJSON *fault)
+{
+    const char *kind;
+
+    th->tc_fault = cJSON_IsObject(fault);
+    th->tc_unload = false;
+    th->tc_group[0] = '\0';
+    th->tc_step[0] = '\0';
+    th->tc_reason[0] = '\0';
+    if(!th->tc_fault) return;
+
+    kind = jstring(fault, "kind");
+    th->tc_unload = kind && strcmp(kind, "unload") == 0;
+    mmu_copy_text(th->tc_group, sizeof(th->tc_group), jstring(fault, "group"));
+    mmu_copy_text(th->tc_step, sizeof(th->tc_step), jstring(fault, "step"));
+    mmu_copy_text(th->tc_reason, sizeof(th->tc_reason), jstring(fault, "reason"));
+}
+
 static void map_fault(mmu_model_t *m, mmu_toolhead_t *th, const cJSON *fault, int nf)
 {
     if(cJSON_IsObject(fault)) {
@@ -1243,11 +1264,37 @@ bool status_map_apply_lanes(mmu_model_t *m, const cJSON *lanes_by_fps)
             th->band_low = (float)cJSON_GetArrayItem(v, 0)->valuedouble;
             th->band_high = (float)cJSON_GetArrayItem(v, 1)->valuedouble;
         }
+
+        map_toolchange_fault(th, field(lane, "toolchange_fault"));
     }
 
     mmu_model_refresh_this(m);
 
     return true;
+}
+
+/* A G-code word as the UI API advertises one: `^[A-Z_][A-Z0-9_]*$`. A word
+ * that does not fit the model's buffer is not taken either, so a command is
+ * never sent cut short. */
+static bool gcode_word(const char *s, size_t cap)
+{
+    size_t i;
+
+    if(!s || !s[0] || strlen(s) >= cap) return false;
+    if(!((s[0] >= 'A' && s[0] <= 'Z') || s[0] == '_')) return false;
+    for(i = 1; s[i]; i++)
+        if(!((s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= '0' && s[i] <= '9') || s[i] == '_')) return false;
+    return true;
+}
+
+void status_map_apply_commands(mmu_model_t *m, const cJSON *commands)
+{
+    const char *retry;
+
+    if(!m) return;
+    retry = cJSON_IsObject(commands) ? jstring(commands, "retry") : NULL;
+    if(gcode_word(retry, sizeof(m->cmd_retry))) mmu_copy_text(m->cmd_retry, sizeof(m->cmd_retry), retry);
+    else m->cmd_retry[0] = '\0';
 }
 
 bool status_map_apply_fixture_event(mmu_model_t *m, const cJSON *event)

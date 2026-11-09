@@ -744,6 +744,33 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
         return 1;
     }
 
+    /* `fault retry <toolhead id>`: continue the lane's failed toolchange or
+     * unload from where it stopped, with the word the host advertises as
+     * `commands.retry` (never one of ours) and always the lane, so it is never
+     * ambiguous on a host with several. */
+    arg = rest(line, "fault retry");
+    if(arg) {
+        const mmu_toolhead_t *lane;
+
+        n = toolhead_find(m, arg);
+        if(n < 0) return 0;
+        lane = &m->toolheads[n];
+        if(!m->cmd_retry[0]) {
+            *why = view_str(VS_REASON_NOT_SUPPORTED);
+            return -1;
+        }
+        if(!lane->tc_fault) {
+            *why = view_str(VS_REASON_NOT_NOW);
+            return -1;
+        }
+        if(sequence_runs(lane->busy, lane->step_count, lane->step_current, lane->step_failed)) {
+            *why = view_str(VS_REASON_GROUP_BUSY);
+            return -1;
+        }
+        wr_cmd(w, "%s FPS=%s", m->cmd_retry, lane->id);
+        return 1;
+    }
+
     /* `fault resume` and the older bare `resume` from the alert buttons. */
     if(strcmp(line, "fault resume") == 0 || strcmp(line, "resume") == 0) {
         wr_cmd(w, "RESUME");

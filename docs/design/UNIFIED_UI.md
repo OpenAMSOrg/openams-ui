@@ -66,7 +66,7 @@ The demo scenarios and transitions keep writing the globals, and `mmu_model_capt
 
 **Renderer state leaves the core:** `selected_*` and `home_selection`. A shared wasm core would make two panels fight over them.
 
-**Pressure and set point** are not in `openams_ui`, by design: C2 keeps fast-changing values out of the projection. They come from `oams_manager.lanes_by_fps.<l>` (`pressure`, `set_point`). The ESP32 adds `lanes_by_fps` to the `oams_manager` attributes it already subscribes to for `settings`. Mainsail already subscribes to every object.
+**Pressure and set point** are not in `openams_ui`, by design: C2 keeps fast-changing values out of the projection. They come from `oams_manager.lanes_by_fps.<l>` (`pressure`, `set_point`), as does a lane's failed toolchange (`toolchange_fault`, 4h). The ESP32 adds `lanes_by_fps` and `commands` (the advertised retry command) to the `oams_manager` attributes it already subscribes to for `settings`. Mainsail already subscribes to every object.
 
 ## 4. The view: builders, not a materialized struct
 
@@ -93,7 +93,7 @@ toolhead   { id, title, subtitle,
                         steps: [label], index, failed},
              runout: {text} | null,
              notice: {text, tone: "warn"|"info"} | null,    // e.g. "T1 needs 120 g; its spools have 80 g"
-             actions: [action],                      // unload, stop, fault retry_load, resume, clear errors
+             actions: [action],                      // unload, stop (a fault's recovery is in its alert item)
              units: [unit] }
 unit       { id, title, short, online,
              env: {text} | null,                     // "28% RH | 55°C"
@@ -115,6 +115,7 @@ action     { id, label, line, enabled, reason, style: "primary"|"normal"|"danger
              confirm: {title, text, ok_label} | null,
              form: {fields: [{id, label, kind: "number"|"select"|"toggle", value, min, max, step, unit, options}]} | null }
 alert      { severity: "stop"|"pause"|"info", code, title, text, unit, slot_id, when_text, unread, actions: [action] }
+                                                     // title: the severity's name; a failed toolchange's is what failed (4h)
 setting    { key, label, note, value, action_on: action, action_off: action }
 ```
 
@@ -257,6 +258,16 @@ These amend §4a where they differ. The alert-placement, spool-naming, unit-head
 - **A read alert leaves the badge, after a while.** The toolhead's badge stops listing history entries once they are read, but not at once. It keeps a read entry for 2 minutes, and an unread information entry for 15 minutes, before it gives up the slot. Entries with recovery actions and active faults stay until resolved. (The owner: "give it some reasonable time before being replaced or timeout for the display".)
 - **Dark filament gets a light outline** wherever its color is drawn on the dark surface: the resting segment, the hotend icon's frame, the device's path and tool chip.
 - **Stop stops the whole sequence.** The card's existing Stop (the panel's bottom right, the device's load screen) stops whatever sequence is running: heat, home, cut, retract, feed, the hooks, not only the AMS's own load or unload. It is enabled for as long as a sequence runs. (The owner: "this 'stop' can be unload / load stop or just 'sequence' stop".)
+
+### 4h. A failed toolchange (2026-11-08, derived from the principles)
+
+The host keeps a lane's failed toolchange, Load or Unload until it is finished (`oams_manager.lanes_by_fps.<l>.toolchange_fault`, C2), and advertises `commands.retry` (`OAMSM_RETRY`). Not an owner ruling yet; derived from principles 3, 4, 8 and 10:
+- **The message row** says what failed and why: "Loading T1 failed: <the host's reason>". The step is the stepper's (its failed step in red) and the item's title's, so the row does not repeat it (principle 4). A lane fault still owns the row when there is one (it is the more specific cause).
+- **The toolhead's badge** holds it as an item (it names no unit, so it is the toolhead's): its **title** is what failed and where, its **text** the host's reason, whole, and its actions are **Retry** (`fault retry <lane>`, sent as the advertised word with `FPS=<lane>`), **Unload** (`unload <lane>`, dimmed when nothing is loaded) and **Clear errors** (`fault clear_errors`, the host's Reset, which keeps the fault). An alert item has up to three actions.
+- **Retry needs the host's word.** Without `commands.retry` (an older host) the item has Unload and Clear errors only; the line `fault retry` is refused with "Not supported on this unit yet".
+- **One Retry.** While the failed toolchange's Retry is offered, a lane fault's own `retry_load` is not: it would load the AMS alone and skip the toolhead part.
+- **A retry in progress shows its own steps.** The host keeps the fault until a retry succeeds, so the item and the row hide it while a sequence runs on the lane, and it comes back with the new reason if the retry fails.
+- **The device** draws the same item on its alerts screen, where the message row leads; its message card is left out when an item with actions already says it.
 
 ### 4f. Finish the job (owner, 2026-10-02; principle 13)
 

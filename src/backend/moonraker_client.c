@@ -65,7 +65,7 @@ typedef struct {
     char unit[MC_UNIT_NAME_MAX];
     bool have_object;
 
-    /* oams_manager (C2 4.9/6.5, settings and lanes_by_fps) is only fetched
+    /* oams_manager (C2 4.9/6.5, settings, lanes_by_fps and commands) is only fetched
      * when the host's object list carries it. */
     bool have_oams_manager;
 
@@ -294,14 +294,16 @@ static void mc_send_subscribe(uint32_t now_ms)
         cJSON_AddItemToObject(objects, "toolhead", fields);
     }
 
-    /* settings and lanes_by_fps live on oams_manager, which a display-only
-     * host may not publish at all (C2 6.1): subscribe to it only when it was
-     * listed, and then to the two keys wanted, so the reply stays small. */
+    /* settings, lanes_by_fps and commands live on oams_manager, which a
+     * display-only host may not publish at all (C2 6.1): subscribe to it only
+     * when it was listed, and then to the three keys wanted, so the reply
+     * stays small. */
     if(g_mc.have_oams_manager) {
         cJSON *fields = cJSON_CreateArray();
 
         cJSON_AddItemToArray(fields, cJSON_CreateString("settings"));
         cJSON_AddItemToArray(fields, cJSON_CreateString("lanes_by_fps"));
+        cJSON_AddItemToArray(fields, cJSON_CreateString("commands"));
         cJSON_AddItemToObject(objects, "oams_manager", fields);
     }
 

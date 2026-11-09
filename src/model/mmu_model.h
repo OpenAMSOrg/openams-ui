@@ -36,6 +36,7 @@
 #define MMU_GROUP_NAME_LEN      16  /**< a group's name with its NUL */
 #define MMU_LANE_ID_LEN         32  /**< a lane id or extruder name with its NUL */
 #define MMU_SLOT_ID_LEN         40  /**< a slot id: a unit name, then the bay number (up to two digits), then the NUL */
+#define MMU_COMMAND_LEN         32  /**< a G-code word the host advertises (`commands.retry`) with its NUL; a longer one is not taken, never cut */
 
 /* ------------------------------------------------------------------ types */
 
@@ -236,6 +237,15 @@ typedef struct {
     uint8_t error_act_count;
     uint8_t error_count;
 
+    /* A toolchange or unload on this lane that failed and is not finished
+     * (`oams_manager.lanes_by_fps.<l>.toolchange_fault`, C2 4.2): what the
+     * panel's Retry continues. An older host never sends it. */
+    bool tc_fault;
+    bool tc_unload;                         /**< the failed operation is an unload, else a load */
+    char tc_group[MMU_GROUP_NAME_LEN];      /**< a load's target group ("T1"); "" for an unload */
+    char tc_step[MMU_TEXT_LEN];             /**< the plan step that was running; "" = none */
+    char tc_reason[MMU_TEXT_LEN * 4];       /**< what failed, in the host's own words */
+
     bool motion_settled;
 
     /* runout / auto-refill banner */
@@ -335,6 +345,10 @@ typedef struct {
     bool spoolman_online;                   /**< Spoolman is reachable */
     bool spoolman_stop;                     /**< the host has a sequence stop (`stop` in the component's status): server.openams.stop */
     bool spoolman_edit;                     /**< the component can edit a bay's spool (`edit` in its status) */
+    /** The G-code word the host advertises as `oams_manager.commands.retry`
+     *  (UI API), "" when it advertises none (an older host): the panel's Retry
+     *  sends this word, never one of its own. */
+    char cmd_retry[MMU_COMMAND_LEN];
     /** The outcome of the last spool edit, for the display to say once:
      *  edit_seq changes with every answer, and edit_refusal is the host's own
      *  words when it refused ("Spoolman is offline"), "" when it took the edit. */

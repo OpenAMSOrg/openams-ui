@@ -102,6 +102,15 @@ Each bay is a tile. Its click targets (`docs/design/UNIFIED_UI.md`, section 4b):
 - **Alerts:** one per level. OpenAMS-wide alerts go in the host's bar, a
   toolhead's at the top right of its card, a unit's at the right end of its
   header. The badge is red for a fault or pause, yellow otherwise.
+- **A failed toolchange, Load or Unload:** the card's message row says what
+  failed and why, the stepper marks the step in red, and the toolhead's alert
+  holds it, with the step, and with **Retry** (carries on from where it
+  stopped), **Unload** (backs it out) and **Clear errors** (the printer's
+  reset, which keeps the failure so Retry can still finish it). Retry sends
+  the command the printer advertises (`commands.retry`, `OAMSM_RETRY`) for
+  that card's lane, and appears only when the printer offers it. While a
+  retry runs, the card shows its steps instead. In a print the printer
+  pauses, and its Resume does the retry.
 - **Humidity reading:** click it for the drying and heating menu.
 
 Actions open in a popover anchored to their source. A form or a confirm opens

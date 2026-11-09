@@ -360,10 +360,12 @@ static void test_connect_flow(void)
         assert(cJSON_IsArray(toolhead) && cJSON_GetArraySize(toolhead) == 1);
         assert(strcmp(cJSON_GetArrayItem(toolhead, 0)->valuestring, "extruder") == 0);
         /* the object list carries oams_manager, so the subscribe asks for its
-         * two keys, as an attribute list rather than the whole object */
-        assert(cJSON_IsArray(manager) && cJSON_GetArraySize(manager) == 2);
+         * three keys, as an attribute list rather than the whole object: the
+         * advertised commands are where the retry word comes from */
+        assert(cJSON_IsArray(manager) && cJSON_GetArraySize(manager) == 3);
         assert(strcmp(cJSON_GetArrayItem(manager, 0)->valuestring, "settings") == 0);
         assert(strcmp(cJSON_GetArrayItem(manager, 1)->valuestring, "lanes_by_fps") == 0);
+        assert(strcmp(cJSON_GetArrayItem(manager, 2)->valuestring, "commands") == 0);
         assert(cJSON_GetArraySize(objs) == 4);
         cJSON_Delete(j);
     }

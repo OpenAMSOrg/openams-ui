@@ -465,6 +465,65 @@ static void test_faults(void)
     expect("resume", "RESUME");
 }
 
+/* An `oams_manager` object as the core applies one: its lanes and its
+ * advertised commands. The fixtures were recorded before the retry command
+ * existed, so a test that wants one applies it here; the exporter
+ * (tools/export_actions_vectors.py) skips what follows until the next
+ * build(), since the JS replay never applies it. */
+static void apply_manager(const char *json)
+{
+    cJSON *obj = cJSON_Parse(json);
+    const cJSON *lanes, *commands;
+
+    assert(obj);
+    lanes = cJSON_GetObjectItemCaseSensitive(obj, "lanes_by_fps");
+    commands = cJSON_GetObjectItemCaseSensitive(obj, "commands");
+    if(lanes) assert(status_map_apply_lanes(&g_mmu, lanes));
+    status_map_apply_commands(&g_mmu, commands);
+    cJSON_Delete(obj);
+}
+
+/* `fault retry <lane>`: the failed toolchange's Retry, with the host's own
+ * word, only while the lane carries a failed toolchange and nothing runs. */
+static void test_fault_retry(void)
+{
+    build("loaded");
+
+    /* the recorded host advertises no retry command */
+    expect_unaddressable("fault retry fps1", "Not supported on this unit yet");
+    /* a lane the model does not hold is not a host line; nor is a bare retry */
+    expect_local("fault retry fps9");
+    expect_local("fault retry");
+
+    /* advertised, but nothing failed on the lane */
+    apply_manager("{\"commands\": {\"retry\": \"OAMSM_RETRY\"}}");
+    expect_unaddressable("fault retry fps1", "Not available right now");
+
+    /* a failed panel load: Retry continues it on that lane, always by name */
+    apply_manager("{\"commands\": {\"retry\": \"OAMSM_RETRY\"}, \"lanes_by_fps\": {\"fps1\": "
+                  "{\"toolchange_fault\": {\"kind\": \"load\", \"group\": \"T1\", \"slot\": \"1\", "
+                  "\"temp\": null, \"step\": \"feed\", \"reason\": \"No progress\", \"panel\": true, "
+                  "\"fed\": false, \"since\": 1.0}}}}");
+    expect("fault retry fps1", "OAMSM_RETRY FPS=fps1");
+    /* the word is the host's, whatever it is */
+    apply_manager("{\"commands\": {\"retry\": \"MY_RETRY\"}, \"lanes_by_fps\": {\"fps1\": "
+                  "{\"toolchange_fault\": {\"kind\": \"unload\", \"group\": null, \"slot\": null, "
+                  "\"temp\": null, \"step\": null, \"reason\": \"Stuck\", \"panel\": true, "
+                  "\"fed\": false, \"since\": 2.0}}}}");
+    expect("fault retry fps1", "MY_RETRY FPS=fps1");
+
+    /* a retry already running (the lane busy, or a plan step in progress) */
+    g_mmu.toolheads[0].busy = MMU_BUSY_LOAD;
+    expect_unaddressable("fault retry fps1", "The toolhead is busy");
+    g_mmu.toolheads[0].busy = MMU_BUSY_NONE;
+
+    /* the host stops advertising it: no Retry, even with the fault there */
+    apply_manager("{\"commands\": {\"reset\": \"OAMSM_CLEAR_ERRORS\"}}");
+    expect_unaddressable("fault retry fps1", "Not supported on this unit yet");
+
+    build("loaded");
+}
+
 static void test_local_vocabulary(void)
 {
     static const char *const k_local[] = {
@@ -1092,6 +1151,7 @@ int main(void)
     test_groups();
     test_change_group();
     test_faults();
+    test_fault_retry();
     test_local_vocabulary();
     test_unknown_and_unresolvable();
     test_small_out();

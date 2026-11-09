@@ -124,6 +124,19 @@
       "script": "RESUME"
     },
     {
+      "line": "fault retry fps1",
+      "kind": "error",
+      "reason": "Not supported on this unit yet"
+    },
+    {
+      "line": "fault retry fps9",
+      "kind": "local"
+    },
+    {
+      "line": "fault retry",
+      "kind": "local"
+    },
+    {
       "line": "display home",
       "kind": "local"
     },

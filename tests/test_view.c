@@ -1468,6 +1468,121 @@ static void test_alert_levels_and_targets(void)
     assert(view_toolhead(&s_local, 0, &th) && !th.alert.present);
 }
 
+/* A failed toolchange or unload (`toolchange_fault`, C2 4.2): the message row
+ * says it, the toolhead's badge holds it with Retry (only with the host's own
+ * word), Unload and Clear errors, and a retry in progress shows its own steps. */
+static void test_toolchange_fault(void)
+{
+    view_alerts_t g;
+    view_toolhead_t th;
+    view_unit_t u;
+    mmu_toolhead_t *t;
+
+    status_map_reset(&s_local);
+    add_unit_to(&s_local, "oams1", 4);
+    s_local.units[0].toolhead = 0;
+    s_local.toolhead_count = 1;
+    t = &s_local.toolheads[0];
+    snprintf(t->id, sizeof(t->id), "fps1");
+    t->current_group = -1;
+    assert(view_toolhead(&s_local, 0, &th) && !th.alert.present);
+
+    /* a failed panel load, on a host that advertises no retry command */
+    t->tc_fault = true;
+    snprintf(t->tc_group, sizeof(t->tc_group), "T1");
+    snprintf(t->tc_step, sizeof(t->tc_step), "feed");
+    snprintf(t->tc_reason, sizeof(t->tc_reason), "No progress");
+    assert(view_toolhead(&s_local, 0, &th));
+    assert(th.message.tone == VIEW_TONE_ERROR);
+    assert(strcmp(th.message.text, "Loading T1 failed: No progress") == 0);
+    assert(th.activity.kind == VIEW_ACTIVITY_ERROR);
+    assert(th.alert.present && th.alert.count == 1 && th.alert.tone == VIEW_TONE_ERROR);
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1);
+    assert(strcmp(g.items[0].title, "Loading T1 failed (Push new filament into extruder)") == 0);
+    assert(strcmp(g.items[0].text, "No progress") == 0);   /* the host's words, whole */
+    assert(g.items[0].severity == MMU_SEV_PAUSE && !g.items[0].has_unit);
+    assert(g.items[0].action_count == 2);
+    assert(strcmp(g.items[0].actions[0].id, "unload") == 0);
+    assert(strcmp(g.items[0].actions[0].line, "unload fps1") == 0);
+    assert(!g.items[0].actions[0].enabled &&
+           strcmp(g.items[0].actions[0].reason, "No filament is loaded") == 0);
+    assert(strcmp(g.items[0].actions[1].id, "clear_errors") == 0);
+    assert(strcmp(g.items[0].actions[1].line, "fault clear_errors") == 0);
+    assert(g.items[0].actions[1].enabled);
+    /* it is the toolhead's: the unit's badge does not list it */
+    assert(view_unit(&s_local, 0, &u) && !u.alert.present);
+
+    /* advertised: Retry first, with the lane */
+    snprintf(s_local.cmd_retry, sizeof(s_local.cmd_retry), "OAMSM_RETRY");
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 3);
+    assert(strcmp(g.items[0].actions[0].id, "retry") == 0);
+    assert(strcmp(g.items[0].actions[0].label, "Retry") == 0);
+    assert(strcmp(g.items[0].actions[0].line, "fault retry fps1") == 0);
+    assert(g.items[0].actions[0].enabled && g.items[0].actions[0].style == VIEW_STYLE_PRIMARY);
+    assert(strcmp(g.items[0].actions[1].id, "unload") == 0);
+    assert(strcmp(g.items[0].actions[2].id, "clear_errors") == 0);
+
+    /* a lane fault offering retry_load gives way to it: one Retry */
+    snprintf(s_local.groups[0].name, sizeof(s_local.groups[0].name), "T1");
+    s_local.groups[0].count = 1;
+    s_local.groups[0].members[0].unit = 0;
+    s_local.groups[0].members[0].slot = 1;
+    s_local.group_count = 1;
+    t->has_error = true;
+    t->error_severity = MMU_SEV_PAUSE;
+    t->error_unit = 0;
+    t->error_slot = -1;
+    snprintf(t->error_text, sizeof(t->error_text), "No progress on oams1");
+    snprintf(t->error_act[0], 16, "retry_load");
+    snprintf(t->error_act[1], 16, "clear_errors");
+    t->error_act_count = 2;
+    t->current_group = 0;
+    assert(view_toolhead(&s_local, 0, &th));
+    assert(strcmp(th.message.text, "No progress on oams1") == 0);   /* the lane fault owns the row */
+    assert(view_unit_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 1);
+    assert(strcmp(g.items[0].actions[0].id, "clear_errors") == 0);
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1);
+    assert(strcmp(g.items[0].actions[0].id, "retry") == 0);
+    /* without the advertised word the lane fault keeps its own */
+    s_local.cmd_retry[0] = '\0';
+    assert(view_unit_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 2);
+    assert(strcmp(g.items[0].actions[0].id, "retry_load") == 0);
+    snprintf(s_local.cmd_retry, sizeof(s_local.cmd_retry), "OAMSM_RETRY");
+    t->has_error = false;
+    t->current_group = -1;
+
+    /* a retry in progress keeps the host's record, and shows its own steps */
+    t->busy = MMU_BUSY_LOAD;
+    assert(view_toolhead(&s_local, 0, &th) && !th.alert.present);
+    assert(th.message.tone == VIEW_TONE_NEUTRAL && th.activity.kind == VIEW_ACTIVITY_LOADING);
+    t->busy = MMU_BUSY_NONE;
+    snprintf(t->steps[0], sizeof(t->steps[0]), "heat");
+    snprintf(t->steps[1], sizeof(t->steps[1]), "feed");
+    t->step_count = 2;
+    t->step_current = 0;
+    t->step_failed = -1;
+    assert(view_toolhead(&s_local, 0, &th) && !th.alert.present);
+    t->step_failed = 1;                      /* the retry failed again: shown again */
+    assert(view_toolhead(&s_local, 0, &th) && th.alert.present && th.message.tone == VIEW_TONE_ERROR);
+    t->step_count = 0;
+    t->step_current = -1;
+    t->step_failed = -1;
+
+    /* an unload that failed before its plan names no tool and no step */
+    t->tc_unload = true;
+    t->tc_group[0] = '\0';
+    t->tc_step[0] = '\0';
+    snprintf(t->tc_reason, sizeof(t->tc_reason), "Spool unloading failed");
+    assert(view_toolhead(&s_local, 0, &th));
+    assert(strcmp(th.message.text, "Unloading failed: Spool unloading failed") == 0);
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1);
+    assert(strcmp(g.items[0].title, "Unloading failed") == 0);
+
+    /* the fault going away leaves nothing behind */
+    t->tc_fault = false;
+    assert(view_toolhead(&s_local, 0, &th) && !th.alert.present && th.message.tone == VIEW_TONE_NEUTRAL);
+}
+
 /* ------------------------- 4a: tile tags and dim, pressure scale, labels */
 
 static void test_tags_dim_scale_labels(void)
@@ -2274,6 +2389,28 @@ static int test_composed_fit(const char *lang)
     FITS("toolhead message", vs_runout_no_spare(W_TOOL, buf, VIEW_MESSAGE_TEXT_LEN));
     FITS("toolhead message", vs_spool_error(spool, buf, VIEW_MESSAGE_TEXT_LEN));
 
+    /* A failed toolchange's alert title, what failed and where, with the
+     * longest step label the language has. Its reason is the host's own words:
+     * the alert item borrows them whole, and the one-line message row may cut
+     * them, so they are not measured here. */
+    {
+        static const view_str_id_t k_steps[] = {
+            VS_STEP_HEAT, VS_STEP_CUT, VS_STEP_RETRACT, VS_STEP_FEED, VS_STEP_PURGE,
+            VS_STEP_GRAB, VS_STEP_CALIBRATE, VS_STEP_HOME, VS_STEP_CLEAN,
+        };
+        const char *longest = "";
+        size_t k;
+
+        for(k = 0; k < sizeof k_steps / sizeof k_steps[0]; k++)
+            if(strlen(view_str(k_steps[k])) > strlen(longest)) longest = view_str(k_steps[k]);
+        {
+            const vs_arg_t tc[2] = { VS_ARG_T("tool", W_GROUP), VS_ARG_T("step", longest) };
+
+            FITS("alert title", vs_format(VS_TOOLCHANGE_LOAD_FAILED_AT, buf, VIEW_ALERT_TEXT_LEN, tc, 2));
+            FITS("alert title", vs_format(VS_TOOLCHANGE_UNLOAD_FAILED_AT, buf, VIEW_ALERT_TEXT_LEN, tc + 1, 1));
+        }
+    }
+
     /* The two alerts the status mapper raises, into the model's own buffer.
      * Both name a spool the way the mapper builds it, "{unit} Spool {n}". */
     FITS("alert text", vs_low_filament(spool, 32767, buf, VIEW_ALERT_TEXT_LEN));
@@ -2554,6 +2691,7 @@ int main(void)
     test_alert_clock_stamps();
     test_outline();
     test_alert_levels_and_targets();
+    test_toolchange_fault();
     test_system_alert_reaches_no_toolhead();
     test_tile_error_message();
     test_adapter_unknown_is_not_missing();

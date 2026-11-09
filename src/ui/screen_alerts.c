@@ -3,7 +3,7 @@
  * The alert list, in the design language (ui_kit), built from the view: the
  * home unit's alerts, its toolhead's, and the panel's, each with its severity
  * icon, title, text, code, unit and its actions (a fault's retry, resume or
- * clear). Every alert sits on exactly one level in the view, so it appears
+ * clear; a failed toolchange's retry, unload or clear). Every alert sits on exactly one level in the view, so it appears
  * once here (principle 4). Below them, "Earlier" lists the history entries the
  * levels above do not already carry.
  *
@@ -146,6 +146,24 @@ static void add_card(lv_obj_t *col, const view_alert_t *a, bool current)
     if(s_seen && s_seen_count < MAX_SEEN) snprintf(s_seen[s_seen_count++], sizeof s_seen[0], "%s", a->text);
 }
 
+/* Whether an item with actions in @p g already says what the message row
+ * says: a lane fault's text is the row's own, and a failed toolchange's row
+ * is its title (what failed and where) followed by its reason. The card with
+ * the actions is the one to keep (principle 4). */
+static bool said_with_actions(const view_alerts_t *g, const char *msg)
+{
+    int i;
+
+    for(i = 0; i < (int)g->count; i++) {
+        const view_alert_t *it = &g->items[i];
+
+        if(it->action_count == 0) continue;
+        if(it->text && it->text[0] && strcmp(it->text, msg) == 0) return true;
+        if(it->title && it->title[0] && strncmp(msg, it->title, strlen(it->title)) == 0) return true;
+    }
+    return false;
+}
+
 static bool seen(const char *text)
 {
     int i;
@@ -242,13 +260,16 @@ static lv_obj_t *build(void)
 
     if(g && one && panel) {
         /* the errors on the tiles, the message row's own text when nothing above
-         * says it, then the unit's alerts, its toolhead's, and the panel's */
+         * or below says it with actions, then the unit's alerts, its
+         * toolhead's, and the panel's */
         shown += add_tile_faults(col, unit);
         {
             view_toolhead_t *vt = malloc(sizeof *vt);
 
             if(vt && th >= 0 && view_toolhead(&g_mmu, th, vt) && vt->message.tone != VIEW_TONE_NEUTRAL &&
-               !seen(vt->message.text)) {
+               !seen(vt->message.text) &&
+               !(view_unit_alerts(&g_mmu, unit, g) && said_with_actions(g, vt->message.text)) &&
+               !(view_toolhead_alerts(&g_mmu, th, g) && said_with_actions(g, vt->message.text))) {
                 memset(one, 0, sizeof *one);
                 one->severity = vt->message.tone == VIEW_TONE_ERROR ? MMU_SEV_PAUSE : MMU_SEV_INFO;
                 one->title = vt->message.tone == VIEW_TONE_ERROR ? panel->labels.fault : NULL;

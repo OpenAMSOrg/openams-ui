@@ -112,6 +112,14 @@ export const cards: { caption: string; key?: string; scenario: Scenario }[] = [
       fault: { code: 'load_failed', text: 'Load failed: the filament did not reach the extruder', sev: 'pause', act: ['resume', 'clear_errors'] } };
     s.units[0].bays[0] = spool('ASA', BLACK, 88, { link: 't' });
   }) },
+  { caption: 'A failed panel load: what failed, and Retry, Unload and Clear errors in the FPS alert', key: 'toolchange-failed', scenario: withCard((s) => {
+    s.lanes[0] = { id: 'fps1', ext: 'extruder', op: 'UNLOADED', pressure: 0.42,
+      stage: { plan: ['heat', 'feed', 'purge'], index: 1, failed: 'feed' },
+      toolchange: { kind: 'load', group: 'T1', step: 'feed', reason: 'Spool loading failed (NO_PROGRESS)' } };
+    s.units[0].bays[0] = spool('ASA', BLACK, 88, { link: 't' });
+    s.commands = { load: 'OPENAMS_LOAD', unload: 'OPENAMS_UNLOAD', cancel: 'OAMSM_LOAD_FILAMENT_CANCEL',
+      reset: 'OAMSM_CLEAR_ERRORS', retry: 'OAMSM_RETRY' };
+  }) },
   { caption: 'Notice (a shortfall for the job)', key: 'notice', scenario: withCard((s) => {
     s.lanes[0] = { id: 'fps1', ext: 'extruder', op: 'LOADED', bay: 'oams1-1', group: 'T1' };
     s.units[0].bays[0] = spool('ASA', BLACK, 88, { link: 't' });

@@ -49,7 +49,7 @@ const DRYER_TEXT = 56;
 const ALERT_CODE = 40;
 const ALERT_UNIT = 8;
 const ALERT_SLOT = 32;
-const ALERT_TEXT = 144;       // VIEW_ALERT_TEXT_LEN: a composed alert's sentence
+const ALERT_TEXT = 192;       // VIEW_ALERT_TEXT_LEN: a composed alert's sentence or title
 const SPOOL_NAME = 64;        // the {spool} of a low-filament sentence
 const RUNOUT_TARGET = LABEL * 3;
 const SETTING_KEY = 32;
@@ -58,7 +58,7 @@ const ACTION_LINE = 168;
 const OPTION_LABEL = 72;
 
 const MAX_ACTIONS = 10;   // VIEW_ACTIONS_MAX in src/view/view.h
-const MAX_ACTIONS_PER_ALERT = 2;
+const MAX_ACTIONS_PER_ALERT = 3;   // a failed toolchange: retry, unload, clear errors
 const MAX_ALERTS_PER_GROUP = 6;
 const MAX_OPTIONS = 160;  // every select of one action list shares the pool, as in C
 const MAX_ALERTS = 8;
@@ -827,12 +827,81 @@ const alertTitle = (sev: number): string =>
 
 const faultWeight = (th: Toolhead): number => (th.errorCount > 0 ? th.errorCount : 1);
 
+// ------------------------------------------------------ failed toolchanges
+
+/** Whether a sequence runs on the lane: busy loading or unloading, or a stage
+ *  plan with a current step that has not failed (lane_runs() in view.c). */
+function laneRuns(th: Toolhead): boolean {
+  return th.busy !== Busy.NONE
+    || (th.steps.length > 0 && th.stepCurrent >= 0 && th.stepCurrent < th.steps.length && th.stepFailed < 0);
+}
+
+/** The lane's failed toolchange or unload as the panel shows it (C2 4.2
+ *  `toolchange_fault`): not while a sequence runs on the lane, because the
+ *  host keeps the fault until a retry has finished, and the retry in progress
+ *  shows its own steps and status instead (tc_fault_shown() in view.c). */
+const tcFaultShown = (th: Toolhead): boolean => th.tcFault && !laneRuns(th);
+
+/** Whether the panel offers Retry for it: only with the word the host
+ *  advertises (`commands.retry`). While it is offered, a lane fault's own
+ *  `retry_load` is not: one "Retry", the one that finishes the whole
+ *  toolchange (tc_retry_offered() in view.c). */
+const tcRetryOffered = (m: Model, th: Toolhead): boolean => m.cmdRetry !== '' && tcFaultShown(th);
+
+/** What failed, and with `where` the step it failed at when the host named
+ *  one: "Loading T1 failed (Heat the nozzle)". The host's reason is not in it:
+ *  an alert item borrows that whole as its text, and the message row adds it
+ *  (tc_fault_subject() in view.c). */
+function tcFaultSubject(th: Toolhead, where: boolean, n: number): string {
+  const step = where && th.tcStep ? stageLabel(th.tcStep) : null;
+  const args: Record<string, string> = {};
+  if (!th.tcUnload) args.tool = th.tcGroup || str('UNKNOWN_MARK');
+  if (step !== null) args.step = step;
+  const id = th.tcUnload
+    ? (step !== null ? 'TOOLCHANGE_UNLOAD_FAILED_AT' : 'TOOLCHANGE_UNLOAD_FAILED')
+    : (step !== null ? 'TOOLCHANGE_LOAD_FAILED_AT' : 'TOOLCHANGE_LOAD_FAILED');
+  return format(id, args, n);
+}
+
+/** The message row's line: what failed and the host's reason, "Loading T1
+ *  failed: <reason>". The step is not repeated: the stepper above marks it
+ *  (principle 4), and the alert item's title names it. A long reason is cut
+ *  in the one-line row; the alert item has it whole (tc_fault_text()). */
+const tcFaultText = (th: Toolhead, n: number): string =>
+  format('TOOLCHANGE_FAILED_REASON', { failed: tcFaultSubject(th, false, ALERT_TEXT), reason: th.tcReason }, n);
+
+/** The lane's failed toolchange or unload as an alert item: what failed and
+ *  where as its title, the host's reason (borrowed whole in C) as its text,
+ *  and the host's three ways on (UI_API "Retry a failed load or unload"):
+ *  Retry (with the advertised word only), Unload to back it out, and Clear
+ *  errors (the host's Reset, which clears the units' faults and keeps this
+ *  one). */
+function tcFaultItem(m: Model, th: Toolhead): ViewAlert {
+  const list = new ActionList();
+  if (tcRetryOffered(m, th)) simple(list, m, 'retry', str('ACTION_RETRY_LOAD'), 'primary', `fault retry ${th.id}`);
+  const unload = simple(list, m, 'unload', str('ACTION_UNLOAD'), 'normal', `unload ${th.id}`);
+  if (unload && m.printing) confirm(unload, str('CONFIRM_UNLOAD_TITLE'), str('CONFIRM_UNLOAD_TEXT'), str('CONFIRM_UNLOAD_OK'));
+  simple(list, m, 'clear_errors', str('ACTION_CLEAR_ERRORS'), 'danger', 'fault clear_errors');
+  return {
+    severity: SEVERITY[Sev.PAUSE],
+    code: '',
+    title: tcFaultSubject(th, true, ALERT_TEXT),
+    text: th.tcReason,
+    unit: null,
+    slot_id: null,
+    when_text: '',
+    unread: true,
+    actions: list.items.slice(0, MAX_ACTIONS_PER_ALERT),
+  };
+}
+
 /** Whether the lane fault has any action to offer (without building them). */
 function faultHasActions(m: Model, th: Toolhead): boolean {
   return th.errorAct.some((tok) => {
     if (tok === 'resume' || tok === 'clear_errors') return true;
     if (tok === 'clear_fault') return th.errorUnit >= 0;
     if (tok === 'retry_load') {
+      if (tcRetryOffered(m, th)) return false;
       return (th.currentGroup >= 0 && th.currentGroup < m.groups.length)
         || (th.errorUnit >= 0 && slotGroup(m, th.errorUnit, th.errorSlot) >= 0);
     }
@@ -842,11 +911,13 @@ function faultHasActions(m: Model, th: Toolhead): boolean {
 
 /** The actions a lane fault's support tokens offer, in the host's order (the
  *  fault's first two tokens): retry, resume, clear errors, and the unit-scoped
- *  clear fault when the fault names a unit. */
+ *  clear fault when the fault names a unit. `retry_load` gives way to the
+ *  failed toolchange's own Retry while that is offered (tcRetryOffered()). */
 function faultActions(m: Model, th: Toolhead): ViewAction[] {
   const list = new ActionList();
   for (const tok of th.errorAct) {
     if (tok === 'retry_load') {
+      if (tcRetryOffered(m, th)) continue;   // the toolchange's own Retry stands for it
       let group: string | null = null;
       if (th.currentGroup >= 0 && th.currentGroup < m.groups.length) group = m.groups[th.currentGroup].name;
       else if (th.errorUnit >= 0) {
@@ -967,6 +1038,10 @@ function scanAlerts(m: Model, unitIdx: number, thIdx: number): ViewAlertGroup | 
       add(faultWeight(th), th.errorSeverity, () => faultItem(m, th));
     }
   }
+  // The lane's failed toolchange or unload names no unit: its toolhead's, with
+  // its recovery actions (principle 4: a load failure keeps its FPS badge,
+  // because the badge holds them).
+  if (unitIdx < 0 && th && tcFaultShown(th)) add(1, Sev.PAUSE, () => tcFaultItem(m, th));
   if (u && u.canDry && u.dryState === DryState.ERROR) {
     add(1, Sev.PAUSE, () => ({
       severity: 'pause', code: '', title: alertTitle(Sev.PAUSE), text: str('ALERT_DRYER'),
@@ -1030,11 +1105,13 @@ function runoutText(m: Model, th: Toolhead): { text: string; error: boolean } {
   return { text: fmtRunout(from.name, to, MESSAGE), error: false };
 }
 
-/** One message line: an error > a runout > a notice > the plain status. */
+/** One message line: an error (the lane fault, else a failed toolchange) > a
+ *  runout > a notice > the plain status. */
 function buildMessage(m: Model, th: Toolhead): ViewToolhead['message'] {
   if (th.hasError) {
     return { text: cut(th.errorText || th.errorCode, MESSAGE), tone: 'error' };
   }
+  if (tcFaultShown(th)) return { text: tcFaultText(th, MESSAGE), tone: 'error' };
   if (th.runoutActive) {
     const r = runoutText(m, th);
     return { text: r.text, tone: r.error ? 'error' : 'info' };
@@ -1166,7 +1243,7 @@ function buildToolhead(m: Model, index: number): ViewToolhead {
   const thAlert = scanAlerts(m, -1, index);
   const message = buildMessage(m, th);
   const activityKind: ViewToolhead['activity']['kind'] =
-    th.hasError ? 'error' : th.runoutActive ? 'runout' : th.busy === Busy.LOAD ? 'loading'
+    th.hasError || tcFaultShown(th) ? 'error' : th.runoutActive ? 'runout' : th.busy === Busy.LOAD ? 'loading'
       : th.busy === Busy.UNLOAD ? 'unloading' : 'idle';
 
   // The loaded tool: the hotend icon's overlay and tint only.

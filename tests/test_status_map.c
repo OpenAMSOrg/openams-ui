@@ -895,6 +895,75 @@ static void test_settings(void)
     cJSON_Delete(not_object);
 }
 
+/* `lanes_by_fps.<l>.toolchange_fault` (C2 4.2) and the advertised
+ * `commands.retry`: what the panel's Retry continues, and the word it sends. */
+static void test_toolchange_fault_and_retry(void)
+{
+    cJSON *load = cJSON_Parse(
+        "{\"fps1\":{\"pressure\":0.5,\"toolchange_fault\":{\"kind\":\"load\",\"group\":\"T1\","
+        "\"slot\":\"5\",\"temp\":null,\"step\":\"heat\",\"reason\":\"Extruder not heating\","
+        "\"panel\":true,\"fed\":false,\"since\":12.5}},\"fps2\":{\"pressure\":0.4}}");
+    cJSON *unload = cJSON_Parse(
+        "{\"fps1\":{\"toolchange_fault\":{\"kind\":\"unload\",\"group\":null,\"slot\":null,"
+        "\"temp\":null,\"step\":null,\"reason\":\"Spool unloading failed\",\"panel\":true,"
+        "\"fed\":false,\"since\":13.0}}}");
+    cJSON *cleared = cJSON_Parse("{\"fps1\":{\"pressure\":0.5}}");
+    cJSON *commands = cJSON_Parse(
+        "{\"load\":\"OPENAMS_LOAD\",\"reset\":\"OAMSM_CLEAR_ERRORS\",\"retry\":\"OAMSM_RETRY\"}");
+    cJSON *no_retry = cJSON_Parse("{\"reset\":\"OAMSM_CLEAR_ERRORS\"}");
+    cJSON *not_a_word = cJSON_Parse("{\"retry\":\"OAMSM_RETRY\\nM112\"}");
+    cJSON *too_long = cJSON_Parse("{\"retry\":\"OAMSM_RETRY_THIS_WORD_IS_FAR_TOO_LONG\"}");
+    mmu_toolhead_t *th;
+
+    assert(load && unload && cleared && commands && no_retry && not_a_word && too_long);
+
+    status_map_reset(&g_mmu);
+    assert(g_mmu.cmd_retry[0] == '\0');
+    assert(status_map_apply_lanes(&g_mmu, load));
+    assert(g_mmu.toolhead_count == 2);
+    th = &g_mmu.toolheads[0];
+    assert(strcmp(th->id, "fps1") == 0);
+    assert(th->tc_fault && !th->tc_unload);
+    assert(strcmp(th->tc_group, "T1") == 0);
+    assert(strcmp(th->tc_step, "heat") == 0);
+    assert(strcmp(th->tc_reason, "Extruder not heating") == 0);
+    /* the lane without one has none */
+    assert(!g_mmu.toolheads[1].tc_fault);
+
+    /* an unload names no group and, failing before its plan, no step */
+    assert(status_map_apply_lanes(&g_mmu, unload));
+    assert(th->tc_fault && th->tc_unload);
+    assert(th->tc_group[0] == '\0' && th->tc_step[0] == '\0');
+    assert(strcmp(th->tc_reason, "Spool unloading failed") == 0);
+
+    /* the field going away is the fault being over */
+    assert(status_map_apply_lanes(&g_mmu, cleared));
+    assert(!th->tc_fault && !th->tc_unload && th->tc_reason[0] == '\0');
+
+    /* the retry word is the host's, and only a G-code word that fits */
+    status_map_apply_commands(&g_mmu, commands);
+    assert(strcmp(g_mmu.cmd_retry, "OAMSM_RETRY") == 0);
+    status_map_apply_commands(&g_mmu, no_retry);
+    assert(g_mmu.cmd_retry[0] == '\0');
+    status_map_apply_commands(&g_mmu, commands);
+    status_map_apply_commands(&g_mmu, not_a_word);
+    assert(g_mmu.cmd_retry[0] == '\0');
+    status_map_apply_commands(&g_mmu, too_long);
+    assert(g_mmu.cmd_retry[0] == '\0');
+    /* an older host: no map at all */
+    status_map_apply_commands(&g_mmu, commands);
+    status_map_apply_commands(&g_mmu, NULL);
+    assert(g_mmu.cmd_retry[0] == '\0');
+
+    cJSON_Delete(load);
+    cJSON_Delete(unload);
+    cJSON_Delete(cleared);
+    cJSON_Delete(commands);
+    cJSON_Delete(no_retry);
+    cJSON_Delete(not_a_word);
+    cJSON_Delete(too_long);
+}
+
 /* A malformed object is refused, and refusing changes nothing: the guards run
  * before any unit is created. */
 static void test_malformed(void)
@@ -1641,6 +1710,7 @@ int main(void)
     test_groups_in_name_order();
     test_motion_settled();
     test_settings();
+    test_toolchange_fault_and_retry();
     test_malformed();
     test_fault_actions();
     test_fault_dedup();

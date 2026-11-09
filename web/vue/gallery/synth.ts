@@ -52,6 +52,8 @@ export interface LaneSpec {
   pressure?: number | null;
   /** The regulator's normal band; the default is [0.3, 0.7], null reports none. */
   band?: [number, number] | null;
+  /** A failed toolchange or unload on the lane (`lanes_by_fps.<l>.toolchange_fault`). */
+  toolchange?: { kind: 'load' | 'unload'; group: string | null; step: string | null; reason: string };
 }
 
 export interface Scenario {
@@ -63,6 +65,8 @@ export interface Scenario {
   job?: number[];
   /** The host has its own sequence stop (`stop` in the component's status): Stop is an RPC. */
   stop?: boolean;
+  /** The commands the host advertises (`oams_manager.commands`); none = an older host. */
+  commands?: Record<string, string>;
 }
 
 const settings = {
@@ -83,8 +87,14 @@ export function build(core: Core, sc: Scenario): View {
   core.reset(false);
   core.apply('oams_manager', null, {
     ready: true, settings,
+    ...(sc.commands ? { commands: sc.commands } : {}),
     lanes_by_fps: Object.fromEntries(sc.lanes.filter((l) => l.pressure !== null)
-      .map((l) => [l.id, { pressure: l.pressure ?? 0.5, set_point: 0.5, pressure_band: l.band === undefined ? [0.3, 0.7] : l.band }])),
+      .map((l) => [l.id, {
+        pressure: l.pressure ?? 0.5, set_point: 0.5, pressure_band: l.band === undefined ? [0.3, 0.7] : l.band,
+        ...(l.toolchange ? { toolchange_fault: {
+          ...l.toolchange, slot: null, temp: null, panel: true, fed: false, since: 100,
+        } } : {}),
+      }])),
   });
   const groups = Object.entries(sc.groups).map(([n, b]) => ({ n, b, s: 'r' }));
   const status: Record<string, unknown> = {};

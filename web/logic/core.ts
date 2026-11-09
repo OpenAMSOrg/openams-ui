@@ -14,7 +14,7 @@
 import { coreAction } from './actions.ts';
 import { cut, jsonEqual } from './cstr.ts';
 import {
-  actionResult, ActionKind, applyComponentStatus, applyLanes, applyMetadata, applyOpenamsUi,
+  actionResult, ActionKind, applyCommands, applyComponentStatus, applyLanes, applyMetadata, applyOpenamsUi,
   applyPrintStats, applySettings, applySpoolList, applyVendorList, drain, MAX_UNITS, newModel, refreshThis,
 } from './model.ts';
 import type { Model } from './model.ts';
@@ -146,6 +146,8 @@ export class OpenamsLogic implements Core {
     } else if (kind === 'oams_manager') {
       if (isObject(copy.settings)) applySettings(m, copy.settings);
       if (isObject(copy.lanes_by_fps)) applyLanes(m, copy.lanes_by_fps);
+      // absent on an older host: then no retry word, and no Retry
+      applyCommands(m, copy.commands);
     } else if (kind === 'component_status') {
       applyComponentStatus(m, copy);
     } else if (kind === 'print_stats') {

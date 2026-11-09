@@ -79,7 +79,7 @@
 #define VIEW_FW_LEN             12
 
 #define VIEW_ALERT_CODE_LEN     40
-#define VIEW_ALERT_TEXT_LEN    144   /* a composed alert: the pseudo-locale's low-filament sentence is 140 bytes */
+#define VIEW_ALERT_TEXT_LEN    192   /* a composed alert: the pseudo-locale's failed-toolchange title with its longest step is 175 bytes, its low-filament sentence 140 */
 #define VIEW_ALERT_UNIT_LEN      8
 #define VIEW_ALERT_SLOT_LEN     32
 #define VIEW_WHEN_LEN           16
@@ -96,7 +96,7 @@
 #define VIEW_ACTIONS_PER_TILE    10   /* load, unload, edit, assign, unlink, change group, reread, calibrate, and a fault's two */
 #define VIEW_ACTIONS_PER_UNIT     6
 #define VIEW_ACTIONS_PER_TOOLHEAD 6
-#define VIEW_ACTIONS_PER_ALERT    2
+#define VIEW_ACTIONS_PER_ALERT    3   /* a failed toolchange: retry, unload, clear errors; a lane fault: its two tokens */
 #define VIEW_ALERTS_PER_GROUP     6   /* a unit: its lane fault, the dryer fault, the adapter, low filament */
 #define VIEW_ACTIONS_MAX          10  /* view_actions_t's own capacity: >= every per-widget cap above */
 #define VIEW_MAX_FORM_FIELDS      6   /* one form's own fields: the spool editor's */
@@ -459,7 +459,10 @@ typedef struct {
 typedef struct {
     mmu_severity_t severity;
     char code[VIEW_ALERT_CODE_LEN];             /* "" - not carried by mmu_alert_t yet */
-    const char *title;                          /* the severity's name, a fixed string */
+    const char *title;                          /* the severity's name, a fixed string; for a
+                                                * failed toolchange what failed and where
+                                                * ("Loading T1 failed (Heat the nozzle)"),
+                                                * composed into text_buf */
     const char *text;                           /* the alert's own sentence: a fixed string
                                                 * or the host's words (borrowed, so a
                                                 * translation is never cut), or text_buf

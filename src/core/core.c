@@ -227,6 +227,8 @@ static bool apply_merge(core_t *core, const char *kind, const char *name, const 
 
         if(cJSON_IsObject(settings)) status_map_apply_settings(core->model, settings);
         if(cJSON_IsObject(lanes)) status_map_apply_lanes(core->model, lanes);
+        /* absent on an older host: then no retry word, and no Retry */
+        status_map_apply_commands(core->model, cJSON_GetObjectItemCaseSensitive(e->copy, "commands"));
     }
     else if(strcmp(kind, "component_status") == 0) {
         status_map_apply_component_status(core->model, e->copy);

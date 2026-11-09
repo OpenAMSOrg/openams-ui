@@ -226,6 +226,71 @@ static view_field_t *form_field(view_actions_t *o, view_action_t *a)
 }
 
 static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_actions_t *out);
+static const char *stage_label(const char *name);
+
+/* ------------------------------------------------------- failed toolchanges */
+
+/* Whether a sequence runs on the lane: it is busy loading or unloading, or its
+ * stage plan has a current step that has not failed (sequence_runs() in
+ * actions_map.c). */
+static bool lane_runs(const mmu_toolhead_t *th)
+{
+    return th->busy != MMU_BUSY_NONE ||
+           (th->step_count > 0 && th->step_current >= 0 && th->step_current < th->step_count &&
+            th->step_failed < 0);
+}
+
+/* The lane's failed toolchange or unload as the panel shows it (C2 4.2
+ * `toolchange_fault`): not while a sequence runs on the lane, because the host
+ * keeps the fault until a retry has finished, and the retry in progress shows
+ * its own steps and status instead. */
+static bool tc_fault_shown(const mmu_toolhead_t *th)
+{
+    return th->tc_fault && !lane_runs(th);
+}
+
+/* Whether the panel offers Retry for it: only with the word the host
+ * advertises (`commands.retry`); an older host has none. While Retry is
+ * offered, a lane fault's own `retry_load` is not: one "Retry", and it is the
+ * one that finishes the whole toolchange. */
+static bool tc_retry_offered(const mmu_model_t *m, const mmu_toolhead_t *th)
+{
+    return m->cmd_retry[0] != '\0' && tc_fault_shown(th);
+}
+
+/* What failed, and with @p where the step it failed at when the host named
+ * one: "Loading T1 failed (Heat the nozzle)". The host's reason is not in it:
+ * an alert item borrows that whole as its text, and the message row adds it
+ * (tc_fault_text()). */
+static void tc_fault_subject(const mmu_toolhead_t *th, bool where, char *out, size_t n)
+{
+    const char *step = (where && th->tc_step[0]) ? stage_label(th->tc_step) : NULL;
+    vs_arg_t a[2];
+    size_t k = 0;
+    view_str_id_t id;
+
+    if(!th->tc_unload)
+        a[k++] = (vs_arg_t)VS_ARG_T("tool", th->tc_group[0] ? th->tc_group : view_str(VS_UNKNOWN_MARK));
+    if(step) a[k++] = (vs_arg_t)VS_ARG_T("step", step);
+    if(th->tc_unload) id = step ? VS_TOOLCHANGE_UNLOAD_FAILED_AT : VS_TOOLCHANGE_UNLOAD_FAILED;
+    else              id = step ? VS_TOOLCHANGE_LOAD_FAILED_AT : VS_TOOLCHANGE_LOAD_FAILED;
+    vs_format(id, out, n, a, k);
+}
+
+/* The message row's line: what failed and the host's reason, "Loading T1
+ * failed: <reason>". The step is not repeated: the stepper above marks it
+ * (principle 4), and the alert item's title names it. The row is one line, so
+ * a long reason is cut there; the alert item has it whole. */
+static void tc_fault_text(const mmu_toolhead_t *th, char *out, size_t n)
+{
+    char subject[VIEW_ALERT_TEXT_LEN];
+    vs_arg_t a[2];
+
+    tc_fault_subject(th, false, subject, sizeof subject);
+    a[0] = (vs_arg_t)VS_ARG_T("failed", subject);
+    a[1] = (vs_arg_t)VS_ARG_T("reason", th->tc_reason);
+    vs_format(VS_TOOLCHANGE_FAILED_REASON, out, n, a, 2);
+}
 
 /* ------------------------------------------------------------------ colors */
 
@@ -1218,6 +1283,7 @@ static const mmu_toolhead_t *unit_lane(const mmu_model_t *m, int unit_idx)
 static int fault_weight(const mmu_toolhead_t *th) { return th->error_count > 0 ? th->error_count : 1; }
 
 static void fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_alert_t *a);
+static void tc_fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_alert_t *a);
 static void build_message(const mmu_model_t *m, const mmu_toolhead_t *th, view_message_t *out);
 
 /* Whether the lane fault has any action to offer (without building them). */
@@ -1230,7 +1296,7 @@ static bool fault_has_actions(const mmu_model_t *m, const mmu_toolhead_t *th)
 
         if(strcmp(tok, "resume") == 0 || strcmp(tok, "clear_errors") == 0) return true;
         if(strcmp(tok, "clear_fault") == 0 && th->error_unit >= 0) return true;
-        if(strcmp(tok, "retry_load") == 0 &&
+        if(strcmp(tok, "retry_load") == 0 && !tc_retry_offered(m, th) &&
            ((th->current_group >= 0 && th->current_group < (int)m->group_count) ||
             (th->error_unit >= 0 && mmu_slot_group_in(m, th->error_unit, th->error_slot) >= 0)))
             return true;
@@ -1294,6 +1360,15 @@ static void scan_alerts(const mmu_model_t *m, int unit_idx, int th_idx, view_ale
             if(a) fault_item(m, th, a);
             ADD_ITEM(fault_weight(th), th->error_severity);
         }
+    }
+    /* The lane's failed toolchange or unload names no unit: its toolhead's,
+     * with its recovery actions (principle 4: a load failure keeps its FPS
+     * badge, because the badge holds them). */
+    if(unit_idx < 0 && th && tc_fault_shown(th)) {
+        view_alert_t *a = NEXT_ITEM();
+
+        if(a) tc_fault_item(m, th, a);
+        ADD_ITEM(1, MMU_SEV_PAUSE);
     }
     if(u && u->can_dry && u->dry_state == MMU_DRY_ERROR) {
         view_alert_t *a = NEXT_ITEM();
@@ -1400,7 +1475,8 @@ static bool toolhead_scope_clear(const mmu_model_t *m, int th_idx, const mmu_too
 
 /* The actions a lane fault's support tokens offer, in the host's order (the
  * fault's first two tokens): retry, resume, clear errors, and the unit-scoped
- * clear fault when the fault names a unit. */
+ * clear fault when the fault names a unit. `retry_load` gives way to the
+ * failed toolchange's own Retry while that is offered (tc_retry_offered()). */
 static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_actions_t *out)
 {
     view_action_t *a;
@@ -1413,6 +1489,7 @@ static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_a
         if(strcmp(tok, "retry_load") == 0) {
             const char *gname = NULL;
 
+            if(tc_retry_offered(m, th)) continue;   /* the toolchange's own Retry stands for it */
             if(th->current_group >= 0 && th->current_group < (int)m->group_count)
                 gname = m->groups[th->current_group].name;
             else if(th->error_unit >= 0) {
@@ -1467,6 +1544,52 @@ static void fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_aler
     fault_actions(m, th, &acts);
     for(i = 0; i < (int)acts.count && i < VIEW_ACTIONS_PER_ALERT; i++)
         a->actions[a->action_count++] = acts.items[i];
+}
+
+/* One plain action written straight into an alert's own list, dry-run like
+ * act_simple()'s. No view_actions_t: one is 17 KB, and fault_item()'s is
+ * already on the device's stack. NULL when the list is full. */
+static view_action_t *alert_act(view_alert_t *al, const mmu_model_t *m, const char *id,
+                                view_str_id_t label, view_action_style_t style,
+                                const char *fmt, const char *arg)
+{
+    char line[VIEW_ACTION_LINE_LEN];
+    view_action_t *a;
+
+    if(al->action_count >= VIEW_ACTIONS_PER_ALERT) return NULL;
+    a = &al->actions[al->action_count++];
+    memset(a, 0, sizeof(*a));
+    snprintf(line, sizeof line, fmt, arg);
+    vs_copy(id, a->id, sizeof(a->id));
+    a->label = view_str(label);
+    vs_copy(line, a->line, sizeof(a->line));
+    a->style = style;
+    action_check(a, line, m);
+    return a;
+}
+
+/* The lane's failed toolchange or unload as an alert item: what failed and
+ * where as its title, the host's reason (borrowed whole) as its text, and the
+ * host's three ways on (UI_API "Retry a failed load or unload"): Retry (with
+ * the advertised word only), Unload to back it out, and Clear errors (the
+ * host's Reset, which clears the units' faults and keeps this one). */
+static void tc_fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_alert_t *a)
+{
+    view_action_t *act;
+
+    memset(a, 0, sizeof(*a));
+    a->severity = MMU_SEV_PAUSE;
+    tc_fault_subject(th, true, a->text_buf, sizeof(a->text_buf));
+    a->title = a->text_buf;
+    a->text = th->tc_reason;
+    a->unread = true;
+
+    if(tc_retry_offered(m, th))
+        alert_act(a, m, "retry", VS_ACTION_RETRY_LOAD, VIEW_STYLE_PRIMARY, "fault retry %s", th->id);
+    act = alert_act(a, m, "unload", VS_ACTION_UNLOAD, VIEW_STYLE_NORMAL, "unload %s", th->id);
+    if(act && m->printing)
+        action_confirm(act, VS_CONFIRM_UNLOAD_TITLE, VS_CONFIRM_UNLOAD_TEXT, VS_CONFIRM_UNLOAD_OK);
+    alert_act(a, m, "clear_errors", VS_ACTION_CLEAR_ERRORS, VIEW_STYLE_DANGER, "%s", "fault clear_errors");
 }
 
 bool view_toolhead_alerts(const mmu_model_t *m, int toolhead_idx, view_alerts_t *out)
@@ -1702,11 +1825,11 @@ static void build_activity(const mmu_model_t *m, const mmu_toolhead_t *th, view_
     int i, n;
 
     memset(out, 0, sizeof(*out));
-    if(th->has_error)                     out->kind = VIEW_ACTIVITY_ERROR;
-    else if(th->runout_active)            out->kind = VIEW_ACTIVITY_RUNOUT;
-    else if(th->busy == MMU_BUSY_LOAD)    out->kind = VIEW_ACTIVITY_LOADING;
-    else if(th->busy == MMU_BUSY_UNLOAD)  out->kind = VIEW_ACTIVITY_UNLOADING;
-    else                                  out->kind = VIEW_ACTIVITY_IDLE;
+    if(th->has_error || tc_fault_shown(th)) out->kind = VIEW_ACTIVITY_ERROR;
+    else if(th->runout_active)              out->kind = VIEW_ACTIVITY_RUNOUT;
+    else if(th->busy == MMU_BUSY_LOAD)      out->kind = VIEW_ACTIVITY_LOADING;
+    else if(th->busy == MMU_BUSY_UNLOAD)    out->kind = VIEW_ACTIVITY_UNLOADING;
+    else                                    out->kind = VIEW_ACTIVITY_IDLE;
 
     n = th->step_count;
     if(n > MMU_MAX_STEPS) n = MMU_MAX_STEPS;
@@ -1779,7 +1902,8 @@ static bool runout_text(const mmu_model_t *m, const mmu_toolhead_t *th, char *ou
     return false;
 }
 
-/* One message line: an error > a runout > a notice > the plain status. */
+/* One message line: an error (the lane fault, else a failed toolchange) > a
+ * runout > a notice > the plain status. */
 static void build_message(const mmu_model_t *m, const mmu_toolhead_t *th, view_message_t *out)
 {
     memset(out, 0, sizeof(*out));
@@ -1787,6 +1911,11 @@ static void build_message(const mmu_model_t *m, const mmu_toolhead_t *th, view_m
     if(th->has_error) {
         out->tone = VIEW_TONE_ERROR;
         vs_copy(th->error_text[0] ? th->error_text : th->error_code, out->text, sizeof(out->text));
+        return;
+    }
+    if(tc_fault_shown(th)) {
+        out->tone = VIEW_TONE_ERROR;
+        tc_fault_text(th, out->text, sizeof(out->text));
         return;
     }
     if(th->runout_active) {

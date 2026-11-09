@@ -46,6 +46,10 @@ const ALERT_TEXT = 48;
 const ERROR_CODE = 40;
 const ERROR_TEXT = 96;
 const ERROR_ACT = 16;
+const TC_GROUP = GROUP_NAME;          // the toolhead's tc_group: MMU_GROUP_NAME_LEN
+const TC_STEP = 24;                   // tc_step: MMU_TEXT_LEN
+const TC_REASON = 96;                 // tc_reason: MMU_TEXT_LEN * 4
+const COMMAND = 32;                   // MMU_COMMAND_LEN: an advertised G-code word with its NUL
 const SPOOL_MATERIAL = 12;
 const SPOOL_VENDOR = 16;
 const REF_NAME = UNIT_NAME;
@@ -153,6 +157,14 @@ export interface Toolhead {
   errorSlot: number;
   errorAct: string[];          // the fault's first two `act` tokens, host order
   errorCount: number;          // the lane's fault count (`nf`)
+  /** A toolchange or unload on this lane that failed and is not finished
+   *  (`oams_manager.lanes_by_fps.<l>.toolchange_fault`, C2 4.2): what the
+   *  panel's Retry continues. An older host never sends it. */
+  tcFault: boolean;
+  tcUnload: boolean;           // the failed operation is an unload, else a load
+  tcGroup: string;             // a load's target group ("T1"); '' for an unload
+  tcStep: string;              // the plan step that was running; '' = none
+  tcReason: string;            // what failed, in the host's own words
   runoutActive: boolean;
   runoutNote: string;
   runoutFromUnit: number;
@@ -262,6 +274,10 @@ export interface Model {
   spoolmanEdit: boolean;
   /** The host has a sequence stop (`stop` in the component's status): server.openams.stop. */
   spoolmanStop: boolean;
+  /** The G-code word the host advertises as `oams_manager.commands.retry`
+   *  (UI API), '' when it advertises none (an older host): the panel's Retry
+   *  sends this word, never one of its own. */
+  cmdRetry: string;
   /** Spoolman's vendor names, as listed (sorted), each whole. */
   vendors: string[];
 
@@ -329,7 +345,7 @@ function settingsDefaults(): Settings {
 export function newModel(): Model {
   return {
     units: [], toolheads: [], groups: [], spools: [], settings: settingsDefaults(),
-    spoolmanOnline: false, spoolmanEdit: false, spoolmanStop: false, vendors: [], thisUnit: 0, loaded: false,
+    spoolmanOnline: false, spoolmanEdit: false, spoolmanStop: false, cmdRetry: '', vendors: [], thisUnit: 0, loaded: false,
     editRefusal: '', editSeq: 0,
     actionRefusal: '', actionRefusalKind: ActionKind.OTHER, actionSeq: 0,
     actionPendingKind: ActionKind.OTHER, actionPendingSeq: 0, actionStartedKind: ActionKind.OTHER,
@@ -381,7 +397,8 @@ function toolheadGetOrCreate(m: Model, id: string | null): Toolhead | null {
     id: cut(want, LANE_ID), extruder: '', loaded: false, loadedUnit: -1, loadedSlot: -1,
     loadedExt: -1, busy: Busy.NONE, busyUnit: -1, busySlot: -1, steps: [], stepCurrent: -1,
     stepFailed: -1, stepDetail: '', currentGroup: -1, hasError: false, errorSeverity: Sev.INFO, errorCode: '',
-    errorText: '', errorUnit: -1, errorSlot: -1, errorAct: [], errorCount: 0, runoutActive: false,
+    errorText: '', errorUnit: -1, errorSlot: -1, errorAct: [], errorCount: 0,
+    tcFault: false, tcUnload: false, tcGroup: '', tcStep: '', tcReason: '', runoutActive: false,
     runoutNote: '', runoutFromUnit: -1, runoutFromSlot: -1, runoutToUnit: -1, runoutToSlot: -1,
     pressure: -1, setPoint: -1, bandLow: -1, bandHigh: -1,
   };
@@ -1268,8 +1285,25 @@ export function applySettings(m: Model, obj: unknown): boolean {
   return true;
 }
 
+/** `lanes_by_fps.<l>.toolchange_fault` (C2 4.2): present only while a
+ *  toolchange or unload on the lane failed and is not finished. Anything but
+ *  an object clears it, so the field going away is the fault being over
+ *  (map_toolchange_fault() in status_map.c). */
+function mapToolchangeFault(th: Toolhead, fault: unknown): void {
+  th.tcFault = isObject(fault);
+  th.tcUnload = false;
+  th.tcGroup = '';
+  th.tcStep = '';
+  th.tcReason = '';
+  if (!isObject(fault)) return;
+  th.tcUnload = jstring(fault, 'kind') === 'unload';
+  th.tcGroup = cut(jstring(fault, 'group') ?? '', TC_GROUP);
+  th.tcStep = cut(jstring(fault, 'step') ?? '', TC_STEP);
+  th.tcReason = cut(jstring(fault, 'reason') ?? '', TC_REASON);
+}
+
 /** `oams_manager.lanes_by_fps`: pressure and set point per lane (the fast
- *  values the openams_ui projection keeps out). */
+ *  values the openams_ui projection keeps out), and its failed toolchange. */
 export function applyLanes(m: Model, lanes: unknown): boolean {
   if (!isObject(lanes)) return false;
   for (const [id, lane] of Object.entries(lanes)) {
@@ -1286,9 +1320,19 @@ export function applyLanes(m: Model, lanes: unknown): boolean {
       th.bandLow = f32(band[0]);
       th.bandHigh = f32(band[1]);
     }
+    mapToolchangeFault(th, lane.toolchange_fault);
   }
   refreshThis(m);
   return true;
+}
+
+/** `oams_manager.commands` (the UI API's operation -> G-code word map): the
+ *  `retry` word, when it is a G-code word that fits (status_map_apply_commands()
+ *  in status_map.c); anything else, or no map at all (an older host), leaves
+ *  none, and Retry is not offered. */
+export function applyCommands(m: Model, commands: unknown): void {
+  const retry = isObject(commands) ? jstring(commands, 'retry') : null;
+  m.cmdRetry = retry !== null && /^[A-Z_][A-Z0-9_]*$/.test(retry) && retry.length < COMMAND ? retry : '';
 }
 
 /** `print_stats`: only the file name is read. */

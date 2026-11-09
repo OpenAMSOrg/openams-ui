@@ -67,6 +67,26 @@ answer: "Could not start loading:" or "Could not start unloading:", followed
 by the host's own reason. The reason can be long and wraps. Nothing moved; fix
 the cause and try again. A typical one asks you to heat the extruder first.
 
+## A load or unload that failed
+
+When a toolchange, a Load or an Unload fails on the printer, OpenAMS keeps a
+record of it on the lane until it is finished. The message row says what
+failed and the printer's reason: "Loading T1 failed: Spool loading failed
+(NO_PROGRESS)". Tap it for the Alerts screen, where the toolhead's card names
+the step it failed at ("Loading T1 failed (Push new filament into
+extruder)") and offers:
+
+| Button | Does |
+|--------|------|
+| Retry | carries on from where it stopped: the toolhead part alone when the filament had reached the extruder, the whole swap otherwise. It clears the units' faults first |
+| Unload | backs it out; dimmed, with the reason, when nothing is loaded |
+| Clear errors | the printer's reset: clears the units' faults and re-reads the lanes. The failed load stays on the card, so Retry or Unload can still finish it |
+
+Retry appears only when the printer offers it (OpenAMS released 2026-11-08 or
+later). While a retry runs, the message row shows its steps instead; if it
+fails again, the card comes back with the new reason. In a print the printer
+pauses instead, and its own Resume does the retry.
+
 ## Groups
 
 A group is a named, ordered list of bays, usually named for a slicer tool

@@ -148,6 +148,26 @@
    "text": "[{spool} ŕéƥôŕťéď áñ éŕŕôŕ…………………………]"
   },
   {
+   "id": "TOOLCHANGE_LOAD_FAILED",
+   "text": "[Ĺôáďíñğ {tool} ƒáíļéď……………………]"
+  },
+  {
+   "id": "TOOLCHANGE_LOAD_FAILED_AT",
+   "text": "[Ĺôáďíñğ {tool} ƒáíļéď ({step})………………………………]"
+  },
+  {
+   "id": "TOOLCHANGE_UNLOAD_FAILED",
+   "text": "[Úñļôáďíñğ ƒáíļéď………………]"
+  },
+  {
+   "id": "TOOLCHANGE_UNLOAD_FAILED_AT",
+   "text": "[Úñļôáďíñğ ƒáíļéď ({step})…………………………]"
+  },
+  {
+   "id": "TOOLCHANGE_FAILED_REASON",
+   "text": "[{failed}: {reason}…………………]"
+  },
+  {
    "id": "ALERT_LOW_FILAMENT",
    "text": "[Ĺôŵ ƒíļáɱéñť: {spool} ĥáš {g} ğ ļéƒť……………………………………]"
   },

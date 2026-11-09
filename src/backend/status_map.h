@@ -62,13 +62,24 @@ bool status_map_apply_settings(mmu_model_t *m, const cJSON *obj);
  * Apply one `oams_manager.lanes_by_fps` object: for each lane id, set that
  * toolhead's `pressure` and `set_point` (creating the toolhead when it is not
  * known yet, C2 6.5), from the -1-if-absent convention every other toolhead
- * field uses. Nothing else from `lanes_by_fps` is read; the `openams_ui`
- * projection stays authoritative for everything else the toolhead holds
- * (pressure and set_point are deliberately left out of that projection).
+ * field uses, and its `toolchange_fault` (C2 4.2): the failed toolchange or
+ * unload the panel's Retry continues, cleared when the lane does not carry
+ * one. Nothing else from `lanes_by_fps` is read; the `openams_ui` projection
+ * stays authoritative for everything else the toolhead holds (pressure and
+ * set_point are deliberately left out of that projection).
  *
  * Returns false when @p lanes_by_fps is not an object.
  */
 bool status_map_apply_lanes(mmu_model_t *m, const cJSON *lanes_by_fps);
+
+/**
+ * Apply `oams_manager.commands` (the UI API's map of operation -> G-code
+ * word): the model keeps the `retry` word, which the panel's Retry sends.
+ * Anything that is not a G-code word (`^[A-Z_][A-Z0-9_]*$`, at most
+ * MMU_COMMAND_LEN - 1 characters), an absent key, or an absent or non-object
+ * @p commands (an older host) leaves no word, and Retry is not offered.
+ */
+void status_map_apply_commands(mmu_model_t *m, const cJSON *commands);
 
 /**
  * Apply one recorded fixture event, dispatching on its `kind`. The two kinds

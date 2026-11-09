@@ -75,6 +75,11 @@ def events(body):
     # not exported, like any other poke
     for m in re.finditer(r'^[ \t]*forget_host_lists\(', body, re.M):
         ev.append((m.start(), "forget", "", ""))
+    # apply_manager(): the test applies an oams_manager object of its own (an
+    # advertised command, a failed toolchange) that the fixture does not
+    # carry, so the JS replay is not in that state either: the same as above
+    for m in re.finditer(r'^[ \t]*apply_manager\(', body, re.M):
+        ev.append((m.start(), "forget", "", ""))
     for m in re.finditer(r'^[ \t]*build\(', body, re.M):
         ev.append((m.start(), "rebuild", "", ""))
     for m in CALL.finditer(body):

@@ -554,6 +554,21 @@ function dispatch(w: Writer, line: string, m: Model): Mapped {
     return { rc: 1, script: '' };
   }
 
+  // `fault retry <toolhead id>`: continue the lane's failed toolchange or
+  // unload from where it stopped, with the word the host advertises as
+  // `commands.retry` (never one of ours) and always the lane, so it is never
+  // ambiguous on a host with several.
+  if ((arg = rest(line, 'fault retry')) !== null) {
+    const idx = toolheadFind(m, arg);
+    if (idx < 0) return NOT_MINE;
+    const t = m.toolheads[idx];
+    if (!m.cmdRetry) return refuse(str('REASON_NOT_SUPPORTED'));
+    if (!t.tcFault) return refuse(str('REASON_NOT_NOW'));
+    if (sequenceRuns(t.busy, t.steps.length, t.stepCurrent, t.stepFailed)) return refuse(str('REASON_GROUP_BUSY'));
+    w.cmd(`${m.cmdRetry} FPS=${t.id}`);
+    return { rc: 1, script: '' };
+  }
+
   // `fault resume` and the older bare `resume` from the alert buttons.
   if (line === 'fault resume' || line === 'resume') {
     w.cmd('RESUME');
