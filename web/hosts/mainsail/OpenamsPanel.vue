@@ -2,7 +2,7 @@
     <panel
         v-if="klipperReadyForGui"
         :title="$t('Panels.OpenamsPanel.Headline')"
-        :icon="mdiViewGrid"
+        :icon="openamsIconLogo"
         :collapsible="true"
         card-class="openams-control-panel">
         <v-card-text class="pt-1">
@@ -12,10 +12,10 @@
 </template>
 <script lang="ts">
 import { Component, Mixins } from 'vue-property-decorator'
-import { mdiViewGrid } from '@mdi/js'
 import BaseMixin from '@/components/mixins/base'
 import { EventBus } from '@/plugins/eventBus'
 import { OpenamsAdapter, OPENAMS_SPOOLMAN_STATUS, panelLanguage } from './adapter'
+import { openamsIconLogo } from '../../vue/src/logo'
 import type { OpenamsStoreState } from './adapter'
 import OpenamsView from '../../vue/src/components/OpenamsView.vue'
 import type { ActionResult } from '../../logic'
@@ -30,7 +30,7 @@ function errorMessage(error: unknown): string {
 
 @Component({ components: { OpenamsView } })
 export default class OpenamsPanel extends Mixins(BaseMixin) {
-    mdiViewGrid = mdiViewGrid
+    openamsIconLogo = openamsIconLogo
 
     adapter = new OpenamsAdapter()
 

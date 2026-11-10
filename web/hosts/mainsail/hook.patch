@@ -6,16 +6,16 @@ index 7da36854..146529cf 100644
      mdiWebcam,
      mdiAdjust,
      mdiMulticast,
-+    mdiViewGrid,
  } from '@mdi/js'
  import { afcIconLogo } from '@/plugins/afcIcons'
++import { openamsIconLogo } from '@/components/panels/Openams/logo'
  
 @@ -79,6 +80,8 @@ export default class DashboardMixin extends BaseMixin {
                  return mdiMulticast
              case 'afc':
                  return afcIconLogo
 +            case 'openams':
-+                return mdiViewGrid
++                return openamsIconLogo
  
              default:
                  return mdiInformation

@@ -18,7 +18,6 @@
 
 <script lang="ts">
 import { Component, Mixins, Watch } from 'vue-property-decorator'
-import { mdiViewGrid } from '@mdi/js'
 import { consola } from 'consola'
 import StateMixin from '@/mixins/state'
 import { EventBus } from '@/eventBus'
@@ -26,6 +25,7 @@ import getFilePaths from '@/util/get-file-paths'
 import { OpenamsAdapter, OPENAMS_SPOOLMAN_STATUS, panelLanguage } from './adapter'
 import type { OpenamsStoreState } from './adapter'
 import OpenamsView from '../../vue/src/components/OpenamsView.vue'
+import { openamsIconLogo } from '../../vue/src/logo'
 import type { ActionResult } from '../../logic'
 
 /** The socket for a method Fluidd's Moonraker.Methods map does not name, which
@@ -45,7 +45,7 @@ function errorMessage (error: unknown): string {
 
 @Component({ components: { OpenamsView } })
 export default class OpenamsCard extends Mixins(StateMixin) {
-  icon: string = mdiViewGrid
+  icon: string = openamsIconLogo
 
   adapter = new OpenamsAdapter()
 
