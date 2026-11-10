@@ -381,8 +381,8 @@ static void add_wrapped_note(lv_obj_t *sheet, const char *text, lv_color_t color
     lv_obj_remove_style_all(row);
     lv_obj_set_width(row, LV_PCT(100));
     lv_obj_set_height(row, LV_SIZE_CONTENT);
-    lv_obj_set_style_pad_top(row, 2, 0);
-    lv_obj_set_style_pad_bottom(row, 2, 0);
+    lv_obj_set_style_pad_top(row, UI_PX(2), 0);
+    lv_obj_set_style_pad_bottom(row, UI_PX(2), 0);
     lv_obj_set_scrollable(row, false);
 
     l = lv_label_create(row);
@@ -391,8 +391,8 @@ static void add_wrapped_note(lv_obj_t *sheet, const char *text, lv_color_t color
     lv_obj_set_style_text_font(l, UI_FONT_S, 0);
     lv_obj_set_style_text_color(l, color, 0);
     lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_WRAP);
-    lv_obj_set_width(l, 448);
-    lv_obj_set_x(l, 16);
+    lv_obj_set_width(l, UI_SCREEN_W - 2 * UI_PX(16));
+    lv_obj_set_x(l, UI_PX(16));
     ui_sheet_fit(sheet);
 }
 
@@ -407,20 +407,20 @@ static void add_tag_candidate(lv_obj_t *sheet, const view_tag_candidate_t *c)
     row = lv_obj_create(body);
     lv_obj_remove_style_all(row);
     lv_obj_set_width(row, LV_PCT(100));
-    lv_obj_set_height(row, 20);
+    lv_obj_set_height(row, UI_PX(20));
     lv_obj_set_scrollable(row, false);
     lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_left(row, 16, 0);
-    lv_obj_set_style_pad_column(row, 6, 0);
+    lv_obj_set_style_pad_left(row, UI_PX(16), 0);
+    lv_obj_set_style_pad_column(row, UI_PX(6), 0);
 
     /* a hairline keeps a dark or a light filament visible; a color the tag
      * did not give is the outline alone */
     sw = lv_obj_create(row);
     lv_obj_remove_style_all(sw);
-    lv_obj_set_size(sw, 12, 12);
-    lv_obj_set_style_radius(sw, 3, 0);
-    lv_obj_set_style_border_width(sw, 1, 0);
+    lv_obj_set_size(sw, UI_PX(12), UI_PX(12));
+    lv_obj_set_style_radius(sw, UI_PX(3), 0);
+    lv_obj_set_style_border_width(sw, UI_PX(1), 0);
     lv_obj_set_style_border_color(sw, UI_COL_TEXT_FAINT, 0);
     if(c->color_known) {
         lv_obj_set_style_bg_color(sw, lv_color_hex(c->color), 0);
