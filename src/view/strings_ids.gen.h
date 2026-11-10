@@ -4,6 +4,8 @@
 
     /* the tag's detail sentence */
 
+    /* a bay whose tag the host has not attributed (openams_ui `tg`): readers that several bays share; the slot sheet's and the tag popover's note */
+
     /* unit alerts */
 
     /* composed text: whole-sentence templates. A sentence with a number or a name in it is ONE id with {named} placeholders, never English fragments glued together in code: word order differs between languages (UNIFIED_UI.md 12). tools/gen_strings.mjs --check compares the placeholder set of every one of these across the languages. */
@@ -54,6 +56,13 @@
     VS_TAGD_LOADING,
     VS_TAGD_UNLOADING,
     VS_TAGD_CONFIRM,
+    VS_TAGR_UNKNOWN,
+    VS_TAGR_CANDIDATE,
+    VS_TAGR_TWO_SPOOLS,
+    VS_TAGR_CLAIMED_TWICE,
+    VS_TAGR_CHANGED,
+    VS_TAGR_NO_TAG,
+    VS_TAGR_CONFLICT,
     VS_ALERT_DRYER,
     VS_ALERT_ADAPTER,
     VS_PCT,
@@ -366,6 +375,7 @@
     VS_ACTION_REFRESH_SPOOLS,
     VS_ACTION_UNLINK,
     VS_ACTION_REREAD,
+    VS_ACTION_TAG_ASSERT,
     VS_ACTION_CALIBRATE,
     VS_ACTION_DELETE_GROUP,
     VS_ACTION_CONFIRM_SPOOL,

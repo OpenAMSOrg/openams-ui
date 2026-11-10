@@ -505,6 +505,34 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
         return 1;
     }
 
+    /* `tag_assert <slot>`: "It is this slot" - the one tag the bay's reader
+     * holds belongs to this bay (C3, ASSERT=1). Only a bay whose tag the host
+     * holds as a candidate (`tg` "c") offers it; the host refuses it when the
+     * field holds two tags, or none. */
+    arg = rest(line, "tag_assert");
+    if(arg) {
+        if(!slot_find(m, arg, &unit, &slot)) return 0;
+        if(m->units[unit].slots[slot].state == MMU_SLOT_EMPTY) {
+            *why = view_str(VS_REASON_BAY_EMPTY);
+            return -1;
+        }
+        gi = unit_host_idx(m, unit);
+        if(gi < 0) {
+            *why = view_str(VS_REASON_UNIT_UNKNOWN);
+            return -1;
+        }
+        if(!unit_may(&m->units[unit], MMU_UNIT_ACT_RFID_SCAN)) {
+            *why = view_str(VS_REASON_NOT_SUPPORTED);
+            return -1;
+        }
+        if(m->units[unit].slots[slot].tag_read != MMU_TAG_READ_CANDIDATE) {
+            *why = view_str(VS_REASON_NOT_NOW);
+            return -1;
+        }
+        wr_cmd(w, "OAMS_RFID_SCAN OAMS=%d BAY=%d ASSERT=1", gi, slot);
+        return 1;
+    }
+
     /* SPOOL= here is the bay index inside OAMS=<host idx> (C3). */
     arg = rest(line, "calibrate");
     if(arg) {

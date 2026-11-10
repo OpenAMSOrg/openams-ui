@@ -1,0 +1,478 @@
+{
+  "scenario": "two_tag",
+  "$comment": "Hand-written (not recorded): every state of the host's tag attribution on bays whose readers several bays share - the openams_ui bay keys tg, tc, tr and to - with the edge cases a reader must survive. oams1: unknown, a candidate with a manual link, claimed_twice naming oams2's bay 2 (slot id 5), attributed and loaded. oams2: each other conflict reason, and claimed_twice back to slot id 2. oams3: ambiguous_pair, a reason this build does not know, claimed_twice naming a slot id no bay has, and claimed_twice without `to`. oams4: two candidates (one with neither material nor color, one with a material longer than the model keeps) and a third that is dropped, a candidate on an empty bay with an unreadable color, a letter this build does not know, and `tc`/`tr` sent where they do not belong. oams5: a unit that does not list rfid_scan, a candidate whose `tc` is not a list, a candidate linked from a tag, and a bay with no `tg` at all.",
+  "seed": 0,
+  "schema_version": 2,
+  "family_map": {
+    "oams1": "ams1",
+    "oams2": "ams1",
+    "oams3": "ams1",
+    "oams4": "ams1",
+    "oams5": "ams1"
+  },
+  "events": [
+    {
+      "t": 0.0,
+      "kind": "c2_status",
+      "unit": null,
+      "payload": {
+        "schema_version": 2,
+        "ready": true,
+        "current_group": "T0",
+        "lanes_by_fps": {
+          "fps1": {
+            "op": "LOADED",
+            "group": "T0",
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "pressure": 0.5,
+            "set_point": 0.5
+          },
+          "fps2": {
+            "op": "UNLOADED",
+            "group": null,
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "pressure": 0.5,
+            "set_point": 0.5
+          },
+          "fps3": {
+            "op": "UNLOADED",
+            "group": null,
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "pressure": 0.5,
+            "set_point": 0.5
+          },
+          "fps4": {
+            "op": "UNLOADED",
+            "group": null,
+            "runout": "idle",
+            "following": false,
+            "extruder": "extruder",
+            "motion_settled": true,
+            "pressure": 0.5,
+            "set_point": 0.5
+          }
+        }
+      }
+    },
+    {
+      "kind": "openams_ui",
+      "unit": "oams1",
+      "t": 0.0,
+      "payload": {
+        "v": 1,
+        "unit": "oams1",
+        "idx": 1,
+        "family": "ams1",
+        "online": true,
+        "ready": true,
+        "act": [
+          "rfid_scan"
+        ],
+        "lane": {
+          "id": "fps1",
+          "ext": "extruder",
+          "op": "LOADED",
+          "group": "T0",
+          "bay": "oams1-3",
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 0,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "u"
+          },
+          {
+            "id": 1,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": {
+              "id": 7,
+              "src": "m"
+            },
+            "tg": "c",
+            "tc": [
+              {
+                "m": "PLA",
+                "c": "D23B3B"
+              }
+            ]
+          },
+          {
+            "id": 2,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "claimed_twice",
+            "to": 5
+          },
+          {
+            "id": 3,
+            "s": "l",
+            "cal": "c",
+            "a": "ucad",
+            "sp": {
+              "id": 9,
+              "src": "t"
+            },
+            "tg": "a"
+          }
+        ],
+        "groups": [
+          {
+            "n": "T0",
+            "b": [
+              "oams1-3"
+            ],
+            "s": "l"
+          },
+          {
+            "n": "T1",
+            "b": [
+              "oams1-1"
+            ],
+            "s": "r"
+          }
+        ],
+        "fault": null,
+        "nf": 0
+      }
+    },
+    {
+      "kind": "openams_ui",
+      "unit": "oams2",
+      "t": 0.0,
+      "payload": {
+        "v": 1,
+        "unit": "oams2",
+        "idx": 2,
+        "family": "ams1",
+        "online": true,
+        "ready": true,
+        "act": [
+          "rfid_scan"
+        ],
+        "lane": {
+          "id": "fps2",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 4,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "two_moving"
+          },
+          {
+            "id": 5,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "claimed_twice",
+            "to": 2
+          },
+          {
+            "id": 6,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "changed_in_place"
+          },
+          {
+            "id": 7,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "no_tag_after_turn"
+          }
+        ],
+        "groups": [],
+        "fault": null,
+        "nf": 0
+      }
+    },
+    {
+      "kind": "openams_ui",
+      "unit": "oams3",
+      "t": 0.0,
+      "payload": {
+        "v": 1,
+        "unit": "oams3",
+        "idx": 3,
+        "family": "ams1",
+        "online": true,
+        "ready": true,
+        "act": [
+          "rfid_scan"
+        ],
+        "lane": {
+          "id": "fps3",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 8,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "ambiguous_pair"
+          },
+          {
+            "id": 9,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "bogus_reason"
+          },
+          {
+            "id": 10,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "claimed_twice",
+            "to": 99
+          },
+          {
+            "id": 11,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "x",
+            "tr": "claimed_twice"
+          }
+        ],
+        "groups": [],
+        "fault": null,
+        "nf": 0
+      }
+    },
+    {
+      "kind": "openams_ui",
+      "unit": "oams4",
+      "t": 0.0,
+      "payload": {
+        "v": 1,
+        "unit": "oams4",
+        "idx": 4,
+        "family": "ams1",
+        "online": true,
+        "ready": true,
+        "act": [
+          "rfid_scan"
+        ],
+        "lane": {
+          "id": "fps4",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 12,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "c",
+            "tc": [
+              {
+                "m": null,
+                "c": null
+              },
+              {
+                "m": "PETG-CF Translucent",
+                "c": "00ae42"
+              },
+              {
+                "m": "ABS",
+                "c": "000000"
+              }
+            ]
+          },
+          {
+            "id": 13,
+            "s": "e",
+            "cal": "c",
+            "a": "",
+            "sp": null,
+            "tg": "c",
+            "tc": [
+              {
+                "m": "ABS",
+                "c": "zzzzzz"
+              }
+            ]
+          },
+          {
+            "id": 14,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "z",
+            "tc": [
+              {
+                "m": "PLA",
+                "c": "FFFFFF"
+              }
+            ]
+          },
+          {
+            "id": 15,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "u",
+            "tc": [
+              {
+                "m": "PLA",
+                "c": "FFFFFF"
+              }
+            ],
+            "tr": "two_moving",
+            "to": 3
+          }
+        ],
+        "groups": [],
+        "fault": null,
+        "nf": 0
+      }
+    },
+    {
+      "kind": "openams_ui",
+      "unit": "oams5",
+      "t": 0.0,
+      "payload": {
+        "v": 1,
+        "unit": "oams5",
+        "idx": 5,
+        "family": "ams1",
+        "online": true,
+        "ready": true,
+        "act": [],
+        "lane": {
+          "id": "fps4",
+          "ext": "extruder",
+          "op": "UNLOADED",
+          "group": null,
+          "bay": null,
+          "stage": null,
+          "runout": "idle",
+          "from": null,
+          "to": null,
+          "ms": true
+        },
+        "bays": [
+          {
+            "id": 16,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "c",
+            "tc": [
+              {
+                "m": "PLA",
+                "c": "FFFFFF"
+              }
+            ]
+          },
+          {
+            "id": 17,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null,
+            "tg": "c",
+            "tc": "PLA"
+          },
+          {
+            "id": 18,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": {
+              "id": 3,
+              "src": "t"
+            },
+            "tg": "c",
+            "tc": [
+              {
+                "m": "PETG",
+                "c": "0A2989"
+              }
+            ]
+          },
+          {
+            "id": 19,
+            "s": "r",
+            "cal": "c",
+            "a": "lcad",
+            "sp": null
+          }
+        ],
+        "groups": [],
+        "fault": null,
+        "nf": 0
+      }
+    }
+  ]
+}

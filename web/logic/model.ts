@@ -64,6 +64,23 @@ export const DryState = { IDLE: 0, HEATING: 1, DEHUMIDIFYING: 2, COOLING: 3, ERR
 export const Busy = { NONE: 0, LOAD: 1, UNLOAD: 2 } as const;
 export const Sev = { INFO: 0, PAUSE: 1, STOP: 2 } as const;
 export const Variant = { AMS: 0, AMS2_PRO: 1, AMS_HT: 2, LANE: 3 } as const;
+/** The host's tag attribution of a bay (`bays[i].tg`, mmu_tag_read_t): NONE is
+ *  a bay with no `tg` (a unit that decodes its own tags, an older host, no
+ *  spool known). */
+export const TagRead = { NONE: 0, UNKNOWN: 1, CANDIDATE: 2, ATTRIBUTED: 3, CONFLICT: 4 } as const;
+/** Why a conflicting bay's reads disagree (`bays[i].tr`, mmu_tag_reason_t);
+ *  OTHER is a reason this build does not know, or none. */
+export const TagReason = {
+  OTHER: 0, TWO_MOVING: 1, CLAIMED_TWICE: 2, CHANGED_IN_PLACE: 3, AMBIGUOUS_PAIR: 4, NO_TAG_AFTER_TURN: 5,
+} as const;
+export const MAX_TAG_CANDIDATES = 2;   // MMU_MAX_TAG_CANDIDATES: `tc` lists one or two
+const TAG_MATERIAL = 16;              // MMU_TAG_MATERIAL_LEN
+
+/** One tag a bay's reader saw that the host has not attributed (`tc[i]`). */
+export interface TagCandidate {
+  color: number;               // 0xRRGGBB, -1 = unknown
+  material: string;            // '' = unknown
+}
 
 // ------------------------------------------------------------------ types
 
@@ -85,6 +102,10 @@ export interface Slot {
   globalId: number;            // `bays[i].id`, the host's own bay id; -1 = unknown
   actsKnown: boolean;          // the host sent `bays[i].a`; false (an older host): nothing is withheld
   acts: number;                // BayAct bits of the letters `bays[i].a` lists
+  tagRead: number;             // TagRead: `bays[i].tg`
+  tagReason: number;           // TagReason: `tr`, only with TagRead.CONFLICT
+  tagOther: number;            // `to`: the other bay's host slot id in a claimed_twice conflict; -1 = not said
+  tagCandidates: TagCandidate[];   // `tc`, only with TagRead.CANDIDATE: at most MAX_TAG_CANDIDATES
 }
 
 /** The bay actions `bays[i].a` lists, one bit per letter. Only the motion ones
@@ -377,6 +398,7 @@ function slotClear(): Slot {
     initialG: -1, flowKX1000: -1,
     calState: CalState.UNKNOWN, positioning: false, globalId: -1,
     actsKnown: false, acts: 0,
+    tagRead: TagRead.NONE, tagReason: TagReason.OTHER, tagOther: -1, tagCandidates: [],
   };
 }
 
@@ -837,6 +859,52 @@ function mapFamily(u: Unit, family: string | null): void {
 
 // --------------------------------------------------------------- one unit
 
+function mapTagReason(tr: string | null): number {
+  switch (tr) {
+    case 'two_moving': return TagReason.TWO_MOVING;
+    case 'claimed_twice': return TagReason.CLAIMED_TWICE;
+    case 'changed_in_place': return TagReason.CHANGED_IN_PLACE;
+    case 'ambiguous_pair': return TagReason.AMBIGUOUS_PAIR;
+    case 'no_tag_after_turn': return TagReason.NO_TAG_AFTER_TURN;
+    default: return TagReason.OTHER;   // a reason this build does not know
+  }
+}
+
+/** The host's tag attribution of one bay (`tg`, `tc`, `tr`, `to`: a unit whose
+ *  readers several bays share). A bay object is the bay's whole state, so what
+ *  it leaves out is cleared. `tc` counts only with `tg` "c", `tr` only with
+ *  "x", and `to` only with a claimed_twice `tr`. A letter this build does not
+ *  know is no `tg` at all. */
+function mapTagRead(s: Slot, bay: Record<string, unknown>): void {
+  s.tagRead = TagRead.NONE;
+  s.tagReason = TagReason.OTHER;
+  s.tagOther = -1;
+  s.tagCandidates = [];
+  const tg = jstring(bay, 'tg');
+  if (tg === 'u') s.tagRead = TagRead.UNKNOWN;
+  else if (tg === 'c') s.tagRead = TagRead.CANDIDATE;
+  else if (tg === 'a') s.tagRead = TagRead.ATTRIBUTED;
+  else if (tg === 'x') s.tagRead = TagRead.CONFLICT;
+  else return;
+
+  if (s.tagRead === TagRead.CANDIDATE) {
+    const tc = bay.tc;
+    if (!Array.isArray(tc)) return;
+    for (const c of tc) {
+      if (s.tagCandidates.length >= MAX_TAG_CANDIDATES) break;
+      if (!isObject(c)) continue;
+      // `c` is "RRGGBB" (the tag's color, alpha dropped) or null
+      const rgb = mapHexColor(jstring(c, 'c'));
+      s.tagCandidates.push({ color: rgb === null ? -1 : rgb, material: cut(jstring(c, 'm') ?? '', TAG_MATERIAL) });
+    }
+  } else if (s.tagRead === TagRead.CONFLICT) {
+    s.tagReason = mapTagReason(jstring(bay, 'tr'));
+    // `to` is the other bay's slot id, in the format `id` has
+    const other = jint(bay, 'to');
+    if (s.tagReason === TagReason.CLAIMED_TWICE && other !== null) s.tagOther = i16(other);
+  }
+}
+
 function mapBays(u: Unit, bays: unknown[]): void {
   for (let i = 0; i < bays.length && i < u.slots.length; i++) {
     const bay = bays[i];
@@ -876,6 +944,8 @@ function mapBays(u: Unit, bays: unknown[]): void {
       s.spoolId = -1;
       s.infoSource = InfoSource.UNKNOWN;
     }
+
+    mapTagRead(s, bay);
   }
 }
 

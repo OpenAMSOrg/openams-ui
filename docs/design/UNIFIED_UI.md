@@ -110,6 +110,8 @@ tile       { slot_id, bay,
              color, ink: "light"|"dark", hatched,
              name, material, brand, grams_text, pct, pct_text, low,
              rfid, pending_confirmation, calibrated,
+             tag_read?: {state: "unknown"|"candidate"|"conflict", tone: "neutral"|"info", text,
+                         candidates: [{material, color, color_name}]},   // absent when the host attributes no reads here (`tg`)
              actions: [action] }
 action     { id, label, line, enabled, reason, style: "primary"|"normal"|"danger",
              confirm: {title, text, ok_label} | null,

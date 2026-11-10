@@ -2264,6 +2264,7 @@ static void build_everything(const mmu_model_t *m)
     view_tile_t t;
     view_alerts_t alerts;
     view_actions_t acts;
+    view_tag_read_t read;
     int i, j;
 
     view_panel(m, &p);
@@ -2286,6 +2287,7 @@ static void build_everything(const mmu_model_t *m)
         for(j = 0; j < (int)m->units[i].slot_count; j++) {
             assert(view_tile(m, i, j, &t));
             assert(view_tile_actions(m, i, j, &acts));
+            assert(view_tile_tag_read(m, i, j, &read));
         }
     }
 }
@@ -2324,6 +2326,7 @@ static cJSON *load_vams_fixture(const char *name)
 
 static const char *const k_vams_fixtures[] = {
     "ams1_unverified", "idle", "loaded", "loading", "positioning", "two_lanes",
+    "../two_tag/two_tag",   /* hand-written: every tag-attribution note, composed ones too */
 };
 
 /* The brief's UTF-8 rule, as a test: no English string is cut anywhere. Every
@@ -2511,6 +2514,17 @@ static int test_composed_fit(const char *lang)
         }
     }
 
+    /* A claimed_twice note names the other bay with a bay label as long as its
+     * buffer (VIEW_SUBLABEL_LEN) holds. */
+    {
+        char slot[VIEW_SUBLABEL_LEN];
+        const vs_arg_t other[1] = { VS_ARG_T("slot", slot) };
+
+        memset(slot, 'W', sizeof(slot) - 1);
+        slot[sizeof(slot) - 1] = '\0';
+        FITS("tag read note", vs_format(VS_TAGR_CLAIMED_TWICE, buf, VIEW_TAG_READ_TEXT_LEN, other, 1));
+    }
+
     /* The two alerts the status mapper raises, into the model's own buffer.
      * Both name a spool the way the mapper builds it, "{unit} Spool {n}". */
     FITS("alert text", vs_low_filament(spool, 32767, buf, VIEW_ALERT_TEXT_LEN));
@@ -2521,6 +2535,177 @@ static int test_composed_fit(const char *lang)
     printf("test_view: %s: %d composed string(s) longer than their field\n", lang, over);
     assert(view_set_language("en"));
     return over;
+}
+
+/* ---------------------------------------------------------- two-tag RFID */
+
+/* The two-tag fixture (tests/fixtures/two_tag/two_tag.json) applied onto @p m
+ * the way the wasm host feeds the module. */
+static void load_two_tag(mmu_model_t *m)
+{
+    cJSON *root = load_vams_fixture("../two_tag/two_tag");
+    const cJSON *ev;
+
+    status_map_reset(m);
+    cJSON_ArrayForEach(ev, cJSON_GetObjectItemCaseSensitive(root, "events"))
+        assert(status_map_apply_fixture_event(m, ev));
+    cJSON_Delete(root);
+}
+
+static int unit_named(const mmu_model_t *m, const char *name)
+{
+    int i;
+
+    for(i = 0; i < (int)m->unit_count; i++)
+        if(strcmp(m->units[i].name, name) == 0) return i;
+    return -1;
+}
+
+/* The bay's details (the host's two-tag attribution, `tg` and friends): the
+ * note for an unknown, a candidate and a conflict, "It is this slot" only for a
+ * candidate, and nothing new on the tile. */
+static void test_two_tag(void)
+{
+    view_tag_read_t r;
+    view_actions_t acts;
+    view_tile_t t;
+    char ids[160];
+    const view_action_t *a;
+    cJSON *root, *th, *u, *bay;
+    int o1, o2, o3, o4, o5, tagged = 0, untagged = 0;
+
+    load_two_tag(&s_local);
+    o1 = unit_named(&s_local, "oams1");
+    o2 = unit_named(&s_local, "oams2");
+    o3 = unit_named(&s_local, "oams3");
+    o4 = unit_named(&s_local, "oams4");
+    o5 = unit_named(&s_local, "oams5");
+    assert(o1 >= 0 && o2 >= 0 && o3 >= 0 && o4 >= 0 && o5 >= 0);
+
+    /* unknown: a plain note, Re-read enabled, nothing to assert */
+    assert(view_tile_tag_read(&s_local, o1, 0, &r));
+    assert(r.state == VIEW_TAG_READ_UNKNOWN && r.tone == VIEW_TONE_NEUTRAL);
+    assert(strcmp(r.text, "Tag not read yet. It is read at the first load.") == 0);
+    assert(r.candidate_count == 0);
+    assert(view_tile_actions(&s_local, o1, 0, &acts));
+    assert(!find_action(&acts, "tag_assert"));
+    assert(find_action(&acts, "reread")->enabled);
+
+    /* candidate: the tag's material and color, then "It is this slot" before Re-read */
+    assert(view_tile_tag_read(&s_local, o1, 1, &r));
+    assert(r.state == VIEW_TAG_READ_CANDIDATE && r.tone == VIEW_TONE_NEUTRAL);
+    assert(strcmp(r.text, "Tag seen, slot not confirmed") == 0);
+    assert(r.candidate_count == 1);
+    assert(strcmp(r.candidates[0].material, "PLA") == 0);
+    assert(r.candidates[0].color_known && r.candidates[0].color == 0xD23B3B);
+    assert(strcmp(r.candidates[0].color_name, "red") == 0);
+    assert(view_tile_actions(&s_local, o1, 1, &acts));
+    action_ids(&acts, ids, sizeof ids);
+    assert(strstr(ids, "change_group,tag_assert,reread,calibrate"));
+    a = find_action(&acts, "tag_assert");
+    assert(strcmp(a->label, "It is this slot") == 0);
+    assert(strcmp(a->line, "tag_assert oams12") == 0);
+    assert(a->enabled && a->reason[0] == '\0' && a->target == VIEW_TARGET_RING);
+    /* the tile is the tile: no RFID mark for a manual link, no tag */
+    assert(view_tile(&s_local, o1, 1, &t));
+    assert(!t.rfid && !t.has_tag);
+
+    /* two candidates, one of them with nothing known */
+    assert(view_tile_tag_read(&s_local, o4, 0, &r));
+    assert(r.candidate_count == 2);
+    assert(!r.candidates[0].color_known && r.candidates[0].color_name[0] == '\0');
+    assert(r.candidates[0].material[0] == '\0');
+    assert(strcmp(r.candidates[1].material, "PETG-CF Translu") == 0);
+    /* an empty bay's candidate: dimmed with the bay's own reason */
+    assert(view_tile_actions(&s_local, o4, 1, &acts));
+    a = find_action(&acts, "tag_assert");
+    assert(a && !a->enabled && strcmp(a->reason, "No spool is inserted") == 0);
+    /* a unit that cannot scan offers neither tag action, and still says what it knows */
+    assert(view_tile_actions(&s_local, o5, 0, &acts));
+    assert(!find_action(&acts, "tag_assert") && !find_action(&acts, "reread"));
+    assert(view_tile_tag_read(&s_local, o5, 0, &r) && r.state == VIEW_TAG_READ_CANDIDATE);
+
+    /* conflict: the amber information look, the reason's text */
+    assert(view_tile_tag_read(&s_local, o1, 2, &r));
+    assert(r.state == VIEW_TAG_READ_CONFLICT && r.tone == VIEW_TONE_INFO);
+    assert(strcmp(r.text, "This tag is also in slot oams2:2.") == 0 && r.text == r.text_buf);
+    assert(view_tile_tag_read(&s_local, o2, 0, &r));
+    assert(strcmp(r.text, "Two spools answered. Load or re-read to settle.") == 0);
+    assert(view_tile_tag_read(&s_local, o2, 1, &r));
+    assert(strcmp(r.text, "This tag is also in slot oams1:3.") == 0);
+    assert(view_tile_tag_read(&s_local, o2, 2, &r));
+    assert(strcmp(r.text, "A different spool's tag appeared here. Re-read to settle.") == 0);
+    assert(view_tile_tag_read(&s_local, o2, 3, &r));
+    assert(strcmp(r.text, "No tag found after a turn.") == 0);
+    assert(view_tile_tag_read(&s_local, o3, 0, &r));
+    assert(strcmp(r.text, "Two spools answered. Load or re-read to settle.") == 0);
+    assert(view_tile_tag_read(&s_local, o3, 1, &r));
+    assert(strcmp(r.text, "The tag reads disagree. Re-read to settle.") == 0);
+    assert(view_tile_tag_read(&s_local, o3, 2, &r));
+    assert(strcmp(r.text, "This tag is also in slot 99.") == 0);
+    assert(view_tile_tag_read(&s_local, o3, 3, &r));
+    assert(strcmp(r.text, "This tag is also in slot ?.") == 0);
+    /* the tile wears no tag for it (a conflict is not a fault) */
+    assert(view_tile(&s_local, o3, 3, &t));
+    assert(!t.has_tag);
+
+    /* nothing to say: attributed (its RFID mark says it), an unknown letter, no `tg` */
+    assert(view_tile_tag_read(&s_local, o1, 3, &r) && r.state == VIEW_TAG_READ_NONE);
+    assert(r.text[0] == '\0');
+    assert(view_tile(&s_local, o1, 3, &t) && t.rfid);
+    assert(view_tile_tag_read(&s_local, o4, 2, &r) && r.state == VIEW_TAG_READ_NONE);
+    assert(view_tile_tag_read(&s_local, o5, 3, &r) && r.state == VIEW_TAG_READ_NONE);
+    assert(!view_tile_tag_read(&s_local, o5, 9, &r) && r.state == VIEW_TAG_READ_NONE);
+    assert(!view_tile_tag_read(&s_local, 9, 0, &r));
+
+    /* the JSON carries `tag_read` exactly where there is something to say */
+    root = view_json_build(&s_local);
+    cJSON_ArrayForEach(th, cJSON_GetObjectItemCaseSensitive(root, "toolheads"))
+        cJSON_ArrayForEach(u, cJSON_GetObjectItemCaseSensitive(th, "units"))
+            cJSON_ArrayForEach(bay, cJSON_GetObjectItemCaseSensitive(u, "bays")) {
+                const cJSON *tr = cJSON_GetObjectItemCaseSensitive(bay, "tag_read");
+                const char *slot = cJSON_GetObjectItemCaseSensitive(bay, "slot_id")->valuestring;
+
+                if(tr) tagged++;
+                else untagged++;
+                if(strcmp(slot, "oams12") == 0) {
+                    const cJSON *c = cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(tr, "candidates"), 0);
+
+                    assert(strcmp(cJSON_GetObjectItemCaseSensitive(tr, "state")->valuestring, "candidate") == 0);
+                    assert(strcmp(cJSON_GetObjectItemCaseSensitive(tr, "tone")->valuestring, "neutral") == 0);
+                    assert(strcmp(cJSON_GetObjectItemCaseSensitive(c, "material")->valuestring, "PLA") == 0);
+                    assert(strcmp(cJSON_GetObjectItemCaseSensitive(c, "color")->valuestring, "#d23b3b") == 0);
+                    assert(strcmp(cJSON_GetObjectItemCaseSensitive(c, "color_name")->valuestring, "red") == 0);
+                }
+                if(strcmp(slot, "oams41") == 0) {
+                    const cJSON *c = cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(tr, "candidates"), 0);
+
+                    assert(cJSON_IsNull(cJSON_GetObjectItemCaseSensitive(c, "color")));
+                }
+                if(strcmp(slot, "oams13") == 0)
+                    assert(strcmp(cJSON_GetObjectItemCaseSensitive(tr, "tone")->valuestring, "info") == 0);
+            }
+    cJSON_Delete(root);
+    assert(tagged == 17 && untagged == 3);   /* oams14, oams43 and oams54 say nothing */
+
+    /* the cap: a candidate that a lane fault also names keeps every action,
+     * the fault's two recovery tokens included */
+    {
+        mmu_toolhead_t *lane = &s_local.toolheads[s_local.units[o1].toolhead];
+
+        lane->has_error = true;
+        lane->error_severity = MMU_SEV_PAUSE;
+        lane->error_unit = (int8_t)o1;
+        lane->error_slot = 1;
+        snprintf(lane->error_act[0], sizeof lane->error_act[0], "resume");
+        snprintf(lane->error_act[1], sizeof lane->error_act[1], "clear_errors");
+        lane->error_act_count = 2;
+        s_local.units[o1].slots[1].spool_id = -1;
+        assert(view_tile_actions(&s_local, o1, 1, &acts));
+        assert(acts.count == VIEW_ACTIONS_PER_TILE);
+        assert(find_action(&acts, "tag_assert") && find_action(&acts, "resume"));
+        assert(find_action(&acts, "clear_errors"));
+    }
 }
 
 /* ------------------------------------------------- language and fallback */
@@ -2807,6 +2992,7 @@ int main(void)
     test_core_set_language();
     test_format();
     test_host_text_is_cut_on_a_character();
+    test_two_tag();
     assert(test_composed_fit("en") == 0);
     assert(test_composed_fit("qps") == 0);   /* a translation is meant to be longer */
     test_no_truncation("en");

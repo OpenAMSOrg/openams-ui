@@ -70,6 +70,37 @@
    "text": "[Çôñƒíŕɱ ťĥé ļíñķéď Šƥôôļɱáñ šƥôôļ.…………………………………]"
   },
   {
+   "group": "a bay whose tag the host has not attributed (openams_ui `tg`): readers that several bays share; the slot sheet's and the tag popover's note"
+  },
+  {
+   "id": "TAGR_UNKNOWN",
+   "text": "[Ťáğ ñôť ŕéáď ýéť. Íť íš ŕéáď áť ťĥé ƒíŕšť ļôáď.………………………………………………]"
+  },
+  {
+   "id": "TAGR_CANDIDATE",
+   "text": "[Ťáğ šééñ, šļôť ñôť çôñƒíŕɱéď……………………………]"
+  },
+  {
+   "id": "TAGR_TWO_SPOOLS",
+   "text": "[Ťŵô šƥôôļš áñšŵéŕéď. Ĺôáď ôŕ ŕé-ŕéáď ťô šéťťļé.………………………………………………]"
+  },
+  {
+   "id": "TAGR_CLAIMED_TWICE",
+   "text": "[Ťĥíš ťáğ íš áļšô íñ šļôť {slot}.………………………………]"
+  },
+  {
+   "id": "TAGR_CHANGED",
+   "text": "[Á ďíƒƒéŕéñť šƥôôļ'š ťáğ áƥƥéáŕéď ĥéŕé. Ŕé-ŕéáď ťô šéťťļé.…………………………………………………………]"
+  },
+  {
+   "id": "TAGR_NO_TAG",
+   "text": "[Ñô ťáğ ƒôúñď áƒťéŕ á ťúŕñ.…………………………]"
+  },
+  {
+   "id": "TAGR_CONFLICT",
+   "text": "[Ťĥé ťáğ ŕéáďš ďíšáğŕéé. Ŕé-ŕéáď ťô šéťťļé.…………………………………………]"
+  },
+  {
    "group": "unit alerts"
   },
   {
@@ -1323,6 +1354,10 @@
   {
    "id": "ACTION_REREAD",
    "text": "[Ŕé-ŕéáď ťáğ…………]"
+  },
+  {
+   "id": "ACTION_TAG_ASSERT",
+   "text": "[Íť íš ťĥíš šļôť………………]"
   },
   {
    "id": "ACTION_CALIBRATE",

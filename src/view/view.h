@@ -90,15 +90,19 @@
 #define VIEW_ACTION_LINE_LEN   168   /* "spool edit {slot} material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load" is 125, and a slot id is up to VIEW_ID_LEN - 1 */
 #define VIEW_FIELD_ID_LEN       12
 #define VIEW_OPTION_LABEL_LEN   72   /* "{vendor} {material} \xc2\xb7 {g} g" in the pseudo-locale */
+#define VIEW_TAG_READ_TEXT_LEN 128   /* "This tag is also in slot {slot}." (TAGR_CLAIMED_TWICE):
+                                      * the pseudo-locale's template is 89 bytes, less its
+                                      * placeholder, plus a bay label (VIEW_SUBLABEL_LEN) */
+#define VIEW_TAG_MATERIAL_LEN    MMU_TAG_MATERIAL_LEN
 
 /* ------------------------------------------------------------ array caps */
 
-#define VIEW_ACTIONS_PER_TILE    10   /* load, unload, edit, assign, unlink, change group, reread, calibrate, and a fault's two */
+#define VIEW_ACTIONS_PER_TILE    11   /* load, unload, edit, assign, unlink, change group, "It is this slot", reread, calibrate, and a fault's two */
 #define VIEW_ACTIONS_PER_UNIT     6
 #define VIEW_ACTIONS_PER_TOOLHEAD 6
 #define VIEW_ACTIONS_PER_ALERT    3   /* a failed toolchange: retry, unload, clear errors; a lane fault: its two tokens */
 #define VIEW_ALERTS_PER_GROUP     6   /* a unit: its lane fault, the dryer fault, the adapter, low filament */
-#define VIEW_ACTIONS_MAX          10  /* view_actions_t's own capacity: >= every per-widget cap above */
+#define VIEW_ACTIONS_MAX          11  /* view_actions_t's own capacity: >= every per-widget cap above */
 #define VIEW_MAX_FORM_FIELDS      6   /* one form's own fields: the spool editor's */
 #define VIEW_MAX_FIELDS          15   /* every form's fields of one view_actions_t, pooled: the spool editor's six, twice over on a bay that offers it twice (an unidentified one: "Load" asks for the spool first), the assign form's one, the group form's one and the confirmation's one */
 #define VIEW_MAX_OPTIONS        160   /* every select's choices of one view_actions_t, pooled: two editors' materials (11 each), colors (20 each) and vendors (MMU_MAX_VENDORS + 2), the spool list, or the group list */
@@ -414,6 +418,39 @@ typedef struct {
      * view_tile_actions() builds them on demand. */
 } view_tile_t;
 
+/* What the host's tag attribution says about a bay whose reads it attributes
+ * (a unit whose readers several bays share: `bays[i].tg`). It belongs to the
+ * bay's details - the slot sheet, the ring's menu and the tag's popover - and
+ * never to the tile itself (VISUAL_SPEC rule 3: a tile carries no tag icon; its
+ * RFID mark keeps its own rule, the link source). Built on demand by
+ * view_tile_tag_read(), so view_tile_t does not grow. */
+typedef enum {
+    VIEW_TAG_READ_NONE,         /* nothing to say: no attribution here, or the tag is attributed */
+    VIEW_TAG_READ_UNKNOWN,      /* no tag evidence yet: it is read at the first load */
+    VIEW_TAG_READ_CANDIDATE,    /* a tag seen, the slot not confirmed: "It is this slot" */
+    VIEW_TAG_READ_CONFLICT,     /* the reads contradict each other */
+} view_tag_read_state_t;
+
+/* One tag the bay's reader saw, as the note shows it: a swatch and a material. */
+typedef struct {
+    bool color_known;                           /* false: the tag gave no color */
+    uint32_t color;
+    const char *color_name;                     /* the palette name nearest the color, borrowed;
+                                                 * "" when the color is unknown */
+    char material[VIEW_TAG_MATERIAL_LEN];       /* "" when the tag gave none */
+} view_tag_candidate_t;
+
+typedef struct {
+    view_tag_read_state_t state;
+    view_tone_t tone;                           /* NEUTRAL for unknown and candidate (normal
+                                                 * states), INFO for a conflict: the amber
+                                                 * information look, never the fault look */
+    const char *text;                           /* the note: a fixed string, or text_buf */
+    char text_buf[VIEW_TAG_READ_TEXT_LEN];      /* a claimed_twice note, which names the other bay */
+    uint8_t candidate_count;                    /* CANDIDATE only */
+    view_tag_candidate_t candidates[MMU_MAX_TAG_CANDIDATES];
+} view_tag_read_t;
+
 /* ------------------------------------------------------------------- unit */
 
 typedef struct {
@@ -643,9 +680,15 @@ const char *view_tile_edit_reason(const mmu_model_t *m, int unit_idx, int bay);
 
 /** The actions of m->units[unit_idx]'s bay @p bay, in order: load, unload,
  * edit_spool, assign_spool (or spool_list_refresh when the model holds no
- * spool list), unlink, change_group, reread, calibrate. False (out left zeroed) on an out-of-range
+ * spool list), unlink, change_group, tag_assert (only for a bay whose tag is a
+ * candidate), reread, calibrate. False (out left zeroed) on an out-of-range
  * index. */
 bool view_tile_actions(const mmu_model_t *m, int unit_idx, int bay, view_actions_t *out);
+
+/** What the host's tag attribution says about m->units[unit_idx]'s bay @p bay
+ * (view_tag_read_t): state VIEW_TAG_READ_NONE when there is nothing to show.
+ * False (out left zeroed) on an out-of-range index. */
+bool view_tile_tag_read(const mmu_model_t *m, int unit_idx, int bay, view_tag_read_t *out);
 
 /** How many of m->units[unit_idx]'s bays sit in a group: how many
  * view_group() calls a caller makes. */

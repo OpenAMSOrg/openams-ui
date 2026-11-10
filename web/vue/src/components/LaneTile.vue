@@ -36,9 +36,12 @@
             <action-popover v-if="tile.tag" :anchor-id="tagAnchor" :heading="tile.tag.text" name="tag">
                 <p class="tag-detail">{{ tile.tag.detail }}</p>
                 <p v-if="tile.tag.code" class="tag-code">{{ tile.tag.code }}</p>
+                <tag-read-note v-if="tile.tag_read" :read="tile.tag_read" />
                 <action-row v-for="(action, i) in actions('tag')" :key="'t' + i" :action="action" />
             </action-popover>
-            <action-popover :anchor-id="tileAnchor" :heading="spoolName" :actions="menu" name="tile" />
+            <action-popover :anchor-id="tileAnchor" :heading="spoolName" :actions="menu" name="tile">
+                <tag-read-note v-if="tile.tag_read" :read="tile.tag_read" />
+            </action-popover>
         </article>
     </li>
 </template>
@@ -52,6 +55,7 @@ import RfidIcon from './RfidIcon.vue'
 import Ring from './Ring.vue'
 import SpareBadge from './SpareBadge.vue'
 import StatusTag from './StatusTag.vue'
+import TagReadNote from './TagReadNote.vue'
 import { INTERACT, type Interactivity } from '../interact'
 import { newAnchor } from '../popover'
 
@@ -63,8 +67,13 @@ import { newAnchor } from '../popover'
  *  row open one menu (the actions the core marked 'tile' or 'ring'); the tag
  *  opens its own details and recovery; the tool pill (`T0 ∞n`) changes the
  *  bay's group directly: the pill is where the group is shown, so it is where
- *  it is changed. */
-@Component({ components: { ActionPopover, ActionRow, RfidIcon, Ring, SpareBadge, StatusTag } })
+ *  it is changed.
+ *
+ *  A bay whose tag the host has not attributed (a reader several bays share)
+ *  says so in its details, never on the tile: the core's `tag_read` note sits
+ *  at the top of the menu, whose "It is this slot" and Re-read answer it, and
+ *  in the tag's popover when the tile wears a tag. */
+@Component({ components: { ActionPopover, ActionRow, RfidIcon, Ring, SpareBadge, StatusTag, TagReadNote } })
 export default class LaneTile extends Vue {
     @Prop({ required: true }) readonly tile!: ViewTile
     @Prop({ required: true }) readonly labels!: ViewLabels

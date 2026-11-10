@@ -259,6 +259,54 @@ static void test_retry_sent_and_answered(void)
     cJSON_Delete(past);
 }
 
+/* The two-tag attribution (`tg`, `tc`, `tr`, `to` per bay) rides on `bays`:
+ * a diff without `bays` keeps it, a new `bays` replaces it whole, and a bay
+ * that stops carrying `tg` has none (core_apply maps the merged copy). */
+static void test_tag_read_rides_on_bays(void)
+{
+    mmu_model_t m;
+    core_t *core;
+    cJSON *full = cJSON_Parse(
+        "{\"unit\":\"oams1\",\"idx\":1,\"family\":\"ams1\",\"act\":[\"rfid_scan\"],"
+        "\"bays\":[{\"id\":0,\"s\":\"r\",\"tg\":\"c\",\"tc\":[{\"m\":\"PLA\",\"c\":\"D23B3B\"}]},"
+        "{\"id\":1,\"s\":\"r\",\"tg\":\"x\",\"tr\":\"claimed_twice\",\"to\":0}],"
+        "\"lane\":{\"id\":\"fps1\",\"op\":\"UNLOADED\"}}");
+    cJSON *diff = cJSON_Parse("{\"lane\":{\"id\":\"fps1\",\"op\":\"UNLOADED\",\"runout\":\"idle\"}}");
+    cJSON *bays = cJSON_Parse(
+        "{\"bays\":[{\"id\":0,\"s\":\"r\",\"tg\":\"a\",\"sp\":{\"id\":4,\"src\":\"t\"}},"
+        "{\"id\":1,\"s\":\"r\"}]}");
+
+    assert(full && diff && bays);
+    status_map_reset(&m);
+    core = core_create(&m);
+    assert(core);
+
+    assert(core_apply(core, "openams_ui", "oams1", full));
+    assert(m.units[0].slots[0].tag_read == MMU_TAG_READ_CANDIDATE);
+    assert(m.units[0].slots[0].tag_candidate_count == 1);
+    assert(m.units[0].slots[1].tag_read == MMU_TAG_READ_CONFLICT);
+    assert(m.units[0].slots[1].tag_other == 0);
+
+    assert(core_apply(core, "openams_ui", "oams1", diff));
+    assert(m.units[0].slots[0].tag_read == MMU_TAG_READ_CANDIDATE);
+    assert(m.units[0].slots[0].tag_candidate_count == 1);
+    assert(m.units[0].slots[0].tag_candidates[0].color == 0xD23B3B);
+    assert(m.units[0].slots[1].tag_reason == MMU_TAG_REASON_CLAIMED_TWICE);
+
+    assert(core_apply(core, "openams_ui", "oams1", bays));
+    assert(m.units[0].slots[0].tag_read == MMU_TAG_READ_ATTRIBUTED);
+    assert(m.units[0].slots[0].tag_candidate_count == 0);
+    assert(m.units[0].slots[0].info_source == MMU_INFO_TAG);
+    assert(m.units[0].slots[1].tag_read == MMU_TAG_READ_NONE);
+    assert(m.units[0].slots[1].tag_reason == MMU_TAG_REASON_OTHER);
+    assert(m.units[0].slots[1].tag_other == -1);
+
+    core_destroy(core);
+    cJSON_Delete(full);
+    cJSON_Delete(diff);
+    cJSON_Delete(bays);
+}
+
 int main(void)
 {
     test_merge_survives_diff();
@@ -268,6 +316,7 @@ int main(void)
     test_changed_second_time();
     test_component_status_keeps_applying();
     test_retry_sent_and_answered();
+    test_tag_read_rides_on_bays();
 
     printf("test_core: ok\n");
     return 0;

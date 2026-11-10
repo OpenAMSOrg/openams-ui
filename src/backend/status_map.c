@@ -103,6 +103,7 @@ static void slot_clear(mmu_slot_t *s)
     s->info_source = MMU_INFO_UNKNOWN;
     s->cal_state = MMU_CAL_UNKNOWN;
     s->global_id = -1;
+    s->tag_other = -1;
 }
 
 /* A unit is found by its whole name. The stored name is the host's, cut to
@@ -646,6 +647,64 @@ static void map_groups(mmu_model_t *m, int unit, const cJSON *groups)
 
 /* --------------------------------------------------------------- one unit */
 
+static mmu_tag_reason_t map_tag_reason(const char *tr)
+{
+    if(!tr) return MMU_TAG_REASON_OTHER;
+    if(strcmp(tr, "two_moving") == 0) return MMU_TAG_REASON_TWO_MOVING;
+    if(strcmp(tr, "claimed_twice") == 0) return MMU_TAG_REASON_CLAIMED_TWICE;
+    if(strcmp(tr, "changed_in_place") == 0) return MMU_TAG_REASON_CHANGED_IN_PLACE;
+    if(strcmp(tr, "ambiguous_pair") == 0) return MMU_TAG_REASON_AMBIGUOUS_PAIR;
+    if(strcmp(tr, "no_tag_after_turn") == 0) return MMU_TAG_REASON_NO_TAG_AFTER_TURN;
+    return MMU_TAG_REASON_OTHER;   /* a reason this build does not know */
+}
+
+/* The host's tag attribution of one bay (`tg`, `tc`, `tr`, `to`: a unit whose
+ * readers several bays share). A bay object is the bay's whole state, so what
+ * it leaves out is cleared. `tc` counts only with `tg` "c", `tr` only with "x",
+ * and `to` only with a claimed_twice `tr`. A letter this build does not know
+ * is no `tg` at all: the bay shows what it showed before hosts sent one. */
+static void map_tag_read(mmu_slot_t *s, const cJSON *bay)
+{
+    const char *tg = jstring(bay, "tg");
+    int other;
+
+    s->tag_read = MMU_TAG_READ_NONE;
+    s->tag_reason = MMU_TAG_REASON_OTHER;
+    s->tag_candidate_count = 0;
+    s->tag_other = -1;
+    memset(s->tag_candidates, 0, sizeof(s->tag_candidates));
+    if(!tg) return;
+
+    if(strcmp(tg, "u") == 0)      s->tag_read = MMU_TAG_READ_UNKNOWN;
+    else if(strcmp(tg, "c") == 0) s->tag_read = MMU_TAG_READ_CANDIDATE;
+    else if(strcmp(tg, "a") == 0) s->tag_read = MMU_TAG_READ_ATTRIBUTED;
+    else if(strcmp(tg, "x") == 0) s->tag_read = MMU_TAG_READ_CONFLICT;
+    else return;
+
+    if(s->tag_read == MMU_TAG_READ_CANDIDATE) {
+        const cJSON *tc = field(bay, "tc"), *c;
+
+        if(!cJSON_IsArray(tc)) return;
+        cJSON_ArrayForEach(c, tc) {
+            mmu_tag_candidate_t *k;
+            uint32_t rgb;
+
+            if(s->tag_candidate_count >= MMU_MAX_TAG_CANDIDATES) break;
+            if(!cJSON_IsObject(c)) continue;
+            k = &s->tag_candidates[s->tag_candidate_count++];
+            /* `c` is "RRGGBB" (the tag's color, alpha dropped) or null */
+            k->color = map_hex_color(jstring(c, "c"), &rgb) ? (int32_t)rgb : -1;
+            mmu_copy_text(k->material, sizeof(k->material), jstring(c, "m"));
+        }
+    }
+    else if(s->tag_read == MMU_TAG_READ_CONFLICT) {
+        s->tag_reason = (uint8_t)map_tag_reason(jstring(bay, "tr"));
+        /* `to` is the other bay's slot id, in the format `id` has */
+        if(s->tag_reason == MMU_TAG_REASON_CLAIMED_TWICE && jint(bay, "to", &other))
+            s->tag_other = (int16_t)other;
+    }
+}
+
 static void map_bays(mmu_unit_t *u, const cJSON *bays)
 {
     const cJSON *bay;
@@ -699,6 +758,8 @@ static void map_bays(mmu_unit_t *u, const cJSON *bays)
             s->spool_id = -1;
             s->info_source = MMU_INFO_UNKNOWN;
         }
+
+        map_tag_read(s, bay);
     }
 }
 

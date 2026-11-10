@@ -1801,6 +1801,95 @@ static void test_host_text_cuts_on_a_character(void)
     }
 }
 
+/* ---------------------------------------------------------- two-tag RFID */
+
+/* The host's tag attribution of each bay (the openams_ui bay keys `tg`,
+ * `tc`, `tr` and `to`), from the hand-written fixture
+ * tests/fixtures/two_tag/two_tag.json: every state, and the edge cases its
+ * $comment lists. The link (`sp`) is read as before, whatever `tg` says. */
+static void test_two_tag(void)
+{
+    const mmu_slot_t *s;
+    cJSON *obj;
+    int u;
+
+    replay("two_tag/two_tag");
+
+    u = find_unit("oams1");
+    assert(u >= 0);
+    s = g_mmu.units[u].slots;
+    assert(s[0].tag_read == MMU_TAG_READ_UNKNOWN && s[0].tag_candidate_count == 0);
+    assert(s[1].tag_read == MMU_TAG_READ_CANDIDATE && s[1].tag_candidate_count == 1);
+    assert(strcmp(s[1].tag_candidates[0].material, "PLA") == 0);
+    assert(s[1].tag_candidates[0].color == 0xD23B3B);
+    assert(s[1].info_source == MMU_INFO_MANUAL && s[1].spool_id == 7);
+    assert(s[2].tag_read == MMU_TAG_READ_CONFLICT);
+    assert(s[2].tag_reason == MMU_TAG_REASON_CLAIMED_TWICE && s[2].tag_other == 5);
+    assert(s[3].tag_read == MMU_TAG_READ_ATTRIBUTED && s[3].info_source == MMU_INFO_TAG);
+
+    u = find_unit("oams2");
+    assert(u >= 0);
+    s = g_mmu.units[u].slots;
+    assert(s[0].tag_read == MMU_TAG_READ_CONFLICT && s[0].tag_reason == MMU_TAG_REASON_TWO_MOVING);
+    assert(s[0].tag_other == -1);
+    assert(s[1].tag_reason == MMU_TAG_REASON_CLAIMED_TWICE && s[1].tag_other == 2);
+    assert(s[2].tag_reason == MMU_TAG_REASON_CHANGED_IN_PLACE);
+    assert(s[3].tag_reason == MMU_TAG_REASON_NO_TAG_AFTER_TURN);
+
+    u = find_unit("oams3");
+    assert(u >= 0);
+    s = g_mmu.units[u].slots;
+    assert(s[0].tag_reason == MMU_TAG_REASON_AMBIGUOUS_PAIR);
+    assert(s[1].tag_read == MMU_TAG_READ_CONFLICT && s[1].tag_reason == MMU_TAG_REASON_OTHER);
+    assert(s[2].tag_reason == MMU_TAG_REASON_CLAIMED_TWICE && s[2].tag_other == 99);
+    assert(s[3].tag_reason == MMU_TAG_REASON_CLAIMED_TWICE && s[3].tag_other == -1);
+
+    u = find_unit("oams4");
+    assert(u >= 0);
+    s = g_mmu.units[u].slots;
+    /* two candidates kept of three; null is unknown; the material cut whole */
+    assert(s[0].tag_read == MMU_TAG_READ_CANDIDATE && s[0].tag_candidate_count == 2);
+    assert(s[0].tag_candidates[0].color == -1 && s[0].tag_candidates[0].material[0] == '\0');
+    assert(s[0].tag_candidates[1].color == 0x00AE42);
+    assert(strcmp(s[0].tag_candidates[1].material, "PETG-CF Translu") == 0);
+    /* an empty bay keeps its candidate; an unreadable color is no color */
+    assert(s[1].state == MMU_SLOT_EMPTY && s[1].tag_read == MMU_TAG_READ_CANDIDATE);
+    assert(s[1].tag_candidate_count == 1 && s[1].tag_candidates[0].color == -1);
+    /* a letter this build does not know is no `tg`; `tc` goes with it */
+    assert(s[2].tag_read == MMU_TAG_READ_NONE && s[2].tag_candidate_count == 0);
+    /* `tc`, `tr` and `to` beside "u" are not this state's */
+    assert(s[3].tag_read == MMU_TAG_READ_UNKNOWN && s[3].tag_candidate_count == 0);
+    assert(s[3].tag_reason == MMU_TAG_REASON_OTHER && s[3].tag_other == -1);
+
+    u = find_unit("oams5");
+    assert(u >= 0);
+    assert(!g_mmu.units[u].rfid);
+    s = g_mmu.units[u].slots;
+    assert(s[0].tag_read == MMU_TAG_READ_CANDIDATE && s[0].tag_candidate_count == 1);
+    assert(s[1].tag_read == MMU_TAG_READ_CANDIDATE && s[1].tag_candidate_count == 0);
+    assert(s[2].tag_read == MMU_TAG_READ_CANDIDATE && s[2].info_source == MMU_INFO_TAG);
+    assert(s[3].tag_read == MMU_TAG_READ_NONE);
+
+    /* The next projection is the bays' whole state: what it leaves out is gone. */
+    obj = cJSON_Parse("{\"unit\":\"oams4\",\"idx\":4,\"family\":\"ams1\","
+                      "\"bays\":[{\"id\":12,\"s\":\"r\",\"tg\":\"x\",\"tr\":\"two_moving\",\"tc\":[{\"m\":\"PLA\"}]},"
+                      "{\"id\":13,\"s\":\"r\"},{\"id\":14,\"s\":\"r\",\"tg\":\"a\"},"
+                      "{\"id\":15,\"s\":\"r\",\"tg\":\"c\",\"tc\":[{\"m\":\"ABS\",\"c\":\"112233\"}],\"tr\":\"claimed_twice\",\"to\":1}],"
+                      "\"lane\":{\"id\":\"fps4\",\"op\":\"UNLOADED\"}}");
+    assert(obj);
+    assert(status_map_apply_openams_ui(&g_mmu, obj));
+    cJSON_Delete(obj);
+    u = find_unit("oams4");
+    s = g_mmu.units[u].slots;
+    assert(s[0].tag_read == MMU_TAG_READ_CONFLICT && s[0].tag_candidate_count == 0);
+    assert(s[0].tag_reason == MMU_TAG_REASON_TWO_MOVING);
+    assert(s[1].tag_read == MMU_TAG_READ_NONE && s[1].tag_candidate_count == 0);
+    assert(s[2].tag_read == MMU_TAG_READ_ATTRIBUTED);
+    assert(s[3].tag_read == MMU_TAG_READ_CANDIDATE && s[3].tag_candidate_count == 1);
+    assert(s[3].tag_candidates[0].color == 0x112233);
+    assert(s[3].tag_reason == MMU_TAG_REASON_OTHER && s[3].tag_other == -1);
+}
+
 int main(void)
 {
     unsigned i;
@@ -1839,6 +1928,7 @@ int main(void)
     test_unload_stage();
     test_stage_labels_and_detail();
     test_host_text_cuts_on_a_character();
+    test_two_tag();
 
     for(i = 0; i < sizeof k_fixtures / sizeof k_fixtures[0]; i++) {
         assert(replay(k_fixtures[i]) == k_flagged[i]);

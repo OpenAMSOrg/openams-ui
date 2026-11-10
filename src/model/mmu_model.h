@@ -82,6 +82,39 @@ typedef enum {
     MMU_CAL_UNCALIBRATED,  /**< no effective path length yet */
 } mmu_cal_state_t;
 
+/** Where the host's tag attribution stands for a bay whose reads it attributes
+ *  (`bays[i].tg` of the openams_ui projection: a unit whose readers are shared
+ *  by several bays). NONE is a bay with no `tg`: a unit that decodes its own
+ *  tags, an older host, or no spool known. */
+typedef enum {
+    MMU_TAG_READ_NONE = 0,
+    MMU_TAG_READ_UNKNOWN,     /**< `u`: a spool, no tag evidence yet */
+    MMU_TAG_READ_CANDIDATE,   /**< `c`: a tag seen, the slot not confirmed (`tc`) */
+    MMU_TAG_READ_ATTRIBUTED,  /**< `a`: the bay's tag, confirmed */
+    MMU_TAG_READ_CONFLICT,    /**< `x`: the reads contradict each other (`tr`) */
+} mmu_tag_read_t;
+
+/** Why the reads of a bay in MMU_TAG_READ_CONFLICT contradict each other
+ *  (`bays[i].tr`). OTHER is a reason this build does not know, or none. */
+typedef enum {
+    MMU_TAG_REASON_OTHER = 0,
+    MMU_TAG_REASON_TWO_MOVING,
+    MMU_TAG_REASON_CLAIMED_TWICE,      /**< the other bay is `to` */
+    MMU_TAG_REASON_CHANGED_IN_PLACE,
+    MMU_TAG_REASON_AMBIGUOUS_PAIR,
+    MMU_TAG_REASON_NO_TAG_AFTER_TURN,
+} mmu_tag_reason_t;
+
+#define MMU_MAX_TAG_CANDIDATES  2   /**< `tc` lists one or two */
+#define MMU_TAG_MATERIAL_LEN   16   /**< a candidate's material with its NUL ("PETG-CF", "PLA Basic"):
+                                      *  shorter than a slot's own, so 72 slots stay small */
+
+/** One tag a bay's reader saw that the host has not attributed (`tc[i]`). */
+typedef struct {
+    int32_t color;                          /**< 0xRRGGBB, -1 = unknown (`c` null) */
+    char material[MMU_TAG_MATERIAL_LEN];    /**< "" = unknown (`m` null) */
+} mmu_tag_candidate_t;
+
 typedef enum {
     MMU_DRY_IDLE,
     MMU_DRY_HEATING,
@@ -124,6 +157,13 @@ typedef struct {
     int16_t global_id;                      /**< `bays[i].id`, the host's own bay id; -1 = unknown */
     bool acts_known;                        /**< the host sent `bays[i].a`; false (an older host, the demo): nothing is withheld */
     uint8_t acts;                           /**< MMU_BAY_ACT_* bits of the letters `bays[i].a` lists */
+    /* --- two-tag attribution (`bays[i].tg`, `tc`, `tr`, `to`) --- */
+    uint8_t tag_read;                       /**< mmu_tag_read_t */
+    uint8_t tag_reason;                     /**< mmu_tag_reason_t; only in MMU_TAG_READ_CONFLICT */
+    uint8_t tag_candidate_count;            /**< entries of tag_candidates[]; only in MMU_TAG_READ_CANDIDATE */
+    int16_t tag_other;                      /**< `to`: the other bay's host slot id (its global_id) in a
+                                             *   claimed_twice conflict; -1 = not said */
+    mmu_tag_candidate_t tag_candidates[MMU_MAX_TAG_CANDIDATES];
 } mmu_slot_t;
 
 /** The bay actions `bays[i].a` lists (C2 6.2), one bit per letter. Only the

@@ -104,7 +104,32 @@ export interface ViewTile {
   rfid: boolean;
   pending_confirmation: boolean;
   calibrated: boolean;
+  /** What the host's tag attribution says about the bay (a unit whose readers
+   *  several bays share): shown in the bay's details (the ring's menu, the
+   *  tag's popover, the device's sheet), never on the tile. Absent when there
+   *  is nothing to say: no attribution on this unit, or the tag is attributed. */
+  tag_read?: ViewTagRead;
   actions: ViewAction[];
+}
+
+/** One tag the bay's reader saw that the host has not attributed. */
+export interface ViewTagCandidate {
+  /** '' when the tag gave none. */
+  material: string;
+  /** "#rrggbb", or null when the tag gave none. */
+  color: string | null;
+  /** The palette name nearest the color ("black"); '' when the color is unknown. */
+  color_name: string;
+}
+
+export interface ViewTagRead {
+  state: 'unknown' | 'candidate' | 'conflict';
+  /** 'neutral' for unknown and candidate (normal states); 'info' for a
+   *  conflict: the amber information look, never the fault look. */
+  tone: Tone;
+  text: string;
+  /** A candidate's tags (one or two); empty otherwise. */
+  candidates: ViewTagCandidate[];
 }
 
 export interface ViewUnit {

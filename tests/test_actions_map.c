@@ -1154,6 +1154,48 @@ static void test_host_lists(void)
 
 /* ---------------------------------------------------- long unit names */
 
+/* `tag_assert <slot>`, "It is this slot" (C3's ASSERT=1): OAMS_RFID_SCAN
+ * OAMS=<idx> BAY=<bay> ASSERT=1, only for a bay whose tag the host holds as a
+ * candidate (`tg` "c"). On the hand-written two-tag fixture, so through the
+ * cap_* names: not an action vector. */
+#define cap_local expect_local
+
+static void test_tag_assert(void)
+{
+    const char *why = "";
+
+    build_host("../two_tag/two_tag", -1);
+
+    cap_ok("tag_assert oams12", "OAMS_RFID_SCAN OAMS=1 BAY=1 ASSERT=1");
+    cap_ok("tag_assert oams41", "OAMS_RFID_SCAN OAMS=4 BAY=0 ASSERT=1");
+    /* Re-read is what it was */
+    cap_ok("reread oams12", "OAMS_RFID_SCAN OAMS=1 BAY=1");
+    cap_ok("reread oams11", "OAMS_RFID_SCAN OAMS=1 BAY=0");
+
+    /* unknown, a conflict, attributed, and a letter this build does not know */
+    cap_refused("tag_assert oams11", "Not available right now");
+    cap_refused("tag_assert oams13", "Not available right now");
+    cap_refused("tag_assert oams14", "Not available right now");
+    cap_refused("tag_assert oams43", "Not available right now");
+    /* an empty bay, and a unit that does not list rfid_scan */
+    cap_refused("tag_assert oams42", "No spool is inserted");
+    cap_refused("tag_assert oams51", "Not supported on this unit yet");
+    /* a bay nobody has, and no bay at all: not a host line */
+    cap_local("tag_assert oams99");
+    cap_local("tag_assert");
+
+    /* the dry run the view dims the action by says the same */
+    assert(actions_check("tag_assert oams12", &g_mmu, &why) == 1);
+    assert(actions_check("tag_assert oams11", &g_mmu, &why) == 0);
+    assert(strcmp(why, "Not available right now") == 0);
+
+    /* a candidate that turns attributed is no longer asserted */
+    g_mmu.units[0].slots[1].tag_read = MMU_TAG_READ_ATTRIBUTED;
+    cap_refused("tag_assert oams12", "Not available right now");
+    g_mmu.units[0].slots[1].tag_read = MMU_TAG_READ_CANDIDATE;
+    cap_ok("tag_assert oams12", "OAMS_RFID_SCAN OAMS=1 BAY=1 ASSERT=1");
+}
+
 /* A unit's name is the host's own and can be any length: it is found by its
  * whole name (cut to the model's 31 bytes on both sides), so it stays one unit
  * however often it is updated, and its bay ids and lines still resolve. */
@@ -1230,6 +1272,7 @@ int main(void)
     test_rpc_spool_edit_own_weight_and_pa();
     test_rpc_spool_edit_then_load();
     test_host_lists();
+    test_tag_assert();
     test_long_names();
 
     printf("test_actions_map: ok\n");

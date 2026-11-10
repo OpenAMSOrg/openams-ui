@@ -20,6 +20,7 @@
 
 #include "app/actions.h"
 #include "app/platform.h"
+#include "backend/actions_map.h"
 #include "model/mmu_model.h"
 #include "ui/ui_chevron.h"
 #include "ui/ui_display.h"
@@ -40,6 +41,7 @@
 #include "view/view.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Which unit the display belongs to, and its one toolhead's index. */
@@ -218,6 +220,7 @@ enum {
     SH_REREAD,
     SH_CHANGE_GROUP,
     SH_ASSIGN_SPOOL,
+    SH_TAG_ASSERT,
 };
 
 /* The sheet is built for one bay at a time, so the rows carry only which
@@ -283,6 +286,13 @@ static void on_sheet_row(lv_event_t *e)
         break;
     case SH_ASSIGN_SPOOL:
         ui_spool_assign_open(s_sheet_unit, s_sheet_slot);
+        break;
+    case SH_TAG_ASSERT:
+        /* "It is this slot": the host attributes the tag the bay's reader
+         * holds to this bay, and its next status says so */
+        actions_log("tag_assert %s", id);
+        ui_sheet_close(NULL);
+        ui_nav_refresh_async();
         break;
     default:
         break;
@@ -357,6 +367,99 @@ static void add_group_note(lv_obj_t *sheet, int unit, int slot)
     lv_obj_set_pos(l, UI_PX(16), UI_PX(2));
 
     ui_sheet_fit(sheet);
+}
+
+/* A note under the sheet's header that wraps instead of being cut: the tag
+ * attribution's sentences run longer than one line in most languages. */
+static void add_wrapped_note(lv_obj_t *sheet, const char *text, lv_color_t color)
+{
+    lv_obj_t *body = ui_sheet_body(sheet);
+    lv_obj_t *row, *l;
+
+    if(!body || !text[0]) return;
+    row = lv_obj_create(body);
+    lv_obj_remove_style_all(row);
+    lv_obj_set_width(row, LV_PCT(100));
+    lv_obj_set_height(row, LV_SIZE_CONTENT);
+    lv_obj_set_style_pad_top(row, 2, 0);
+    lv_obj_set_style_pad_bottom(row, 2, 0);
+    lv_obj_set_scrollable(row, false);
+
+    l = lv_label_create(row);
+    lv_obj_remove_style_all(l);
+    lv_label_set_text(l, text);
+    lv_obj_set_style_text_font(l, UI_FONT_S, 0);
+    lv_obj_set_style_text_color(l, color, 0);
+    lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_WRAP);
+    lv_obj_set_width(l, 448);
+    lv_obj_set_x(l, 16);
+    ui_sheet_fit(sheet);
+}
+
+/* One tag the bay's reader saw (a candidate): its color as a swatch, its
+ * material, and the color's name - each only when the tag said it. */
+static void add_tag_candidate(lv_obj_t *sheet, const view_tag_candidate_t *c)
+{
+    lv_obj_t *body = ui_sheet_body(sheet);
+    lv_obj_t *row, *sw, *l;
+
+    if(!body || (!c->material[0] && !c->color_known)) return;
+    row = lv_obj_create(body);
+    lv_obj_remove_style_all(row);
+    lv_obj_set_width(row, LV_PCT(100));
+    lv_obj_set_height(row, 20);
+    lv_obj_set_scrollable(row, false);
+    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_left(row, 16, 0);
+    lv_obj_set_style_pad_column(row, 6, 0);
+
+    /* a hairline keeps a dark or a light filament visible; a color the tag
+     * did not give is the outline alone */
+    sw = lv_obj_create(row);
+    lv_obj_remove_style_all(sw);
+    lv_obj_set_size(sw, 12, 12);
+    lv_obj_set_style_radius(sw, 3, 0);
+    lv_obj_set_style_border_width(sw, 1, 0);
+    lv_obj_set_style_border_color(sw, UI_COL_TEXT_FAINT, 0);
+    if(c->color_known) {
+        lv_obj_set_style_bg_color(sw, lv_color_hex(c->color), 0);
+        lv_obj_set_style_bg_opa(sw, LV_OPA_COVER, 0);
+    }
+
+    if(c->material[0]) {
+        l = lv_label_create(row);
+        lv_obj_remove_style_all(l);
+        lv_label_set_text(l, c->material);
+        lv_obj_set_style_text_font(l, UI_FONT_S, 0);
+        lv_obj_set_style_text_color(l, UI_COL_TEXT, 0);
+    }
+    if(c->color_name[0]) {
+        l = lv_label_create(row);
+        lv_obj_remove_style_all(l);
+        lv_label_set_text(l, c->color_name);
+        lv_obj_set_style_text_font(l, UI_FONT_S, 0);
+        lv_obj_set_style_text_color(l, UI_COL_TEXT_DIM, 0);
+    }
+    ui_sheet_fit(sheet);
+}
+
+/* What the host's tag attribution says about this bay, when a reader several
+ * bays share has left something to say (view_tile_tag_read): the core's note,
+ * plain for a tag not read yet or a slot not confirmed, in the information
+ * tone for a conflict (never the fault look), then each candidate tag. The
+ * tile shows none of it (VISUAL_SPEC rule 3). */
+static void add_tag_read(lv_obj_t *sheet, int unit, int slot)
+{
+    view_tag_read_t *r = malloc(sizeof *r);    /* off the LVGL task's stack */
+    int i;
+
+    if(!r) return;
+    if(view_tile_tag_read(&g_mmu, unit, slot, r) && r->state != VIEW_TAG_READ_NONE) {
+        add_wrapped_note(sheet, r->text, ui_home_tone_color(r->tone));
+        for(i = 0; i < (int)r->candidate_count; i++) add_tag_candidate(sheet, &r->candidates[i]);
+    }
+    free(r);
 }
 
 /* Why a row cannot act, or NULL when it can. The order is what matters: an
@@ -434,6 +537,7 @@ static void open_slot_sheet(int unit, int slot)
         }
     }
     add_group_note(sheet, unit, slot);
+    add_tag_read(sheet, unit, slot);
 
     why[0] = '\0';
     (void)mmu_busy_elsewhere(why, sizeof why);
@@ -482,9 +586,25 @@ static void open_slot_sheet(int unit, int slot)
     ui_sheet_row(sheet, UI_ICON_PENCIL_OUTLINE, view_str(VS_HS_EDIT), reason, on_sheet_row,
                  (void *)(intptr_t)(SH_EDIT + 1), false);
 
+    /* "It is this slot", beside Re-read, only while the host holds the bay's
+     * tag as a candidate; dimmed by the core's own predicate */
+    if(u->rfid && sl->tag_read == MMU_TAG_READ_CANDIDATE) {
+        char line[MMU_SLOT_ID_LEN + 16];
+        const char *no = "";
+
+        reason = block_reason(u, unit, slot, why, true);
+        snprintf(line, sizeof line, "tag_assert %s", id);   /* lit-ok: an action line */
+        if(!reason && !actions_check(line, &g_mmu, &no)) reason = no;
+        ui_sheet_row(sheet, UI_ICON_CHECK_CIRCLE, view_str(VS_ACTION_TAG_ASSERT), reason, on_sheet_row,
+                     (void *)(intptr_t)(SH_TAG_ASSERT + 1), false);
+    }
+
+    /* A unit whose host attributes the tags (`tg`) re-reads a bay it has no
+     * tag for yet: "Tag not read yet" offers Re-read. */
     reason = block_reason(u, unit, slot, why, true);
     if(!reason && sl->state == MMU_SLOT_EMPTY)               reason = view_str(VS_HS_EMPTY);
-    else if(!reason && (sl->info_source != MMU_INFO_TAG || !u->rfid))
+    else if(!reason && (!u->rfid ||
+                        (sl->info_source != MMU_INFO_TAG && sl->tag_read == MMU_TAG_READ_NONE)))
         reason = view_str(VS_HS_NO_TAG);
     ui_sheet_row(sheet, UI_ICON_REFRESH, view_str(VS_HS_REREAD), reason, on_sheet_row,
                  (void *)(intptr_t)(SH_REREAD + 1), false);

@@ -127,6 +127,7 @@ static void slot_set(mmu_slot_t *s, uint32_t color, const char *material,
     s->cal_state = MMU_CAL_CONFIGURED;
     s->positioning = false;
     s->global_id = -1;
+    s->tag_other = -1;
 }
 
 static void slot_empty(mmu_slot_t *s)

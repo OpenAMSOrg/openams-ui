@@ -247,6 +247,44 @@ static cJSON *json_toolhead_actions(const mmu_model_t *m, int th_idx)
 static cJSON *json_alert_group(bool present, int severity, int count, const mmu_model_t *m,
                                int unit_idx, int th_idx);
 
+static const char *tag_read_state_str(view_tag_read_state_t st)
+{
+    switch(st) {
+    case VIEW_TAG_READ_CANDIDATE: return "candidate";
+    case VIEW_TAG_READ_CONFLICT:  return "conflict";
+    case VIEW_TAG_READ_UNKNOWN:
+    default:                      return "unknown";
+    }
+}
+
+/* The bay's `tag_read` (view_tag_read_t), or NULL when it has nothing to say:
+ * the key is then left out of the tile, so a unit that decodes its own tags,
+ * or an older host, gives the tile it always gave. A frame of its own, like
+ * the actions. */
+static cJSON *json_tag_read(const mmu_model_t *m, int unit_idx, int bay)
+{
+    view_tag_read_t r;
+    cJSON *o, *list;
+    int i;
+
+    if(!view_tile_tag_read(m, unit_idx, bay, &r) || r.state == VIEW_TAG_READ_NONE) return NULL;
+    o = cJSON_CreateObject();
+    cJSON_AddStringToObject(o, "state", tag_read_state_str(r.state));
+    cJSON_AddStringToObject(o, "tone", tone_str(r.tone));
+    cJSON_AddStringToObject(o, "text", text_of(r.text));
+    list = cJSON_AddArrayToObject(o, "candidates");
+    for(i = 0; i < (int)r.candidate_count; i++) {
+        const view_tag_candidate_t *c = &r.candidates[i];
+        cJSON *k = cJSON_CreateObject();
+
+        cJSON_AddStringToObject(k, "material", c->material);
+        cJSON_AddItemToObject(k, "color", c->color_known ? hex_json(c->color) : cJSON_CreateNull());
+        cJSON_AddStringToObject(k, "color_name", text_of(c->color_name));
+        cJSON_AddItemToArray(list, k);
+    }
+    return o;
+}
+
 static cJSON *json_tile(const mmu_model_t *m, int unit_idx, const view_tile_t *t)
 {
     cJSON *o = cJSON_CreateObject();
@@ -303,6 +341,12 @@ static cJSON *json_tile(const mmu_model_t *m, int unit_idx, const view_tile_t *t
     cJSON_AddBoolToObject(o, "rfid", t->rfid);
     cJSON_AddBoolToObject(o, "pending_confirmation", t->pending_confirmation);
     cJSON_AddBoolToObject(o, "calibrated", t->calibrated);
+
+    {
+        cJSON *tr = json_tag_read(m, unit_idx, t->bay);
+
+        if(tr) cJSON_AddItemToObject(o, "tag_read", tr);
+    }
 
     cJSON_AddItemToObject(o, "actions", json_tile_actions(m, unit_idx, t->bay));
     return o;

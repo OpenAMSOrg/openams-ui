@@ -955,6 +955,12 @@ bool view_tile_actions(const mmu_model_t *m, int unit_idx, int bay, view_actions
 
     add_change_group_action(out, m, unit_idx, bay, slot_id);
 
+    /* "It is this slot": the tag the bay's reader saw is this bay's. Only a bay
+     * whose tag the host holds as a candidate offers it, beside its Re-read. */
+    if(u->rfid && s->tag_read == MMU_TAG_READ_CANDIDATE)
+        act_simple(out, m, "tag_assert", VS_ACTION_TAG_ASSERT, VIEW_STYLE_NORMAL, "tag_assert %s",
+                   slot_id);
+
     /* a unit with no reader can never re-read a tag: no such action */
     if(u->rfid)
         act_simple(out, m, "reread", VS_ACTION_REREAD, VIEW_STYLE_NORMAL, "reread %s", slot_id);
@@ -1000,6 +1006,107 @@ bool view_tile_actions(const mmu_model_t *m, int unit_idx, int bay, view_actions
         }
     }
 
+    return true;
+}
+
+/* ---------------------------------------------------------------- tag read */
+
+/* The unit holding the bay whose host slot id is @p id (its `bays[i].id`), with
+ * the bay in @p out_bay; -1 when no bay of the model has it. */
+static int unit_of_global_id(const mmu_model_t *m, int id, int *out_bay)
+{
+    int i, j;
+
+    for(i = 0; i < (int)m->unit_count; i++) {
+        for(j = 0; j < (int)m->units[i].slot_count; j++) {
+            if(m->units[i].slots[j].global_id == id) {
+                *out_bay = j;
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+/* A conflict's note, by its reason (the interfaces' texts). claimed_twice names
+ * the other bay the way the toolhead's resting path does ("oams1:2"); a slot id
+ * no bay of this model has is the host's number, and none at all is "?". */
+static void tag_conflict_text(const mmu_model_t *m, const mmu_slot_t *s, view_tag_read_t *out)
+{
+    switch(s->tag_reason) {
+    case MMU_TAG_REASON_TWO_MOVING:
+    case MMU_TAG_REASON_AMBIGUOUS_PAIR:
+        out->text = view_str(VS_TAGR_TWO_SPOOLS);
+        break;
+    case MMU_TAG_REASON_CHANGED_IN_PLACE:
+        out->text = view_str(VS_TAGR_CHANGED);
+        break;
+    case MMU_TAG_REASON_NO_TAG_AFTER_TURN:
+        out->text = view_str(VS_TAGR_NO_TAG);
+        break;
+    case MMU_TAG_REASON_CLAIMED_TWICE: {
+        char slot[VIEW_SUBLABEL_LEN];
+        int ou, ob = 0;
+
+        if(s->tag_other < 0)
+            vs_copy(view_str(VS_UNKNOWN_MARK), slot, sizeof slot);
+        else if((ou = unit_of_global_id(m, s->tag_other, &ob)) >= 0)
+            vs_unit_bay_label(m->units[ou].name, ob, slot, sizeof slot);
+        else
+            snprintf(slot, sizeof slot, "%d", (int)s->tag_other);
+        vs_format(VS_TAGR_CLAIMED_TWICE, out->text_buf, sizeof out->text_buf,
+                  (vs_arg_t[]){ VS_ARG_T("slot", slot) }, 1);
+        out->text = out->text_buf;
+        break;
+    }
+    default:   /* a reason this build does not know */
+        out->text = view_str(VS_TAGR_CONFLICT);
+        break;
+    }
+}
+
+bool view_tile_tag_read(const mmu_model_t *m, int unit_idx, int bay, view_tag_read_t *out)
+{
+    const mmu_slot_t *s;
+    int i;
+
+    if(!out) return false;
+    memset(out, 0, sizeof(*out));
+    out->text = "";                 /* a fixed string: "" rather than NULL */
+    out->tone = VIEW_TONE_NEUTRAL;
+    if(!m || unit_idx < 0 || unit_idx >= (int)m->unit_count) return false;
+    if(bay < 0 || bay >= (int)m->units[unit_idx].slot_count) return false;
+    s = &m->units[unit_idx].slots[bay];
+
+    switch(s->tag_read) {
+    case MMU_TAG_READ_UNKNOWN:
+        /* a normal state, said plainly: no warning color */
+        out->state = VIEW_TAG_READ_UNKNOWN;
+        out->text = view_str(VS_TAGR_UNKNOWN);
+        break;
+    case MMU_TAG_READ_CANDIDATE:
+        out->state = VIEW_TAG_READ_CANDIDATE;
+        out->text = view_str(VS_TAGR_CANDIDATE);
+        for(i = 0; i < (int)s->tag_candidate_count && i < MMU_MAX_TAG_CANDIDATES; i++) {
+            const mmu_tag_candidate_t *k = &s->tag_candidates[i];
+            view_tag_candidate_t *c = &out->candidates[out->candidate_count++];
+
+            c->color_known = k->color >= 0;
+            c->color = c->color_known ? (uint32_t)k->color : 0;
+            c->color_name = c->color_known ? view_color_name(c->color) : "";
+            vs_copy(k->material, c->material, sizeof(c->material));
+        }
+        break;
+    case MMU_TAG_READ_CONFLICT:
+        /* the amber information look: a read that disagrees never blocks a print */
+        out->state = VIEW_TAG_READ_CONFLICT;
+        out->tone = VIEW_TONE_INFO;
+        tag_conflict_text(m, s, out);
+        break;
+    default:
+        /* none, or attributed: the RFID mark and the link already say it */
+        break;
+    }
     return true;
 }
 
