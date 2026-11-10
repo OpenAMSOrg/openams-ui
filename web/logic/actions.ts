@@ -354,7 +354,9 @@ function dispatch(w: Writer, line: string, m: Model): Mapped {
     const idx = unitHostIdx(m, found.unit);
     if (idx < 0) return refuse(str('REASON_UNIT_UNKNOWN'));
     if (!unitMay(m, found.unit, UnitAct.RFID_SCAN)) return refuse(str('REASON_NOT_SUPPORTED'));
-    w.cmd(`OAMS_RFID_SCAN OAMS=${idx}`);
+    // BAY= is the re-read of that bay (C3): a unit that reads its tags per
+    // bay refuses the command without it.
+    w.cmd(`OAMS_RFID_SCAN OAMS=${idx} BAY=${found.slot}`);
     return { rc: 1, script: '' };
   }
 

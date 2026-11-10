@@ -499,7 +499,9 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
             *why = view_str(VS_REASON_NOT_SUPPORTED);
             return -1;
         }
-        wr_cmd(w, "OAMS_RFID_SCAN OAMS=%d", gi);
+        /* BAY= is the re-read of that bay (C3): a unit that reads its tags per
+         * bay refuses the command without it. */
+        wr_cmd(w, "OAMS_RFID_SCAN OAMS=%d BAY=%d", gi, slot);
         return 1;
     }
 

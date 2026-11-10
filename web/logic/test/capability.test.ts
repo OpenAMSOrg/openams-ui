@@ -100,7 +100,7 @@ test('drying follows act: no dryer_start, the reason is set; no dryer_stop, stop
     assert.equal(start?.reason, NOT_SUPPORTED);
   }
   refused(p, 'dry dry1 start 50C 4h', NOT_SUPPORTED);
-  sent(p, 'reread dry11', 'OAMS_RFID_SCAN OAMS=1');
+  sent(p, 'reread dry11', 'OAMS_RFID_SCAN OAMS=1 BAY=0');
   sent(p, 'fault clear_fault dry1', 'OAMS_CLEAR_FAULT OAMS=1');
 
   p = await loaded('cap_ams2_dryer_no_adapter');
@@ -142,7 +142,7 @@ test('a unit with full lists offers what it always did', async () => {
   const p = await loaded('cap_full');
   sent(p, 'load full11', 'OPENAMS_LOAD GROUP=T0 SLOT=0');
   sent(p, 'calibrate full11', 'OAMS_CALIBRATE_PTFE_LENGTH OAMS=1 SPOOL=0');
-  sent(p, 'reread full11', 'OAMS_RFID_SCAN OAMS=1');
+  sent(p, 'reread full11', 'OAMS_RFID_SCAN OAMS=1 BAY=0');
   sent(p, 'dry full1 start 50C 4h', 'OAMS_DRYER_START OAMS=1 TARGET=50 DURATION=14400');
   sent(p, 'fault clear_fault full1', 'OAMS_CLEAR_FAULT OAMS=1');
 });

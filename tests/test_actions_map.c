@@ -348,8 +348,8 @@ static void test_load_while_positioning(void)
 
 static void test_reread_calibrate(void)
 {
-    expect("reread oams11", "OAMS_RFID_SCAN OAMS=1");
-    expect("reread oams12", "OAMS_RFID_SCAN OAMS=1");
+    expect("reread oams11", "OAMS_RFID_SCAN OAMS=1 BAY=0");
+    expect("reread oams12", "OAMS_RFID_SCAN OAMS=1 BAY=1");
     expect_unaddressable("reread oams13", "No spool is inserted");
     expect("calibrate oams11", "OAMS_CALIBRATE_PTFE_LENGTH OAMS=1 SPOOL=0");
     expect("calibrate oams13", "OAMS_CALIBRATE_PTFE_LENGTH OAMS=1 SPOOL=2");
@@ -1014,7 +1014,7 @@ static void test_host_lists(void)
     build_host("cap_full", -1);
     cap_ok("load full11", "OPENAMS_LOAD GROUP=T0 SLOT=0");
     cap_ok("calibrate full11", "OAMS_CALIBRATE_PTFE_LENGTH OAMS=1 SPOOL=0");
-    cap_ok("reread full11", "OAMS_RFID_SCAN OAMS=1");
+    cap_ok("reread full11", "OAMS_RFID_SCAN OAMS=1 BAY=0");
     cap_ok("dry full1 start 50C 4h", "OAMS_DRYER_START OAMS=1 TARGET=50 DURATION=14400");
     cap_ok("fault clear_fault full1", "OAMS_CLEAR_FAULT OAMS=1");
     cap_refused("dry full1 stop", "The dryer is not running");
@@ -1071,7 +1071,7 @@ static void test_host_lists(void)
     cap_refused("dry dry1 start 50C 4h", "Not supported on this unit yet");
     g_mmu.units[0].dry_state = MMU_DRY_HEATING;
     cap_refused("dry dry1 stop", "Not supported on this unit yet");
-    cap_ok("reread dry11", "OAMS_RFID_SCAN OAMS=1");               /* rfid_scan is listed */
+    cap_ok("reread dry11", "OAMS_RFID_SCAN OAMS=1 BAY=0");               /* rfid_scan is listed */
     cap_ok("fault clear_fault dry1", "OAMS_CLEAR_FAULT OAMS=1");    /* so is clear_fault */
     build_host("cap_ams2_dryer_no_adapter", -1);
     cap_refused("dry dry1 start 50C 4h", "The dryer's power adapter is not connected.");
