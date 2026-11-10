@@ -1156,8 +1156,9 @@ static void test_host_lists(void)
 
 /* `tag_assert <slot>`, "It is this slot" (C3's ASSERT=1): OAMS_RFID_SCAN
  * OAMS=<idx> BAY=<bay> ASSERT=1, only for a bay whose tag the host holds as a
- * candidate (`tg` "c"). On the hand-written two-tag fixture, so through the
- * cap_* names: not an action vector. */
+ * candidate (`tg` "c") or in conflict ("x"), which a re-read does not settle.
+ * On the hand-written two-tag fixture, so through the cap_* names: not an
+ * action vector. */
 #define cap_local expect_local
 
 static void test_tag_assert(void)
@@ -1172,9 +1173,17 @@ static void test_tag_assert(void)
     cap_ok("reread oams12", "OAMS_RFID_SCAN OAMS=1 BAY=1");
     cap_ok("reread oams11", "OAMS_RFID_SCAN OAMS=1 BAY=0");
 
-    /* unknown, a conflict, attributed, and a letter this build does not know */
+    /* every conflict: claimed_twice, two_moving, changed_in_place, no tag after
+     * a turn, ambiguous_pair and a reason this build does not know */
+    cap_ok("tag_assert oams13", "OAMS_RFID_SCAN OAMS=1 BAY=2 ASSERT=1");
+    cap_ok("tag_assert oams21", "OAMS_RFID_SCAN OAMS=2 BAY=0 ASSERT=1");
+    cap_ok("tag_assert oams23", "OAMS_RFID_SCAN OAMS=2 BAY=2 ASSERT=1");
+    cap_ok("tag_assert oams24", "OAMS_RFID_SCAN OAMS=2 BAY=3 ASSERT=1");
+    cap_ok("tag_assert oams31", "OAMS_RFID_SCAN OAMS=3 BAY=0 ASSERT=1");
+    cap_ok("tag_assert oams32", "OAMS_RFID_SCAN OAMS=3 BAY=1 ASSERT=1");
+
+    /* unknown, attributed, and a letter this build does not know */
     cap_refused("tag_assert oams11", "Not available right now");
-    cap_refused("tag_assert oams13", "Not available right now");
     cap_refused("tag_assert oams14", "Not available right now");
     cap_refused("tag_assert oams43", "Not available right now");
     /* an empty bay, and a unit that does not list rfid_scan */
@@ -1188,6 +1197,8 @@ static void test_tag_assert(void)
     assert(actions_check("tag_assert oams12", &g_mmu, &why) == 1);
     assert(actions_check("tag_assert oams11", &g_mmu, &why) == 0);
     assert(strcmp(why, "Not available right now") == 0);
+
+    assert(actions_check("tag_assert oams13", &g_mmu, &why) == 1);
 
     /* a candidate that turns attributed is no longer asserted */
     g_mmu.units[0].slots[1].tag_read = MMU_TAG_READ_ATTRIBUTED;

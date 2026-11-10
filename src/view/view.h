@@ -90,19 +90,20 @@
 #define VIEW_ACTION_LINE_LEN   168   /* "spool edit {slot} material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load" is 125, and a slot id is up to VIEW_ID_LEN - 1 */
 #define VIEW_FIELD_ID_LEN       12
 #define VIEW_OPTION_LABEL_LEN   72   /* "{vendor} {material} \xc2\xb7 {g} g" in the pseudo-locale */
-#define VIEW_TAG_READ_TEXT_LEN 128   /* "This tag is also in slot {slot}." (TAGR_CLAIMED_TWICE):
-                                      * the pseudo-locale's template is 89 bytes, less its
-                                      * placeholder, plus a bay label (VIEW_SUBLABEL_LEN) */
+#define VIEW_TAG_READ_TEXT_LEN 256   /* "This tag is also in slot {slot}. Load this spool or
+                                      * press ..." (TAGR_CLAIMED_TWICE): the pseudo-locale's
+                                      * template is 213 bytes, less its placeholder, plus a
+                                      * bay label (VIEW_SUBLABEL_LEN) */
 #define VIEW_TAG_MATERIAL_LEN    MMU_TAG_MATERIAL_LEN
 
 /* ------------------------------------------------------------ array caps */
 
-#define VIEW_ACTIONS_PER_TILE    11   /* load, unload, edit, assign, unlink, change group, "It is this slot", reread, calibrate, and a fault's two */
+#define VIEW_ACTIONS_PER_TILE    12   /* load, unload, edit, assign, unlink, change group, "It is this slot", reread, calibrate, "Confirm spool", and a fault's two */
 #define VIEW_ACTIONS_PER_UNIT     6
 #define VIEW_ACTIONS_PER_TOOLHEAD 6
 #define VIEW_ACTIONS_PER_ALERT    3   /* a failed toolchange: retry, unload, clear errors; a lane fault: its two tokens */
 #define VIEW_ALERTS_PER_GROUP     6   /* a unit: its lane fault, the dryer fault, the adapter, low filament */
-#define VIEW_ACTIONS_MAX          11  /* view_actions_t's own capacity: >= every per-widget cap above */
+#define VIEW_ACTIONS_MAX          12  /* view_actions_t's own capacity: >= every per-widget cap above */
 #define VIEW_MAX_FORM_FIELDS      6   /* one form's own fields: the spool editor's */
 #define VIEW_MAX_FIELDS          15   /* every form's fields of one view_actions_t, pooled: the spool editor's six, twice over on a bay that offers it twice (an unidentified one: "Load" asks for the spool first), the assign form's one, the group form's one and the confirmation's one */
 #define VIEW_MAX_OPTIONS        160   /* every select's choices of one view_actions_t, pooled: two editors' materials (11 each), colors (20 each) and vendors (MMU_MAX_VENDORS + 2), the spool list, or the group list */
@@ -678,11 +679,19 @@ const char *view_color_name(uint32_t rgb);
  * a renderer that draws its own edit screen and still dims by the same check. */
 const char *view_tile_edit_reason(const mmu_model_t *m, int unit_idx, int bay);
 
+/** Why the bay's Re-read is dimmed (the table's own words), or NULL when the host
+ * can take it now: the predicate the tile's own `reread` action is enabled by,
+ * and "No tag on this spool" for a unit without a reader, which offers no such
+ * action. For the device's slot sheet, which dims its Re-read row by the same
+ * check whatever the bay's tag attribution (`tg`) says. */
+const char *view_tile_reread_reason(const mmu_model_t *m, int unit_idx, int bay);
+
 /** The actions of m->units[unit_idx]'s bay @p bay, in order: load, unload,
  * edit_spool, assign_spool (or spool_list_refresh when the model holds no
  * spool list), unlink, change_group, tag_assert (only for a bay whose tag is a
- * candidate), reread, calibrate. False (out left zeroed) on an out-of-range
- * index. */
+ * candidate or in conflict), reread, calibrate; then the "Confirm" tag's
+ * confirm_spool and the recovery actions of the lane fault that names the bay.
+ * False (out left zeroed) on an out-of-range index. */
 bool view_tile_actions(const mmu_model_t *m, int unit_idx, int bay, view_actions_t *out);
 
 /** What the host's tag attribution says about m->units[unit_idx]'s bay @p bay

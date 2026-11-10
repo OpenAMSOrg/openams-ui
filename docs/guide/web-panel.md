@@ -115,6 +115,19 @@ Each bay is a tile. Its click targets (`docs/design/UNIFIED_UI.md`, section 4b):
   or refuses the retry and leaves the failure as it was. The alert shows the
   printer's reason whole.
 - **Humidity reading:** click it for the drying and heating menu.
+- **A bay's tag note:** on a unit whose bays share a tag reader, the printer
+  works out which bay a tag belongs to. Until it is sure, the ring's menu
+  (and the tag's details, when the tile shows a tag) starts with a note:
+  the tag is not read yet, a tag was seen but its slot is not confirmed (with
+  the tag's material and color), or, in amber, the reads disagree (two spools
+  answered, a different spool's tag appeared, or the tag is also in another
+  slot). The tile itself does not change. To settle it, load the spool, or
+  choose **It is this slot** in the same menu to tell the printer the tag in
+  front of the reader belongs to this bay; with two tags there, the printer
+  refuses and says so; if the tag there is not the one the note lists, the
+  first press only lists that tag instead, and a second confirms it.
+  **Re-read** reads the bay again, which helps when its
+  tag has not been read yet, not when the reads disagree.
 
 Actions open in a popover anchored to their source. A form or a confirm opens
 the panel's one dialog (a native `<dialog>`, so focus and Escape just work). A

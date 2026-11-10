@@ -52,6 +52,7 @@ Tap a tile to open its sheet. Which rows appear depends on the bay:
 | Load | load that spool; unloads the current one first when needed |
 | Unload | unload the toolhead |
 | Edit | open the Edit screen |
+| It is this slot | tell the printer the tag its reader holds belongs to this bay (see below) |
 | Re-read | read the spool's tag again |
 | Change group... | open the group picker |
 | Assign Spoolman spool | pick a Spoolman spool for an untagged bay |
@@ -59,6 +60,25 @@ Tap a tile to open its sheet. Which rows appear depends on the bay:
 A row that cannot run is dimmed. Tap it to see why: "Unit is busy, please
 wait", "In use by the running print", "Spool is empty", "No tag on this
 spool", "Unit is not connected".
+
+## A bay's tag note
+
+On a unit whose bays share a tag reader, the printer works out which bay a
+tag belongs to. Until it is sure, the bay's sheet shows a note under the
+header:
+
+| Note | What to do |
+|------|------------|
+| Tag not read yet. It is read at the first load. | nothing: load the spool, or tap Re-read |
+| Tag seen, slot not confirmed | the tag's material and color are listed under the note; if that tag is this spool's, tap It is this slot |
+| Two spools answered, a different spool's tag appeared here, or this tag is also in another slot (amber) | load this spool, or tap It is this slot |
+
+It is this slot works only while one tag is in front of the reader; with two
+there, the printer refuses and says so. If the tag in front of the reader is
+not the one the note lists, the first tap only lists that tag instead; tap again
+to confirm it. Re-read does not settle an amber note.
+When the printer turns a spool and finds no tag, the note goes away; if the
+spool has a tag, turn it by hand and tap Re-read.
 
 ## Refusals on the load screen
 

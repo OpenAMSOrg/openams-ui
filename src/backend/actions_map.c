@@ -506,9 +506,9 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
     }
 
     /* `tag_assert <slot>`: "It is this slot" - the one tag the bay's reader
-     * holds belongs to this bay (C3, ASSERT=1). Only a bay whose tag the host
-     * holds as a candidate (`tg` "c") offers it; the host refuses it when the
-     * field holds two tags, or none. */
+     * holds belongs to this bay (C3, ASSERT=1). A bay whose tag the host holds
+     * as a candidate (`tg` "c") or in conflict ("x") offers it; the host
+     * refuses it when the field holds two tags, or none. */
     arg = rest(line, "tag_assert");
     if(arg) {
         if(!slot_find(m, arg, &unit, &slot)) return 0;
@@ -525,7 +525,8 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
             *why = view_str(VS_REASON_NOT_SUPPORTED);
             return -1;
         }
-        if(m->units[unit].slots[slot].tag_read != MMU_TAG_READ_CANDIDATE) {
+        if(m->units[unit].slots[slot].tag_read != MMU_TAG_READ_CANDIDATE &&
+           m->units[unit].slots[slot].tag_read != MMU_TAG_READ_CONFLICT) {
             *why = view_str(VS_REASON_NOT_NOW);
             return -1;
         }

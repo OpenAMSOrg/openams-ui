@@ -891,6 +891,21 @@ const char *view_tile_edit_reason(const mmu_model_t *m, int unit_idx, int bay)
     return actions_check(resolved, m, &why) ? NULL : why;
 }
 
+const char *view_tile_reread_reason(const mmu_model_t *m, int unit_idx, int bay)
+{
+    char slot_id[VIEW_ID_LEN], line[VIEW_ACTION_LINE_LEN];
+    const char *why = "";
+
+    if(!m || unit_idx < 0 || unit_idx >= (int)m->unit_count) return view_str(VS_REASON_NOT_NOW);
+    if(bay < 0 || bay >= (int)m->units[unit_idx].slot_count) return view_str(VS_REASON_NOT_NOW);
+    /* a unit with no reader: the tile has no Re-read at all (view_tile_actions) */
+    if(!m->units[unit_idx].rfid) return view_str(VS_HS_NO_TAG);
+    mmu_slot_id_in(m, unit_idx, bay, slot_id, sizeof slot_id);
+    snprintf(line, sizeof line, "reread %s", slot_id);
+    if(actions_check(line, m, &why)) return NULL;
+    return why[0] ? why : view_str(VS_REASON_NOT_NOW);
+}
+
 bool view_tile_actions(const mmu_model_t *m, int unit_idx, int bay, view_actions_t *out)
 {
     const mmu_unit_t *u;
@@ -955,9 +970,10 @@ bool view_tile_actions(const mmu_model_t *m, int unit_idx, int bay, view_actions
 
     add_change_group_action(out, m, unit_idx, bay, slot_id);
 
-    /* "It is this slot": the tag the bay's reader saw is this bay's. Only a bay
-     * whose tag the host holds as a candidate offers it, beside its Re-read. */
-    if(u->rfid && s->tag_read == MMU_TAG_READ_CANDIDATE)
+    /* "It is this slot": the tag the bay's reader holds is this bay's. A bay
+     * whose tag the host holds as a candidate offers it beside its Re-read, and
+     * so does a conflict, which a re-read does not settle. */
+    if(u->rfid && (s->tag_read == MMU_TAG_READ_CANDIDATE || s->tag_read == MMU_TAG_READ_CONFLICT))
         act_simple(out, m, "tag_assert", VS_ACTION_TAG_ASSERT, VIEW_STYLE_NORMAL, "tag_assert %s",
                    slot_id);
 

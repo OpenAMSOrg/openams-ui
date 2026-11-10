@@ -384,6 +384,34 @@ if(NOT EMSCRIPTEN)
     set_tests_properties(screen_update PROPERTIES
         ENVIRONMENT "SDL_VIDEODRIVER=dummy")
 
+    # The device's slot sheet for a bay whose tag the host attributes: the
+    # note, "It is this slot", and the Re-read row's predicate, in real widgets.
+    file(GLOB_RECURSE MMU_SCREEN_HOME_SHEET_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+    )
+    list(APPEND MMU_SCREEN_HOME_SHEET_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/platform/sim/display_cfg.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_screen_home_sheet.c")
+    mmu_languages_filter_sources(MMU_SCREEN_HOME_SHEET_SOURCES ${MMU_SCREEN_HOME_SHEET_SOURCES})
+    mmu_resolution_filter_sources(MMU_SCREEN_HOME_SHEET_SOURCES ${MMU_SCREEN_HOME_SHEET_SOURCES})
+
+    add_executable(test_screen_home_sheet ${MMU_SCREEN_HOME_SHEET_SOURCES})
+
+    target_include_directories(test_screen_home_sheet PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}/platform")
+
+    target_compile_definitions(test_screen_home_sheet PRIVATE ${MMU_LANGUAGE_DEFINES} ${MMU_UI_DEFINES})
+
+    target_compile_options(test_screen_home_sheet PRIVATE -Wall -Wextra)
+
+    target_link_libraries(test_screen_home_sheet PRIVATE lvgl::lvgl m)
+
+    add_test(NAME screen_home_sheet COMMAND test_screen_home_sheet)
+    set_tests_properties(screen_home_sheet PROPERTIES
+        ENVIRONMENT "SDL_VIDEODRIVER=dummy")
+
     # Replay the recorded fixtures through the simulator and compare each
     # model dump against its golden (tests/fixtures/recorded/*.dump). The
     # simulator is a path argument because the script is shared with machines

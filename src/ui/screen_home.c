@@ -586,9 +586,10 @@ static void open_slot_sheet(int unit, int slot)
     ui_sheet_row(sheet, UI_ICON_PENCIL_OUTLINE, view_str(VS_HS_EDIT), reason, on_sheet_row,
                  (void *)(intptr_t)(SH_EDIT + 1), false);
 
-    /* "It is this slot", beside Re-read, only while the host holds the bay's
-     * tag as a candidate; dimmed by the core's own predicate */
-    if(u->rfid && sl->tag_read == MMU_TAG_READ_CANDIDATE) {
+    /* "It is this slot", beside Re-read, while the host holds the bay's tag as
+     * a candidate or in conflict (which a re-read does not settle); dimmed by
+     * the core's own predicate */
+    if(u->rfid && (sl->tag_read == MMU_TAG_READ_CANDIDATE || sl->tag_read == MMU_TAG_READ_CONFLICT)) {
         char line[MMU_SLOT_ID_LEN + 16];
         const char *no = "";
 
@@ -599,12 +600,14 @@ static void open_slot_sheet(int unit, int slot)
                      (void *)(intptr_t)(SH_TAG_ASSERT + 1), false);
     }
 
-    /* A unit whose host attributes the tags (`tg`) re-reads a bay it has no
-     * tag for yet: "Tag not read yet" offers Re-read. */
+    /* Against a live host, Re-read dims by the predicate the web panel's own
+     * Re-read is enabled by, whatever the bay's `tg` says: a spool the host
+     * found no tag on after a turn (it drops `tg`) can be turned by hand and
+     * read again. The demo has no host, and re-reads only a tag it has. */
     reason = block_reason(u, unit, slot, why, true);
     if(!reason && sl->state == MMU_SLOT_EMPTY)               reason = view_str(VS_HS_EMPTY);
-    else if(!reason && (!u->rfid ||
-                        (sl->info_source != MMU_INFO_TAG && sl->tag_read == MMU_TAG_READ_NONE)))
+    else if(!reason && mmu_model_is_live())                  reason = view_tile_reread_reason(&g_mmu, unit, slot);
+    else if(!reason && (!u->rfid || sl->info_source != MMU_INFO_TAG))
         reason = view_str(VS_HS_NO_TAG);
     ui_sheet_row(sheet, UI_ICON_REFRESH, view_str(VS_HS_REREAD), reason, on_sheet_row,
                  (void *)(intptr_t)(SH_REREAD + 1), false);

@@ -2522,7 +2522,16 @@ static int test_composed_fit(const char *lang)
 
         memset(slot, 'W', sizeof(slot) - 1);
         slot[sizeof(slot) - 1] = '\0';
-        FITS("tag read note", vs_format(VS_TAGR_CLAIMED_TWICE, buf, VIEW_TAG_READ_TEXT_LEN, other, 1));
+        /* its own buffer: the note is longer than a message (buf) */
+        char note[VIEW_TAG_READ_TEXT_LEN];
+
+        view_str_truncations_reset();
+        vs_format(VS_TAGR_CLAIMED_TWICE, note, sizeof note, other, 1);
+        if(view_str_truncations() != 0) {
+            over++;
+            printf("test_view: %s: [%s] does not fit tag read note (%zu bytes)\n", lang, note,
+                   strlen(note));
+        }
     }
 
     /* The two alerts the status mapper raises, into the model's own buffer.
@@ -2561,9 +2570,12 @@ static int unit_named(const mmu_model_t *m, const char *name)
     return -1;
 }
 
+/* What a conflict's note says after its reason: the two ways out the bay offers. */
+#define TAGR_WAYS_OUT "Load this spool or press \"It is this slot\"."
+
 /* The bay's details (the host's two-tag attribution, `tg` and friends): the
- * note for an unknown, a candidate and a conflict, "It is this slot" only for a
- * candidate, and nothing new on the tile. */
+ * note for an unknown, a candidate and a conflict, "It is this slot" for a
+ * candidate and a conflict, and nothing new on the tile. */
 static void test_two_tag(void)
 {
     view_tag_read_t r;
@@ -2625,29 +2637,46 @@ static void test_two_tag(void)
     assert(!find_action(&acts, "tag_assert") && !find_action(&acts, "reread"));
     assert(view_tile_tag_read(&s_local, o5, 0, &r) && r.state == VIEW_TAG_READ_CANDIDATE);
 
-    /* conflict: the amber information look, the reason's text */
+    /* conflict: the amber information look, the reason's text, which names
+     * the two ways out the bay offers (a re-read settles no conflict) */
     assert(view_tile_tag_read(&s_local, o1, 2, &r));
     assert(r.state == VIEW_TAG_READ_CONFLICT && r.tone == VIEW_TONE_INFO);
-    assert(strcmp(r.text, "This tag is also in slot oams2:2.") == 0 && r.text == r.text_buf);
+    assert(strcmp(r.text, "This tag is also in slot oams2:2. " TAGR_WAYS_OUT) == 0 && r.text == r.text_buf);
     assert(view_tile_tag_read(&s_local, o2, 0, &r));
-    assert(strcmp(r.text, "Two spools answered. Load or re-read to settle.") == 0);
+    assert(strcmp(r.text, "Two spools answered. " TAGR_WAYS_OUT) == 0);
     assert(view_tile_tag_read(&s_local, o2, 1, &r));
-    assert(strcmp(r.text, "This tag is also in slot oams1:3.") == 0);
+    assert(strcmp(r.text, "This tag is also in slot oams1:3. " TAGR_WAYS_OUT) == 0);
     assert(view_tile_tag_read(&s_local, o2, 2, &r));
-    assert(strcmp(r.text, "A different spool's tag appeared here. Re-read to settle.") == 0);
+    assert(strcmp(r.text, "A different spool's tag appeared here. " TAGR_WAYS_OUT) == 0);
     assert(view_tile_tag_read(&s_local, o2, 3, &r));
     assert(strcmp(r.text, "No tag found after a turn.") == 0);
     assert(view_tile_tag_read(&s_local, o3, 0, &r));
-    assert(strcmp(r.text, "Two spools answered. Load or re-read to settle.") == 0);
+    assert(strcmp(r.text, "Two spools answered. " TAGR_WAYS_OUT) == 0);
     assert(view_tile_tag_read(&s_local, o3, 1, &r));
-    assert(strcmp(r.text, "The tag reads disagree. Re-read to settle.") == 0);
+    assert(strcmp(r.text, "The tag reads disagree. " TAGR_WAYS_OUT) == 0);
     assert(view_tile_tag_read(&s_local, o3, 2, &r));
-    assert(strcmp(r.text, "This tag is also in slot 99.") == 0);
+    assert(strcmp(r.text, "This tag is also in slot 99. " TAGR_WAYS_OUT) == 0);
     assert(view_tile_tag_read(&s_local, o3, 3, &r));
-    assert(strcmp(r.text, "This tag is also in slot ?.") == 0);
+    assert(strcmp(r.text, "This tag is also in slot ?. " TAGR_WAYS_OUT) == 0);
     /* the tile wears no tag for it (a conflict is not a fault) */
     assert(view_tile(&s_local, o3, 3, &t));
     assert(!t.has_tag);
+    /* ... and every conflict offers "It is this slot" before its Re-read */
+    {
+        static const int k_conflicts[][2] = {
+            { 0, 2 }, { 1, 0 }, { 1, 1 }, { 1, 2 }, { 1, 3 }, { 2, 0 }, { 2, 1 }, { 2, 2 }, { 2, 3 },
+        };
+        const int units[3] = { o1, o2, o3 };
+        size_t k;
+
+        for(k = 0; k < sizeof k_conflicts / sizeof k_conflicts[0]; k++) {
+            assert(view_tile_actions(&s_local, units[k_conflicts[k][0]], k_conflicts[k][1], &acts));
+            action_ids(&acts, ids, sizeof ids);
+            assert(strstr(ids, "change_group,tag_assert,reread,calibrate"));
+            a = find_action(&acts, "tag_assert");
+            assert(a->enabled && a->reason[0] == '\0' && a->target == VIEW_TARGET_RING);
+        }
+    }
 
     /* nothing to say: attributed (its RFID mark says it), an unknown letter, no `tg` */
     assert(view_tile_tag_read(&s_local, o1, 3, &r) && r.state == VIEW_TAG_READ_NONE);
@@ -2688,7 +2717,8 @@ static void test_two_tag(void)
     cJSON_Delete(root);
     assert(tagged == 17 && untagged == 3);   /* oams14, oams43 and oams54 say nothing */
 
-    /* the cap: a candidate that a lane fault also names keeps every action,
+    /* the cap: a candidate whose spool waits for its confirmation and that a
+     * lane fault also names keeps every action: twelve, the confirmation and
      * the fault's two recovery tokens included */
     {
         mmu_toolhead_t *lane = &s_local.toolheads[s_local.units[o1].toolhead];
@@ -2701,11 +2731,47 @@ static void test_two_tag(void)
         snprintf(lane->error_act[1], sizeof lane->error_act[1], "clear_errors");
         lane->error_act_count = 2;
         s_local.units[o1].slots[1].spool_id = -1;
+        s_local.units[o1].slots[1].pending_confirmation = true;
         assert(view_tile_actions(&s_local, o1, 1, &acts));
-        assert(acts.count == VIEW_ACTIONS_PER_TILE);
-        assert(find_action(&acts, "tag_assert") && find_action(&acts, "resume"));
+        assert(acts.count == 12 && acts.count == VIEW_ACTIONS_PER_TILE);
+        assert(find_action(&acts, "tag_assert") && find_action(&acts, "confirm_spool"));
+        assert(find_action(&acts, "resume"));
         assert(find_action(&acts, "clear_errors"));
     }
+}
+
+/* The device's Re-read row (screen_home.c) dims by the predicate the web
+ * panel's own Re-read is enabled by, never by the bay's `tg`: a bay the host
+ * says nothing about - its spool turned and showed no tag ("no tag after a
+ * turn" drops `tg`), or a letter this build does not know - can be re-read. */
+static void test_reread_reason(void)
+{
+    view_actions_t acts;
+    int o1, o4, o5;
+
+    load_two_tag(&s_local);
+    o1 = unit_named(&s_local, "oams1");
+    o4 = unit_named(&s_local, "oams4");
+    o5 = unit_named(&s_local, "oams5");
+    assert(o1 >= 0 && o4 >= 0 && o5 >= 0);
+
+    /* no `tg`, no tag: the host has nothing to say, Re-read is still there */
+    assert(s_local.units[o4].slots[2].tag_read == MMU_TAG_READ_NONE);
+    assert(s_local.units[o4].slots[2].info_source != MMU_INFO_TAG);
+    assert(view_tile_reread_reason(&s_local, o4, 2) == NULL);
+    s_local.units[o1].slots[0].tag_read = MMU_TAG_READ_NONE;    /* `tg` "u" dropped */
+    assert(view_tile_reread_reason(&s_local, o1, 0) == NULL);
+    assert(view_tile_actions(&s_local, o1, 0, &acts) && find_action(&acts, "reread")->enabled);
+    /* a candidate, a conflict and a bay its tag names */
+    assert(view_tile_reread_reason(&s_local, o1, 1) == NULL);
+    assert(view_tile_reread_reason(&s_local, o1, 2) == NULL);
+    assert(view_tile_reread_reason(&s_local, o1, 3) == NULL);
+    /* an empty bay, and a unit without a reader */
+    assert(strcmp(view_tile_reread_reason(&s_local, o4, 1), "No spool is inserted") == 0);
+    assert(strcmp(view_tile_reread_reason(&s_local, o5, 0), view_str(VS_HS_NO_TAG)) == 0);
+    /* out of range: a reason, never a crash */
+    assert(view_tile_reread_reason(&s_local, o4, 9) != NULL);
+    assert(view_tile_reread_reason(&s_local, 9, 0) != NULL);
 }
 
 /* ------------------------------------------------- language and fallback */
@@ -2993,6 +3059,7 @@ int main(void)
     test_format();
     test_host_text_is_cut_on_a_character();
     test_two_tag();
+    test_reread_reason();
     assert(test_composed_fit("en") == 0);
     assert(test_composed_fit("qps") == 0);   /* a translation is meant to be longer */
     test_no_truncation("en");

@@ -19,11 +19,13 @@ const FIXTURE = new URL('tests/fixtures/two_tag/two_tag.json', repoRoot);
 
 const UNKNOWN = 'Tag not read yet. It is read at the first load.';
 const CANDIDATE = 'Tag seen, slot not confirmed';
-const TWO_SPOOLS = 'Two spools answered. Load or re-read to settle.';
-const CHANGED = "A different spool's tag appeared here. Re-read to settle.";
+// A conflict's note names the two ways out the bay offers (a re-read settles none).
+const WAYS_OUT = 'Load this spool or press "It is this slot".';
+const TWO_SPOOLS = `Two spools answered. ${WAYS_OUT}`;
+const CHANGED = `A different spool's tag appeared here. ${WAYS_OUT}`;
 const NO_TAG = 'No tag found after a turn.';
-const DISAGREE = 'The tag reads disagree. Re-read to settle.';
-const claimed = (slot: string): string => `This tag is also in slot ${slot}.`;
+const DISAGREE = `The tag reads disagree. ${WAYS_OUT}`;
+const claimed = (slot: string): string => `This tag is also in slot ${slot}. ${WAYS_OUT}`;
 
 function fixture(): { steps: Step[]; units: Map<string, Record<string, unknown>> } {
   const doc = JSON.parse(readFileSync(FIXTURE, 'utf8')) as { events: FixtureEvent[] };
@@ -152,7 +154,7 @@ test('candidate: the note with the tag\'s material and color, "It is this slot" 
   }
 });
 
-test('conflict: the amber info look, with the text of its reason', async () => {
+test('conflict: the amber info look, the text of its reason, and "It is this slot"', async () => {
   const p = await setup();
   const want: [string, string][] = [
     ['oams13', claimed('oams2:2')],     // `to` 5 is oams2's bay 2
@@ -172,7 +174,14 @@ test('conflict: the amber info look, with the text of its reason', async () => {
       // never the fault look on the tile: its tag and state are the bay's own
       assert.equal(t.tag, null, slot);
       assert.equal(t.state, 'unknown', slot);
-      assert.equal(action(t, 'tag_assert'), undefined, slot);
+      // "It is this slot" before Re-read: the re-read does not settle a conflict
+      const assertAct = action(t, 'tag_assert');
+      assert.ok(assertAct, slot);
+      assert.equal(assertAct.line, `tag_assert ${slot}`, slot);
+      assert.equal(assertAct.enabled, true, slot);
+      assert.equal(assertAct.target, 'ring', slot);
+      const ids = t.actions.map((a) => a.id);
+      assert.equal(ids.indexOf('tag_assert') + 1, ids.indexOf('reread'), slot);
       assert.equal(action(t, 'reread')?.enabled, true, slot);
     }
   }
@@ -199,14 +208,19 @@ test('the tile\'s RFID mark keeps its rule: the link source, whatever `tg` says'
   }
 });
 
-test('tag_assert: OAMS_RFID_SCAN OAMS=<idx> BAY=<bay> ASSERT=1, only for a candidate', async () => {
+test('tag_assert: OAMS_RFID_SCAN OAMS=<idx> BAY=<bay> ASSERT=1, for a candidate or a conflict', async () => {
   const p = await setup();
   assert.deepEqual(sendBoth(p, 'tag_assert oams12'), { kind: 'gcode', script: 'OAMS_RFID_SCAN OAMS=1 BAY=1 ASSERT=1' });
   assert.deepEqual(sendBoth(p, 'tag_assert oams41'), { kind: 'gcode', script: 'OAMS_RFID_SCAN OAMS=4 BAY=0 ASSERT=1' });
+  // every conflict, whatever its reason
+  assert.deepEqual(sendBoth(p, 'tag_assert oams13'), { kind: 'gcode', script: 'OAMS_RFID_SCAN OAMS=1 BAY=2 ASSERT=1' });
+  assert.deepEqual(sendBoth(p, 'tag_assert oams21'), { kind: 'gcode', script: 'OAMS_RFID_SCAN OAMS=2 BAY=0 ASSERT=1' });
+  assert.deepEqual(sendBoth(p, 'tag_assert oams23'), { kind: 'gcode', script: 'OAMS_RFID_SCAN OAMS=2 BAY=2 ASSERT=1' });
+  assert.deepEqual(sendBoth(p, 'tag_assert oams32'), { kind: 'gcode', script: 'OAMS_RFID_SCAN OAMS=3 BAY=1 ASSERT=1' });
   // Re-read is unchanged
   assert.deepEqual(sendBoth(p, 'reread oams12'), { kind: 'gcode', script: 'OAMS_RFID_SCAN OAMS=1 BAY=1' });
-  // a bay that is not a candidate
-  for (const slot of ['oams11', 'oams13', 'oams14', 'oams43']) {
+  // a bay that is neither a candidate nor a conflict
+  for (const slot of ['oams11', 'oams14', 'oams43']) {
     assert.deepEqual(sendBoth(p, `tag_assert ${slot}`), { kind: 'error', reason: 'Not available right now' }, slot);
   }
   // an empty bay, a unit that does not list rfid_scan, a bay nobody has
@@ -271,5 +285,29 @@ test('the composed note fits its buffer in the pseudo-locale with a long unit na
   for (const v of t.values()) {
     const text = v.tag_read?.text ?? '';
     assert.ok(text.endsWith(']'), `the pseudo-locale's note is whole: "${text}"`);
+  }
+});
+
+test('a tile holds twelve actions: a candidate whose spool waits for its confirmation, named by a lane fault', async () => {
+  const p = await setup();
+  const ui = structuredClone(fixture().units.get('oams1')) as Record<string, unknown>;
+  ui.fault = { sev: 'pause', code: 'load_failed', text: 'The load failed', unit: 'oams1', bay: 1, act: ['resume', 'clear_errors'] };
+  ui.nf = 1;
+  applyBoth(p, { kind: 'openams_ui', name: 'oams1', obj: ui });
+  applyBoth(p, {
+    kind: 'component_status', name: null,
+    obj: {
+      spoolman_online: true,
+      bays: { 'oams1-1': { state: 'pending_confirmation', pending_confirmation: true,
+        spool: { material: 'PLA', vendor: 'Polymaker', color_hex: 'D23B3B', remaining_g: 300, remaining_pct: 40, initial_g: 1000 } } },
+    },
+  });
+  bothAgree(p, 'twelve actions');
+  for (const core of [p.c, p.ts]) {
+    const ids = tile(core, 'oams12').actions.map((a) => a.id);
+    assert.equal(ids.length, 12, ids.join(','));
+    // the fault's second token is the one the old cap of eleven dropped
+    assert.deepEqual(ids.slice(-3), ['confirm_spool', 'resume', 'clear_errors']);
+    assert.ok(ids.includes('tag_assert'));
   }
 });

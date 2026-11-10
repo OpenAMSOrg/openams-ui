@@ -56,10 +56,10 @@ const SETTING_KEY = 32;
 const ACTION_ID = 20;
 const ACTION_LINE = 168;
 const OPTION_LABEL = 72;
-const TAG_READ_TEXT = 128;    // VIEW_TAG_READ_TEXT_LEN: "This tag is also in slot {slot}."
+const TAG_READ_TEXT = 256;    // VIEW_TAG_READ_TEXT_LEN: "This tag is also in slot {slot}. Load this spool ..."
 const TAG_MATERIAL = 16;      // VIEW_TAG_MATERIAL_LEN (MMU_TAG_MATERIAL_LEN)
 
-const MAX_ACTIONS = 11;   // VIEW_ACTIONS_MAX in src/view/view.h
+const MAX_ACTIONS = 12;   // VIEW_ACTIONS_MAX in src/view/view.h
 const MAX_ACTIONS_PER_ALERT = 3;   // a failed toolchange: retry, unload, clear errors
 const MAX_ALERTS_PER_GROUP = 6;
 const MAX_OPTIONS = 160;  // every select of one action list shares the pool, as in C
@@ -676,9 +676,10 @@ function tileActions(m: Model, unitIdx: number, bay: number): ViewAction[] {
 
   simple(list, m, 'unlink', str('ACTION_UNLINK'), 'normal', `unlink ${id}`);
   addChangeGroupAction(list, m, unitIdx, bay, id);
-  // "It is this slot": the tag the bay's reader saw is this bay's. Only a bay
-  // whose tag the host holds as a candidate offers it, beside its Re-read.
-  if (u.rfid && s.tagRead === TagRead.CANDIDATE) {
+  // "It is this slot": the tag the bay's reader holds is this bay's. A bay
+  // whose tag the host holds as a candidate offers it beside its Re-read, and
+  // so does a conflict, which a re-read does not settle.
+  if (u.rfid && (s.tagRead === TagRead.CANDIDATE || s.tagRead === TagRead.CONFLICT)) {
     simple(list, m, 'tag_assert', str('ACTION_TAG_ASSERT'), 'normal', `tag_assert ${id}`);
   }
   // A unit with no reader can never re-read a tag: no such action.
