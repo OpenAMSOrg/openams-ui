@@ -475,6 +475,13 @@ typedef struct {
     char slot_id[VIEW_ALERT_SLOT_LEN];          /* "" - not carried by mmu_alert_t yet */
     char when_text[VIEW_WHEN_LEN];              /* "" - no timestamp stored yet */
     bool unread;
+    /* The item says what its toolhead's message row says: a lane fault's text
+     * is the row's own, and a failed toolchange's row is its title's subject
+     * and its reason. A list that shows both the row and the items (the
+     * device's alerts screen) keeps the item when it has actions and leaves
+     * the row's card out, so a failure is one card. Not part of the view's
+     * JSON: the web panel shows the row and the items in different places. */
+    bool says_message;
 
     view_action_t actions[VIEW_ACTIONS_PER_ALERT];
     uint8_t action_count;

@@ -38,6 +38,12 @@ void platform_action(const char *line)
     case 1:
         if(net_link_send_gcode(out, kind, NULL)) {
             ESP_LOGI(TAG, "GCODE: %s", out);
+            /* A Retry is sent once for its fault (NULL-safe: no lane, no
+             * record): on the display's model at once, so a second tap before
+             * the next sync finds it already sent, and on the shadow model,
+             * which that sync copies over the display's. */
+            mmu_model_retry_sent(&g_mmu, mmu_action_retry_lane(line));
+            net_link_retry_sent(mmu_action_retry_lane(line));
         }
         else {
             ESP_LOGW(TAG, "GCODE-REFUSED: link not ready: %s", out);

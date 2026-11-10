@@ -8,7 +8,9 @@
  * levels above do not already carry.
  *
  * An action's line goes to the host verbatim (actions_log); on the demo model
- * a fault action also clears the demo error, as the older screen did.
+ * a fault action also clears the demo error, as the older screen did. An
+ * action that carries a confirmation (Unload during a print) asks first, in a
+ * sheet, and is sent only from the sheet's own button.
  */
 #include "view/strings.h"
 #include "ui/ui_screens.h"
@@ -18,6 +20,8 @@
 #include "ui/ui_icons.h"
 #include "ui/ui_kit.h"
 #include "ui/ui_nav.h"
+#include "ui/ui_sheet.h"
+#include "ui/ui_theme.h"
 #include "view/view.h"
 
 #include <stdio.h>
@@ -30,9 +34,18 @@
  * index (the view's action structs are gone once the build returns). */
 typedef struct {
     char line[VIEW_ACTION_LINE_LEN];
+    /* the action's confirmation, NULL when it has none: fixed strings of the
+     * string table, as the view hands them out */
+    const char *confirm_title;
+    const char *confirm_text;
+    const char *confirm_ok;
 } act_line_t;
 static act_line_t *s_act;                    /* heap, for the life of the screen */
 static int s_act_count;
+
+/* The line the open confirmation sends. Its own copy: the screen (and s_act
+ * with it) can be rebuilt by a status update while the sheet is up. */
+static char s_confirm_line[VIEW_ACTION_LINE_LEN];
 
 /* The texts already listed, so "Earlier" does not repeat them. */
 #define MAX_SEEN 24
@@ -40,15 +53,62 @@ static int s_act_count;
 static char (*s_seen)[SEEN_LEN];   /* heap, for the length of one build */
 static int s_seen_count;
 
+static void send_line(const char *line)
+{
+    actions_log("%s", line);
+    /* The demo has no host to clear the fault; a live host's next status does. */
+    if(!mmu_model_is_live()) mmu_model_clear_error();
+    ui_nav_refresh_async();
+}
+
+static void on_confirm_ok(lv_event_t *e)
+{
+    (void)e;
+    ui_sheet_close(NULL);
+    if(!s_confirm_line[0]) return;
+    send_line(s_confirm_line);
+    s_confirm_line[0] = '\0';
+}
+
+/* Ask before sending: the confirmation's title, its text, and one button that
+ * sends. A tap on the scrim closes the sheet and sends nothing. */
+static void open_confirm(const act_line_t *a)
+{
+    lv_obj_t *sheet, *body, *note;
+
+    sheet = ui_sheet_open(a->confirm_title ? a->confirm_title : "", UI_PX(160));
+    if(sheet == NULL) return;
+    body = ui_sheet_body(sheet);
+    if(body == NULL) return;
+
+    snprintf(s_confirm_line, sizeof s_confirm_line, "%s", a->line);
+
+    if(a->confirm_text && a->confirm_text[0]) {
+        /* The body is a flex column, which drops every child at its left
+         * edge, so the margin the sheet's title keeps is padding here. */
+        note = lv_label_create(body);
+        lv_obj_remove_style_all(note);
+        lv_obj_set_style_text_font(note, UI_FONT_S, 0);
+        lv_obj_set_style_text_color(note, UI_COL_TEXT_DIM, 0);
+        lv_obj_set_width(note, UI_SCREEN_W);
+        lv_label_set_long_mode(note, LV_LABEL_LONG_MODE_WRAP);
+        lv_obj_set_style_pad_hor(note, UI_PAD_XXL, 0);
+        lv_label_set_text(note, a->confirm_text);
+    }
+
+    ui_sheet_button(sheet, a->confirm_ok ? a->confirm_ok : "", on_confirm_ok, NULL, true);
+}
+
 static void on_action(lv_event_t *e)
 {
     int i = (int)(intptr_t)lv_event_get_user_data(e);
 
     if(!s_act || i < 0 || i >= s_act_count) return;
-    actions_log("%s", s_act[i].line);
-    /* The demo has no host to clear the fault; a live host's next status does. */
-    if(!mmu_model_is_live()) mmu_model_clear_error();
-    ui_nav_refresh_async();
+    if(s_act[i].confirm_title) {
+        open_confirm(&s_act[i]);
+        return;
+    }
+    send_line(s_act[i].line);
 }
 
 static void on_clear_resolved(lv_event_t *e)
@@ -133,6 +193,9 @@ static void add_card(lv_obj_t *col, const view_alert_t *a, bool current)
             if(s_act && s_act_count < MAX_ACTIONS) {
                 idx = s_act_count++;
                 snprintf(s_act[idx].line, sizeof s_act[idx].line, "%s", ac->line);
+                s_act[idx].confirm_title = ac->confirm.present ? ac->confirm.title : NULL;
+                s_act[idx].confirm_text = ac->confirm.present ? ac->confirm.text : NULL;
+                s_act[idx].confirm_ok = ac->confirm.present ? ac->confirm.ok_label : NULL;
             }
             ui_kit_button(bar, ac->label, i == 0 ? UI_KIT_BTN_PRIMARY : UI_KIT_BTN_NORMAL,
                           i * (w + gap), 0, w, UI_PX(36), ac->enabled && idx >= 0, on_action,
@@ -147,20 +210,15 @@ static void add_card(lv_obj_t *col, const view_alert_t *a, bool current)
 }
 
 /* Whether an item with actions in @p g already says what the message row
- * says: a lane fault's text is the row's own, and a failed toolchange's row
- * is its title (what failed and where) followed by its reason. The card with
- * the actions is the one to keep (principle 4). */
-static bool said_with_actions(const view_alerts_t *g, const char *msg)
+ * says. The view decides that (view_alert_t.says_message): a lane fault, or a
+ * failed toolchange with or without its step. The card with the actions is
+ * the one to keep (principle 4). */
+static bool said_with_actions(const view_alerts_t *g)
 {
     int i;
 
-    for(i = 0; i < (int)g->count; i++) {
-        const view_alert_t *it = &g->items[i];
-
-        if(it->action_count == 0) continue;
-        if(it->text && it->text[0] && strcmp(it->text, msg) == 0) return true;
-        if(it->title && it->title[0] && strncmp(msg, it->title, strlen(it->title)) == 0) return true;
-    }
+    for(i = 0; i < (int)g->count; i++)
+        if(g->items[i].says_message && g->items[i].action_count > 0) return true;
     return false;
 }
 
@@ -268,8 +326,8 @@ static lv_obj_t *build(void)
 
             if(vt && th >= 0 && view_toolhead(&g_mmu, th, vt) && vt->message.tone != VIEW_TONE_NEUTRAL &&
                !seen(vt->message.text) &&
-               !(view_unit_alerts(&g_mmu, unit, g) && said_with_actions(g, vt->message.text)) &&
-               !(view_toolhead_alerts(&g_mmu, th, g) && said_with_actions(g, vt->message.text))) {
+               !(view_unit_alerts(&g_mmu, unit, g) && said_with_actions(g)) &&
+               !(view_toolhead_alerts(&g_mmu, th, g) && said_with_actions(g))) {
                 memset(one, 0, sizeof *one);
                 one->severity = vt->message.tone == VIEW_TONE_ERROR ? MMU_SEV_PAUSE : MMU_SEV_INFO;
                 one->title = vt->message.tone == VIEW_TONE_ERROR ? panel->labels.fault : NULL;

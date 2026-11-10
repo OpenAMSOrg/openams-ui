@@ -263,7 +263,7 @@ static bool apply_action_result(core_t *core, const cJSON *obj)
     const cJSON *msg = cJSON_GetObjectItemCaseSensitive(obj, "message");
     int kind = cJSON_IsNumber(k) ? k->valueint : MMU_ACTION_OTHER;
 
-    if(kind < MMU_ACTION_OTHER || kind > MMU_ACTION_UNLOAD) return false;
+    if(kind < MMU_ACTION_OTHER || kind > MMU_ACTION_RETRY) return false;
 
     mmu_model_action_result(core->model, (mmu_action_kind_t)kind, cJSON_IsTrue(ok),
                             cJSON_IsString(msg) ? msg->valuestring : "");
@@ -294,6 +294,13 @@ bool core_action_sent(core_t *core, mmu_action_kind_t kind)
     if(!core || !core->model) return false;
     if(kind == MMU_ACTION_OTHER) return false;
     mmu_model_action_sent(core->model, kind);
+    return true;
+}
+
+bool core_retry_sent(core_t *core, const char *lane_id)
+{
+    if(!core || !core->model || !lane_id) return false;
+    mmu_model_retry_sent(core->model, lane_id);
     return true;
 }
 

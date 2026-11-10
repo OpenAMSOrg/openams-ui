@@ -12,7 +12,7 @@ import { actionsCheck, dryReason } from './actions.ts';
 import {
   Busy, DryState, InfoSource, CalState, SlotState, Sev, Variant, MAX_TOOLS, MATERIALS, editDefaults,
   editVendorCount, editVendorName, GROUP_CHOICE_NEW, GROUP_CHOICE_NONE, groupEditReason, groupNextSpare,
-  groupOnUnitLane, slotGroup, slotId, toolShortfall, alertBadgeExpired,
+  groupOnUnitLane, laneIdOk, slotGroup, slotId, toolShortfall, alertBadgeExpired,
 } from './model.ts';
 import type { Alert, Model, Toolhead, Unit } from './model.ts';
 import { AlertKind } from './model.ts';
@@ -839,14 +839,26 @@ function laneRuns(th: Toolhead): boolean {
 /** The lane's failed toolchange or unload as the panel shows it (C2 4.2
  *  `toolchange_fault`): not while a sequence runs on the lane, because the
  *  host keeps the fault until a retry has finished, and the retry in progress
- *  shows its own steps and status instead (tc_fault_shown() in view.c). */
-const tcFaultShown = (th: Toolhead): boolean => th.tcFault && !laneRuns(th);
+ *  shows its own steps and status instead. A plan that was already on the
+ *  lane, unfinished, when the fault appeared (tcPlanStale) is an older
+ *  sequence's leftover and hides nothing; a lane that is loading or unloading
+ *  always does (tc_fault_shown() in view.c). */
+const tcFaultShown = (th: Toolhead): boolean =>
+  th.tcFault && th.busy === Busy.NONE && (th.tcPlanStale || !laneRuns(th));
 
-/** Whether the panel offers Retry for it: only with the word the host
- *  advertises (`commands.retry`). While it is offered, a lane fault's own
- *  `retry_load` is not: one "Retry", the one that finishes the whole
- *  toolchange (tc_retry_offered() in view.c). */
-const tcRetryOffered = (m: Model, th: Toolhead): boolean => m.cmdRetry !== '' && tcFaultShown(th);
+/** Whether the failed toolchange has a Retry of its own: only with the word
+ *  the host advertises (`commands.retry`), and only for a lane whose id can
+ *  go into a script. While it has one, a lane fault's own `retry_load` is not
+ *  offered: one "Retry", the one that finishes the whole toolchange - also
+ *  while that Retry has been sent and is not offered again
+ *  (tc_retry_stands() in view.c). */
+const tcRetryStands = (m: Model, th: Toolhead): boolean =>
+  m.cmdRetry !== '' && tcFaultShown(th) && laneIdOk(th.id);
+
+/** Whether the panel offers that Retry now: not once it has been sent for
+ *  this fault (tcRetrySent), until the fault changes or clears or the host
+ *  answers the retry. Retry is sent once (tc_retry_offered() in view.c). */
+const tcRetryOffered = (m: Model, th: Toolhead): boolean => tcRetryStands(m, th) && !th.tcRetrySent;
 
 /** What failed, and with `where` the step it failed at when the host named
  *  one: "Loading T1 failed (Heat the nozzle)". The host's reason is not in it:
@@ -879,7 +891,10 @@ const tcFaultText = (th: Toolhead, n: number): string =>
 function tcFaultItem(m: Model, th: Toolhead): ViewAlert {
   const list = new ActionList();
   if (tcRetryOffered(m, th)) simple(list, m, 'retry', str('ACTION_RETRY_LOAD'), 'primary', `fault retry ${th.id}`);
-  const unload = simple(list, m, 'unload', str('ACTION_UNLOAD'), 'normal', `unload ${th.id}`);
+  // A lane id that cannot go into a script gets neither Retry nor Unload.
+  const unload = laneIdOk(th.id)
+    ? simple(list, m, 'unload', str('ACTION_UNLOAD'), 'normal', `unload ${th.id}`)
+    : null;
   if (unload && m.printing) confirm(unload, str('CONFIRM_UNLOAD_TITLE'), str('CONFIRM_UNLOAD_TEXT'), str('CONFIRM_UNLOAD_OK'));
   simple(list, m, 'clear_errors', str('ACTION_CLEAR_ERRORS'), 'danger', 'fault clear_errors');
   return {
@@ -901,7 +916,7 @@ function faultHasActions(m: Model, th: Toolhead): boolean {
     if (tok === 'resume' || tok === 'clear_errors') return true;
     if (tok === 'clear_fault') return th.errorUnit >= 0;
     if (tok === 'retry_load') {
-      if (tcRetryOffered(m, th)) return false;
+      if (tcRetryStands(m, th)) return false;
       return (th.currentGroup >= 0 && th.currentGroup < m.groups.length)
         || (th.errorUnit >= 0 && slotGroup(m, th.errorUnit, th.errorSlot) >= 0);
     }
@@ -912,12 +927,12 @@ function faultHasActions(m: Model, th: Toolhead): boolean {
 /** The actions a lane fault's support tokens offer, in the host's order (the
  *  fault's first two tokens): retry, resume, clear errors, and the unit-scoped
  *  clear fault when the fault names a unit. `retry_load` gives way to the
- *  failed toolchange's own Retry while that is offered (tcRetryOffered()). */
+ *  failed toolchange's own Retry while it has one (tcRetryStands()). */
 function faultActions(m: Model, th: Toolhead): ViewAction[] {
   const list = new ActionList();
   for (const tok of th.errorAct) {
     if (tok === 'retry_load') {
-      if (tcRetryOffered(m, th)) continue;   // the toolchange's own Retry stands for it
+      if (tcRetryStands(m, th)) continue;    // the toolchange's own Retry stands for it
       let group: string | null = null;
       if (th.currentGroup >= 0 && th.currentGroup < m.groups.length) group = m.groups[th.currentGroup].name;
       else if (th.errorUnit >= 0) {

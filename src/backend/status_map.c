@@ -830,7 +830,10 @@ static void map_stage(mmu_toolhead_t *th, const cJSON *stage)
     }
     th->step_count = (uint8_t)count;
 
-    if(cJSON_IsNumber(jidx)) th->step_current = (int8_t)(int)jidx->valuedouble;
+    /* Only a value an int8_t holds is a step: anything else (a number no
+     * plan can reach) is no current step, never a narrowed one. */
+    if(cJSON_IsNumber(jidx) && jidx->valuedouble >= -128.0 && jidx->valuedouble <= 127.0)
+        th->step_current = (int8_t)(int)jidx->valuedouble;
 
     /* `failed` names a plan entry: its position is the failed step, so the
      * load screen can mark it (H2). A name not in the plan is not a step. */
@@ -962,25 +965,93 @@ static bool map_lane(mmu_model_t *m, mmu_toolhead_t *th, const cJSON *lane)
     return cJSON_IsBool(ms);
 }
 
+/* Whether the lane's own `stage` (`lanes_by_fps.<l>.stage`, an object) is a
+ * plan with a current step that has not failed, and that step's position. */
+static bool lane_stage_running(const cJSON *stage, int *index)
+{
+    const cJSON *jplan, *jidx;
+    int count;
+
+    if(!cJSON_IsObject(stage)) return false;
+    jplan = field(stage, "plan");
+    jidx = field(stage, "index");
+    if(!cJSON_IsArray(jplan) || !cJSON_IsNumber(jidx) || cJSON_IsString(field(stage, "failed"))) return false;
+    count = cJSON_GetArraySize(jplan);
+    if(count > MMU_MAX_STEPS) count = MMU_MAX_STEPS;
+    if(jidx->valuedouble < 0.0 || jidx->valuedouble >= (double)count) return false;
+    *index = (int)jidx->valuedouble;
+    return true;
+}
+
 /* `lanes_by_fps.<l>.toolchange_fault` (C2 4.2): present only while a
  * toolchange or unload on the lane failed and is not finished. Anything but an
- * object clears it, so the field going away is the fault being over. */
-static void map_toolchange_fault(mmu_toolhead_t *th, const cJSON *fault)
+ * object clears it, so the field going away is the fault being over.
+ *
+ * `since` tells one fault from the next. What belongs to a fault holds while
+ * `since` does: that Retry was sent for it (tc_retry_sent), its step's label,
+ * and whether the plan found on the lane when it appeared is an older one
+ * (tc_plan_stale). @p stage is the same lane's `stage`, read in the same
+ * status so the two cannot disagree. */
+static void map_toolchange_fault(mmu_toolhead_t *th, const cJSON *fault, const cJSON *stage)
 {
-    const char *kind;
+    const cJSON *jsince, *jlabels, *jl;
+    const char *kind, *step;
+    char step_was[MMU_TEXT_LEN];
+    bool had = th->tc_fault;
+    double was = th->tc_since;
+    bool same, running;
+    int index = -1;
+
+    mmu_copy_text(step_was, sizeof(step_was), th->tc_step);
 
     th->tc_fault = cJSON_IsObject(fault);
     th->tc_unload = false;
+    th->tc_since = -1.0;
     th->tc_group[0] = '\0';
     th->tc_step[0] = '\0';
     th->tc_reason[0] = '\0';
-    if(!th->tc_fault) return;
+    if(!th->tc_fault) {
+        th->tc_retry_sent = false;
+        th->tc_plan_stale = false;
+        th->tc_stale_step = -1;
+        th->tc_lane_seen = true;
+        return;
+    }
+
+    jsince = field(fault, "since");
+    if(cJSON_IsNumber(jsince)) th->tc_since = jsince->valuedouble;
+    same = had && was == th->tc_since;
+
+    /* A plan already running, unfinished, in the status that first shows the
+     * fault is not a retry of it: a retry starts after the fault is recorded.
+     * The first status of a connection is not told apart (a retry may be
+     * running when the display joins), so nothing is stale there. */
+    running = lane_stage_running(stage, &index);
+    if(!same) {
+        th->tc_retry_sent = false;
+        th->tc_plan_stale = th->tc_lane_seen && running;
+        th->tc_stale_step = th->tc_plan_stale ? (int8_t)index : -1;
+    }
+    else if(th->tc_plan_stale && !(running && index == th->tc_stale_step)) {
+        th->tc_plan_stale = false;
+        th->tc_stale_step = -1;
+    }
+    th->tc_lane_seen = true;
 
     kind = jstring(fault, "kind");
     th->tc_unload = kind && strcmp(kind, "unload") == 0;
     mmu_copy_text(th->tc_group, sizeof(th->tc_group), jstring(fault, "group"));
-    mmu_copy_text(th->tc_step, sizeof(th->tc_step), jstring(fault, "step"));
     mmu_copy_text(th->tc_reason, sizeof(th->tc_reason), jstring(fault, "reason"));
+
+    /* The step as the stepper shows it: the label the plan gives it, else its
+     * name. The plan goes away before the fault does (Clear errors drops it),
+     * so what the same fault was given earlier is kept. */
+    step = jstring(fault, "step");
+    jlabels = cJSON_IsObject(stage) ? field(stage, "labels") : NULL;
+    jl = (step && cJSON_IsObject(jlabels)) ? field(jlabels, step) : NULL;
+    if(cJSON_IsString(jl) && jl->valuestring[0]) mmu_copy_text(th->tc_step, sizeof(th->tc_step), jl->valuestring);
+    else if(same && step && step_was[0]) mmu_copy_text(th->tc_step, sizeof(th->tc_step), step_was);
+    else mmu_copy_text(th->tc_step, sizeof(th->tc_step), step);
 }
 
 static void map_fault(mmu_model_t *m, mmu_toolhead_t *th, const cJSON *fault, int nf)
@@ -1265,7 +1336,7 @@ bool status_map_apply_lanes(mmu_model_t *m, const cJSON *lanes_by_fps)
             th->band_high = (float)cJSON_GetArrayItem(v, 1)->valuedouble;
         }
 
-        map_toolchange_fault(th, field(lane, "toolchange_fault"));
+        map_toolchange_fault(th, field(lane, "toolchange_fault"), field(lane, "stage"));
     }
 
     mmu_model_refresh_this(m);

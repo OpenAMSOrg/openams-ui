@@ -671,6 +671,17 @@ bool net_link_send_gcode(const char *script, mmu_action_kind_t kind, int *reques
     return ok;
 }
 
+void net_link_retry_sent(const char *lane_id)
+{
+    if(!s_lock || !lane_id) return;
+
+    /* On the shadow model, like a load's pending state: net_link_sync()
+     * copies it over the display's in full. */
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    if(core_retry_sent(s_core, lane_id)) s_dirty = true;
+    xSemaphoreGive(s_lock);
+}
+
 bool net_link_send_rpc(const char *method, cJSON *params, int tag)
 {
     bool ok;

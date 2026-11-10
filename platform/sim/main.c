@@ -246,6 +246,8 @@ void platform_action(const char *line)
         else {
             sim_sent_remember(id, kind);
             core_action_sent(s_core, kind);
+            /* a Retry is sent once for its fault (NULL-safe: no lane, no record) */
+            core_retry_sent(s_core, mmu_action_retry_lane(line));
         }
         fflush(stdout);
         return;

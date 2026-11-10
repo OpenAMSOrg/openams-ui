@@ -139,6 +139,16 @@ static const char *unit_lane(const mmu_model_t *m, int unit)
     return m->units[unit].lane[0] ? m->units[unit].lane : NULL;
 }
 
+/* Whether @p lane can go into a script (mmu_lane_id_ok()): a lane id is the
+ * host's own text, and one with a space or a newline in it would end the
+ * command there and start another. Such a lane gets no script at all. */
+static bool lane_sendable(const char *lane, const char **why)
+{
+    if(mmu_lane_id_ok(lane)) return true;
+    *why = view_str(VS_REASON_NOT_SUPPORTED);
+    return false;
+}
+
 /* The toolhead whose id (the FPS lane) is @p id, or -1. The panel addresses
  * a toolhead directly (no particular bay) for "stop" and "unload": several
  * toolheads can be busy independently, so the single-lane display's bare
@@ -435,6 +445,7 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
                 return -1;
             }
             if(!bay_may(m, unit, slot, MMU_BAY_ACT_UNLOAD, why)) return -1;
+            if(!lane_sendable(lane, why)) return -1;
             wr_cmd(w, "OPENAMS_UNLOAD FPS=%s", lane);
             return 1;
         }
@@ -452,6 +463,7 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
             !bay_may(m, m->toolheads[th].loaded_unit, m->toolheads[th].loaded_slot,
                     MMU_BAY_ACT_UNLOAD, why)))
             return -1;
+        if(!lane_sendable(m->toolheads[th].id, why)) return -1;
         wr_cmd(w, "OPENAMS_UNLOAD FPS=%s", m->toolheads[th].id);
         return 1;
     }
@@ -763,10 +775,21 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
             *why = view_str(VS_REASON_NOT_NOW);
             return -1;
         }
-        if(sequence_runs(lane->busy, lane->step_count, lane->step_current, lane->step_failed)) {
+        /* A plan that was already there when the fault appeared is an older
+         * sequence's leftover (tc_plan_stale), not something running. */
+        if(lane->busy != MMU_BUSY_NONE ||
+           (!lane->tc_plan_stale &&
+            sequence_runs(lane->busy, lane->step_count, lane->step_current, lane->step_failed))) {
             *why = view_str(VS_REASON_GROUP_BUSY);
             return -1;
         }
+        /* Retry is sent once for a fault: not again until the fault changes
+         * or clears, or the host answers the one that was sent. */
+        if(lane->tc_retry_sent) {
+            *why = view_str(VS_REASON_NOT_NOW);
+            return -1;
+        }
+        if(!lane_sendable(lane->id, why)) return -1;
         wr_cmd(w, "%s FPS=%s", m->cmd_retry, lane->id);
         return 1;
     }

@@ -244,6 +244,9 @@ char *core_wasm_action(const char *line, const char *form_json)
     script[0] = '\0';
     rc = actions_map(resolved, &s_model, script, sizeof script);
     if(rc == 1) {
+        /* The caller sends what this returns, so a Retry is sent now: it is
+         * not offered again for that fault (NULL-safe: no lane, no record). */
+        mmu_model_retry_sent(&s_model, mmu_action_retry_lane(resolved));
         o = cJSON_CreateObject();
         if(!o) return NULL;
         cJSON_AddStringToObject(o, "kind", "gcode");

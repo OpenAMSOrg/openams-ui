@@ -110,7 +110,10 @@ Each bay is a tile. Its click targets (`docs/design/UNIFIED_UI.md`, section 4b):
   the command the printer advertises (`commands.retry`, `OAMSM_RETRY`) for
   that card's lane, and appears only when the printer offers it. While a
   retry runs, the card shows its steps instead. In a print the printer
-  pauses, and its Resume does the retry.
+  pauses, and its Resume does the retry. Retry is sent once: after a click it
+  leaves the alert, and it comes back when the printer reports a new failure
+  or refuses the retry and leaves the failure as it was. The alert shows the
+  printer's reason whole.
 - **Humidity reading:** click it for the drying and heating menu.
 
 Actions open in a popover anchored to their source. A form or a confirm opens

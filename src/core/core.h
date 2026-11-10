@@ -108,6 +108,15 @@ bool core_set_language(core_t *core, const char *code);
 bool core_action_sent(core_t *core, mmu_action_kind_t kind);
 
 /**
+ * The display just sent Retry for the failed toolchange on lane @p lane_id
+ * (mmu_action_retry_lane() on the action line): Retry is not offered again
+ * for that fault until it changes or clears, the host answers the retry
+ * (core_apply("action_result") with MMU_ACTION_RETRY), or core_reset().
+ * Returns false when there is nothing to record it on.
+ */
+bool core_retry_sent(core_t *core, const char *lane_id);
+
+/**
  * The answer to an RPC the display sent (@p tag is actions_rpc_tag()'s, the one
  * handed to mc_send_rpc()): a spool or vendor list, a file's metadata, or the
  * host's word on a spool edit (@p error is its message, NULL when it took the

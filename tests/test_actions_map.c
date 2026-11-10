@@ -524,6 +524,70 @@ static void test_fault_retry(void)
     build("loaded");
 }
 
+/* The 2026-11-09 review: Retry is sent once per fault, until the fault changes
+ * or clears or the host answers that retry; a plan already on the lane when
+ * the fault appeared is no retry running; and a lane id that cannot go into a
+ * script builds no script, for Retry or for Unload. */
+static void test_fault_retry_once_and_lane_ids(void)
+{
+    static const char fault5[] =
+        "{\"commands\": {\"retry\": \"OAMSM_RETRY\"}, \"lanes_by_fps\": {\"fps1\": "
+        "{\"toolchange_fault\": {\"kind\": \"load\", \"group\": \"T1\", \"slot\": null, "
+        "\"temp\": null, \"step\": \"feed\", \"reason\": \"No progress\", \"panel\": false, "
+        "\"fed\": false, \"since\": 5.0}}}}";
+    static const char fault9[] =
+        "{\"commands\": {\"retry\": \"OAMSM_RETRY\"}, \"lanes_by_fps\": {\"fps1\": "
+        "{\"toolchange_fault\": {\"kind\": \"load\", \"group\": \"T1\", \"slot\": null, "
+        "\"temp\": null, \"step\": \"feed\", \"reason\": \"No progress\", \"panel\": false, "
+        "\"fed\": false, \"since\": 9.0}}}}";
+
+    build("loaded");
+    apply_manager(fault5);
+    expect("fault retry fps1", "OAMSM_RETRY FPS=fps1");
+    assert(mmu_action_kind_of("fault retry fps1") == MMU_ACTION_RETRY);
+    assert(strcmp(mmu_action_retry_lane("fault retry fps1"), "fps1") == 0);
+    assert(mmu_action_retry_lane("fault retry_load T1") == NULL);
+
+    /* sent: not again for the same fault */
+    mmu_model_retry_sent(&g_mmu, "fps1");
+    expect_unaddressable("fault retry fps1", "Not available right now");
+    apply_manager(fault5);
+    expect_unaddressable("fault retry fps1", "Not available right now");
+    /* the host answered it (here: refused, a fault stayed latched) */
+    mmu_model_action_result(&g_mmu, MMU_ACTION_RETRY, false, "a fault stayed latched");
+    expect("fault retry fps1", "OAMSM_RETRY FPS=fps1");
+    /* the retry failed again: a new fault, Retry again */
+    mmu_model_retry_sent(&g_mmu, "fps1");
+    apply_manager(fault9);
+    expect("fault retry fps1", "OAMSM_RETRY FPS=fps1");
+
+    /* a plan already on the lane when the fault appeared is no retry running */
+    g_mmu.toolheads[0].step_count = 2;
+    g_mmu.toolheads[0].step_current = 0;
+    g_mmu.toolheads[0].step_failed = -1;
+    expect_unaddressable("fault retry fps1", "The toolhead is busy");
+    g_mmu.toolheads[0].tc_plan_stale = true;
+    expect("fault retry fps1", "OAMSM_RETRY FPS=fps1");
+    g_mmu.toolheads[0].busy = MMU_BUSY_LOAD;                /* but a loading lane is busy */
+    expect_unaddressable("fault retry fps1", "The toolhead is busy");
+    g_mmu.toolheads[0].busy = MMU_BUSY_NONE;
+    g_mmu.toolheads[0].tc_plan_stale = false;
+    g_mmu.toolheads[0].step_count = 0;
+    g_mmu.toolheads[0].step_current = -1;
+
+    /* lane ids */
+    assert(mmu_lane_id_ok("fps1") && mmu_lane_id_ok("lane_2.a-b"));
+    assert(!mmu_lane_id_ok("") && !mmu_lane_id_ok(NULL));
+    assert(!mmu_lane_id_ok("fps1 M112") && !mmu_lane_id_ok("fps1\nM112") && !mmu_lane_id_ok("fps1;"));
+    snprintf(g_mmu.toolheads[0].id, sizeof(g_mmu.toolheads[0].id), "fps1 M112");
+    snprintf(g_mmu.units[0].lane, sizeof(g_mmu.units[0].lane), "fps1 M112");
+    expect_unaddressable("fault retry fps1 M112", "Not supported on this unit yet");
+    expect_unaddressable("unload oams11", "Not supported on this unit yet");
+    expect_unaddressable("unload fps1 M112", "Not supported on this unit yet");
+
+    build("loaded");
+}
+
 static void test_local_vocabulary(void)
 {
     static const char *const k_local[] = {
@@ -1152,6 +1216,7 @@ int main(void)
     test_change_group();
     test_faults();
     test_fault_retry();
+    test_fault_retry_once_and_lane_ids();
     test_local_vocabulary();
     test_unknown_and_unresolvable();
     test_small_out();

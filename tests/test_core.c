@@ -226,6 +226,39 @@ static void test_component_status_keeps_applying(void)
     core_destroy(core);
 }
 
+/* Retry sent (core_retry_sent) holds until the host answers that retry: an
+ * action_result of kind 3 (MMU_ACTION_RETRY) is taken and ends it; a kind
+ * past it is refused and changes nothing. */
+static void test_retry_sent_and_answered(void)
+{
+    mmu_model_t m;
+    core_t *core;
+    cJSON *lanes = cJSON_Parse(
+        "{\"lanes_by_fps\":{\"fps1\":{\"toolchange_fault\":{\"kind\":\"load\",\"group\":\"T1\","
+        "\"slot\":null,\"temp\":null,\"step\":\"feed\",\"reason\":\"No progress\","
+        "\"panel\":false,\"fed\":false,\"since\":3.0}}}}");
+    cJSON *answer = cJSON_Parse("{\"kind\":3,\"ok\":false,\"message\":\"a fault stayed latched\"}");
+    cJSON *past = cJSON_Parse("{\"kind\":4,\"ok\":true,\"message\":\"\"}");
+
+    assert(lanes && answer && past);
+    status_map_reset(&m);
+    core = core_create(&m);
+    assert(core);
+    assert(core_apply(core, "oams_manager", NULL, lanes));
+    assert(m.toolhead_count == 1 && m.toolheads[0].tc_fault);
+    assert(core_retry_sent(core, "fps1") && m.toolheads[0].tc_retry_sent);
+    assert(!core_retry_sent(core, NULL));
+    assert(!core_apply(core, "action_result", NULL, past));
+    assert(m.toolheads[0].tc_retry_sent);
+    assert(core_apply(core, "action_result", NULL, answer));
+    assert(!m.toolheads[0].tc_retry_sent);
+
+    core_destroy(core);
+    cJSON_Delete(lanes);
+    cJSON_Delete(answer);
+    cJSON_Delete(past);
+}
+
 int main(void)
 {
     test_merge_survives_diff();
@@ -234,6 +267,7 @@ int main(void)
     test_reset();
     test_changed_second_time();
     test_component_status_keeps_applying();
+    test_retry_sent_and_answered();
 
     printf("test_core: ok\n");
     return 0;

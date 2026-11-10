@@ -87,6 +87,16 @@ later). While a retry runs, the message row shows its steps instead; if it
 fails again, the card comes back with the new reason. In a print the printer
 pauses instead, and its own Resume does the retry.
 
+Retry is sent once. After you tap it, the button leaves the card. It comes
+back when the printer reports a new failure, or when the printer refuses the
+retry and leaves the failure as it was. The other buttons stay.
+
+The failure is one card on the Alerts screen. The card shows the printer's
+reason whole, and the step by the name the stepper gives it.
+
+Unload during a print asks first. The printer gets the command only when you
+confirm.
+
 ## Groups
 
 A group is a named, ordered list of bays, usually named for a slicer tool

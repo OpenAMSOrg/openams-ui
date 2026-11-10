@@ -37,6 +37,7 @@
 #define MMU_LANE_ID_LEN         32  /**< a lane id or extruder name with its NUL */
 #define MMU_SLOT_ID_LEN         40  /**< a slot id: a unit name, then the bay number (up to two digits), then the NUL */
 #define MMU_COMMAND_LEN         32  /**< a G-code word the host advertises (`commands.retry`) with its NUL; a longer one is not taken, never cut */
+#define MMU_TC_REASON_LEN      256  /**< a failed toolchange's reason with its NUL: a Klipper error message, kept whole up to 255 bytes */
 
 /* ------------------------------------------------------------------ types */
 
@@ -242,9 +243,22 @@ typedef struct {
      * panel's Retry continues. An older host never sends it. */
     bool tc_fault;
     bool tc_unload;                         /**< the failed operation is an unload, else a load */
+    /** The panel sent Retry for this very fault (this lane, this tc_since) and
+     *  the host has neither answered it nor changed the fault: Retry is not
+     *  offered again. Cleared when the fault changes or clears, when the host
+     *  answers the retry, and by a reset (the connection dropped). */
+    bool tc_retry_sent;
+    /** The lane's plan was already running, unfinished, when this fault
+     *  appeared, so it is an older sequence's leftover and not a retry of
+     *  this fault: it does not hide the fault. Holds while that plan stays as
+     *  it was (tc_stale_step). */
+    bool tc_plan_stale;
+    bool tc_lane_seen;                      /**< `lanes_by_fps` named this lane before: a fault that appears now is new */
+    int8_t tc_stale_step;                   /**< the stale plan's current step when the fault appeared */
+    double tc_since;                        /**< the host's `since` (its clock, seconds), -1 = none: tells one fault from the next */
     char tc_group[MMU_GROUP_NAME_LEN];      /**< a load's target group ("T1"); "" for an unload */
-    char tc_step[MMU_TEXT_LEN];             /**< the plan step that was running; "" = none */
-    char tc_reason[MMU_TEXT_LEN * 4];       /**< what failed, in the host's own words */
+    char tc_step[MMU_TEXT_LEN];             /**< the plan step that was running: its label when the host gave it one, else its name; "" = none */
+    char tc_reason[MMU_TC_REASON_LEN];      /**< what failed, in the host's own words */
 
     bool motion_settled;
 
@@ -543,13 +557,27 @@ void mmu_model_edit_result(mmu_model_t *m, const char *refusal);
 typedef enum {
     MMU_ACTION_OTHER = 0,
     MMU_ACTION_LOAD,
-    MMU_ACTION_UNLOAD
+    MMU_ACTION_UNLOAD,
+    MMU_ACTION_RETRY                        /**< `fault retry <lane>`: a failed toolchange's Retry */
 } mmu_action_kind_t;
 
 /** The kind of the action line @p line (as the display wrote it: "load A2",
- *  "unload A2"), or MMU_ACTION_OTHER for anything else. The platforms call it
- *  on the way out, so an answer that comes back names the action it is about. */
+ *  "unload A2", "fault retry fps1"), or MMU_ACTION_OTHER for anything else.
+ *  The platforms call it on the way out, so an answer that comes back names
+ *  the action it is about. */
 mmu_action_kind_t mmu_action_kind_of(const char *line);
+
+/** The lane of a `fault retry <lane>` line, NULL for any other line. */
+const char *mmu_action_retry_lane(const char *line);
+
+/** Whether @p id can go into a G-code script as a lane: `^[A-Za-z0-9_.-]+$`.
+ *  Anything else (a space, a newline, nothing) builds no script. */
+bool mmu_lane_id_ok(const char *id);
+
+/** The panel just sent Retry for the failed toolchange on lane @p lane_id:
+ *  Retry is not offered again for that fault (tc_retry_sent). Nothing when
+ *  the lane is unknown or carries no fault. */
+void mmu_model_retry_sent(mmu_model_t *m, const char *lane_id);
 
 /** The display just sent a load or an unload and the host has not reported it
  *  yet: the load screen says it is starting until the model's own busy state
@@ -557,6 +585,8 @@ mmu_action_kind_t mmu_action_kind_of(const char *line);
  *  deadline passes. action_pending_seq moves on, so a display can tell a new
  *  one from the one it is already showing. */
 void mmu_model_action_sent(mmu_model_t *m, mmu_action_kind_t kind);
+/* A retry (MMU_ACTION_RETRY) is no load the load screen waits on: it changes
+ * nothing here, and mmu_model_retry_sent() records it on its lane. */
 
 /** The host's answer to an action of that kind: @p message is its own words
  *  when it refused, "" when it took the action. Sets action_refusal and moves
@@ -565,6 +595,9 @@ void mmu_model_action_sent(mmu_model_t *m, mmu_action_kind_t kind);
  *  failure for a load or an unload the host already reported running is not
  *  a refusal and changes nothing (see action_started_kind). */
 void mmu_model_action_result(mmu_model_t *m, mmu_action_kind_t kind, bool ok, const char *message);
+/* The answer to a retry (MMU_ACTION_RETRY) ends every lane's tc_retry_sent:
+ * the host has spoken, so a fault it left as it was can be retried again. A
+ * refusal is then said like any other action's (MMU_ACTION_OTHER). */
 
 /** Live mode: the host's status is the only source of truth, so every model
  * function the screens call to *simulate* an operation does nothing. */

@@ -964,6 +964,117 @@ static void test_toolchange_fault_and_retry(void)
     cJSON_Delete(too_long);
 }
 
+/* The 2026-11-09 review: one fault is told from the next by its `since`, and
+ * what belongs to a fault holds while `since` does: that Retry was sent for
+ * it, and whether the plan on the lane when it appeared is an older one. The
+ * reason is kept whole to 255 bytes, the step shows the plan's label, and a
+ * step index no int8_t holds is no step. */
+static void apply_lanes_text(mmu_model_t *m, const char *json)
+{
+    cJSON *lanes = cJSON_Parse(json);
+
+    assert(lanes);
+    assert(status_map_apply_lanes(m, lanes));
+    cJSON_Delete(lanes);
+}
+
+#define TC_FAULT(since, extra)                                                                     \
+    "{\"fps1\":{\"toolchange_fault\":{\"kind\":\"load\",\"group\":\"T1\",\"slot\":null,"            \
+    "\"temp\":null,\"step\":\"feed\",\"reason\":\"No progress\",\"panel\":false,\"fed\":false,"     \
+    "\"since\":" since "}" extra "}}"
+#define TC_RUNNING  ",\"stage\":{\"plan\":[\"heat\",\"cut\",\"feed\"],\"index\":1}"
+#define TC_MOVED_ON ",\"stage\":{\"plan\":[\"heat\",\"cut\",\"feed\"],\"index\":2}"
+
+static void test_toolchange_fault_review(void)
+{
+    static const double big[] = {300.0, -129.0, 1e300};
+    char reason[256], json[1024];
+    mmu_toolhead_t *th;
+    const mmu_toolhead_t *uth;
+    mmu_model_t m;
+    unsigned i;
+
+    status_map_reset(&g_mmu);
+    apply_lanes_text(&g_mmu, "{\"fps1\":{\"pressure\":0.5}}");
+    th = &g_mmu.toolheads[0];
+    assert(!th->tc_fault && !th->tc_retry_sent);
+
+    /* P1: Retry sent holds while the fault is the same one */
+    apply_lanes_text(&g_mmu, TC_FAULT("5.0", ""));
+    assert(th->tc_fault && th->tc_since == 5.0 && !th->tc_retry_sent);
+    mmu_model_retry_sent(&g_mmu, "fps1");
+    assert(th->tc_retry_sent);
+    apply_lanes_text(&g_mmu, TC_FAULT("5.0", ""));
+    assert(th->tc_retry_sent);
+    apply_lanes_text(&g_mmu, TC_FAULT("9.5", ""));          /* the retry failed: a new fault */
+    assert(!th->tc_retry_sent);
+    mmu_model_retry_sent(&g_mmu, "fps1");
+    mmu_model_action_result(&g_mmu, MMU_ACTION_RETRY, false, "a fault stayed latched");
+    assert(!th->tc_retry_sent);                             /* the host answered */
+    mmu_model_retry_sent(&g_mmu, "fps1");
+    apply_lanes_text(&g_mmu, "{\"fps1\":{\"pressure\":0.5}}");
+    assert(!th->tc_fault && !th->tc_retry_sent);            /* the fault is over */
+    mmu_model_retry_sent(&g_mmu, "fps1");                   /* nothing to hold it */
+    mmu_model_retry_sent(&g_mmu, "fps9");
+    assert(!th->tc_retry_sent);
+
+    /* P7: a plan running, unfinished, when a fault appears is an older one */
+    apply_lanes_text(&g_mmu, TC_FAULT("12.0", TC_RUNNING));
+    assert(th->tc_fault && th->tc_plan_stale && th->tc_stale_step == 1);
+    apply_lanes_text(&g_mmu, TC_FAULT("12.0", TC_RUNNING));
+    assert(th->tc_plan_stale);
+    apply_lanes_text(&g_mmu, TC_FAULT("12.0", TC_MOVED_ON)); /* it moves: a retry runs */
+    assert(!th->tc_plan_stale && th->tc_stale_step == -1);
+    /* the first status of a connection tells nothing apart */
+    status_map_reset(&g_mmu);
+    apply_lanes_text(&g_mmu, TC_FAULT("12.0", TC_RUNNING));
+    th = &g_mmu.toolheads[0];
+    assert(th->tc_fault && !th->tc_plan_stale);
+
+    /* P4, P8: a 255-byte reason, whole; the step as the plan labels it, kept
+     * for the same fault once the plan is gone */
+    memset(reason, 'r', 255);
+    reason[255] = '\0';
+    snprintf(json, sizeof json,
+             "{\"fps1\":{\"toolchange_fault\":{\"kind\":\"load\",\"group\":\"T1\",\"slot\":null,"
+             "\"temp\":null,\"step\":\"purge\",\"reason\":\"%s\",\"panel\":false,\"fed\":true,"
+             "\"since\":20.0},\"stage\":{\"plan\":[\"feed\",\"purge\"],\"index\":1,"
+             "\"failed\":\"purge\",\"labels\":{\"purge\":\"Purge line\"}}}}", reason);
+    apply_lanes_text(&g_mmu, json);
+    assert(strlen(th->tc_reason) == 255 && strcmp(th->tc_reason, reason) == 0);
+    assert(strcmp(th->tc_step, "Purge line") == 0);
+    assert(!th->tc_plan_stale);                             /* a failed plan runs nothing */
+    snprintf(json, sizeof json,
+             "{\"fps1\":{\"toolchange_fault\":{\"kind\":\"load\",\"group\":\"T1\",\"slot\":null,"
+             "\"temp\":null,\"step\":\"purge\",\"reason\":\"x\",\"panel\":false,\"fed\":true,"
+             "\"since\":20.0}}}");
+    apply_lanes_text(&g_mmu, json);
+    assert(strcmp(th->tc_step, "Purge line") == 0);
+    snprintf(json, sizeof json,
+             "{\"fps1\":{\"toolchange_fault\":{\"kind\":\"load\",\"group\":\"T1\",\"slot\":null,"
+             "\"temp\":null,\"step\":\"purge\",\"reason\":\"x\",\"panel\":false,\"fed\":true,"
+             "\"since\":21.0}}}");
+    apply_lanes_text(&g_mmu, json);                         /* another fault: its own name */
+    assert(strcmp(th->tc_step, "purge") == 0);
+
+    /* P6: a step index outside -128..127 is no current step */
+    for(i = 0; i < sizeof big / sizeof big[0]; i++) {
+        cJSON *ui;
+
+        snprintf(json, sizeof json,
+                 "{\"unit\":\"oams1\",\"family\":\"ams1\",\"bays\":[{\"s\":\"l\"},{\"s\":\"r\"}],"
+                 "\"lane\":{\"id\":\"fps1\",\"op\":\"LOADING\",\"bay\":\"oams1-0\","
+                 "\"stage\":[[\"cut\",\"feed\"],%.17g,null]}}", big[i]);
+        ui = cJSON_Parse(json);
+        assert(ui);
+        status_map_reset(&m);
+        assert(status_map_apply_openams_ui(&m, ui));
+        uth = mmu_model_toolhead(&m, m.units[0].toolhead);
+        assert(uth && uth->step_count == 2 && uth->step_current == -1);
+        cJSON_Delete(ui);
+    }
+}
+
 /* A malformed object is refused, and refusing changes nothing: the guards run
  * before any unit is created. */
 static void test_malformed(void)
@@ -1711,6 +1822,7 @@ int main(void)
     test_motion_settled();
     test_settings();
     test_toolchange_fault_and_retry();
+    test_toolchange_fault_review();
     test_malformed();
     test_fault_actions();
     test_fault_dedup();

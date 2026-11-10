@@ -243,19 +243,33 @@ static bool lane_runs(const mmu_toolhead_t *th)
 /* The lane's failed toolchange or unload as the panel shows it (C2 4.2
  * `toolchange_fault`): not while a sequence runs on the lane, because the host
  * keeps the fault until a retry has finished, and the retry in progress shows
- * its own steps and status instead. */
+ * its own steps and status instead. A plan that was already on the lane,
+ * unfinished, when the fault appeared (tc_plan_stale) is an older sequence's
+ * leftover and hides nothing; a lane that is loading or unloading always
+ * does. */
 static bool tc_fault_shown(const mmu_toolhead_t *th)
 {
-    return th->tc_fault && !lane_runs(th);
+    if(!th->tc_fault || th->busy != MMU_BUSY_NONE) return false;
+    return th->tc_plan_stale || !lane_runs(th);
 }
 
-/* Whether the panel offers Retry for it: only with the word the host
- * advertises (`commands.retry`); an older host has none. While Retry is
- * offered, a lane fault's own `retry_load` is not: one "Retry", and it is the
- * one that finishes the whole toolchange. */
+/* Whether the failed toolchange has a Retry of its own: only with the word
+ * the host advertises (`commands.retry`; an older host has none), and only
+ * for a lane whose id can go into a script. While it has one, a lane fault's
+ * own `retry_load` is not offered: one "Retry", and it is the one that
+ * finishes the whole toolchange - also while that Retry has been sent and is
+ * not offered again (tc_retry_offered()). */
+static bool tc_retry_stands(const mmu_model_t *m, const mmu_toolhead_t *th)
+{
+    return m->cmd_retry[0] != '\0' && tc_fault_shown(th) && mmu_lane_id_ok(th->id);
+}
+
+/* Whether the panel offers that Retry now: not once it has been sent for
+ * this fault (tc_retry_sent), until the fault changes or clears or the host
+ * answers the retry. Retry is sent once. */
 static bool tc_retry_offered(const mmu_model_t *m, const mmu_toolhead_t *th)
 {
-    return m->cmd_retry[0] != '\0' && tc_fault_shown(th);
+    return tc_retry_stands(m, th) && !th->tc_retry_sent;
 }
 
 /* What failed, and with @p where the step it failed at when the host named
@@ -1296,7 +1310,7 @@ static bool fault_has_actions(const mmu_model_t *m, const mmu_toolhead_t *th)
 
         if(strcmp(tok, "resume") == 0 || strcmp(tok, "clear_errors") == 0) return true;
         if(strcmp(tok, "clear_fault") == 0 && th->error_unit >= 0) return true;
-        if(strcmp(tok, "retry_load") == 0 && !tc_retry_offered(m, th) &&
+        if(strcmp(tok, "retry_load") == 0 && !tc_retry_stands(m, th) &&
            ((th->current_group >= 0 && th->current_group < (int)m->group_count) ||
             (th->error_unit >= 0 && mmu_slot_group_in(m, th->error_unit, th->error_slot) >= 0)))
             return true;
@@ -1476,7 +1490,7 @@ static bool toolhead_scope_clear(const mmu_model_t *m, int th_idx, const mmu_too
 /* The actions a lane fault's support tokens offer, in the host's order (the
  * fault's first two tokens): retry, resume, clear errors, and the unit-scoped
  * clear fault when the fault names a unit. `retry_load` gives way to the
- * failed toolchange's own Retry while that is offered (tc_retry_offered()). */
+ * failed toolchange's own Retry while it has one (tc_retry_stands()). */
 static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_actions_t *out)
 {
     view_action_t *a;
@@ -1489,7 +1503,7 @@ static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_a
         if(strcmp(tok, "retry_load") == 0) {
             const char *gname = NULL;
 
-            if(tc_retry_offered(m, th)) continue;   /* the toolchange's own Retry stands for it */
+            if(tc_retry_stands(m, th)) continue;    /* the toolchange's own Retry stands for it */
             if(th->current_group >= 0 && th->current_group < (int)m->group_count)
                 gname = m->groups[th->current_group].name;
             else if(th->error_unit >= 0) {
@@ -1539,6 +1553,7 @@ static void fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_aler
         }
     }
     a->unread = true;
+    a->says_message = true;     /* build_message(): the lane fault is the row's text */
 
     a->action_count = 0;
     fault_actions(m, th, &acts);
@@ -1583,10 +1598,16 @@ static void tc_fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_a
     a->title = a->text_buf;
     a->text = th->tc_reason;
     a->unread = true;
+    /* build_message(): the row says the failed toolchange unless a lane fault
+     * has it */
+    a->says_message = !th->has_error;
 
     if(tc_retry_offered(m, th))
         alert_act(a, m, "retry", VS_ACTION_RETRY_LOAD, VIEW_STYLE_PRIMARY, "fault retry %s", th->id);
-    act = alert_act(a, m, "unload", VS_ACTION_UNLOAD, VIEW_STYLE_NORMAL, "unload %s", th->id);
+    /* A lane id that cannot go into a script gets neither Retry nor Unload. */
+    act = mmu_lane_id_ok(th->id)
+              ? alert_act(a, m, "unload", VS_ACTION_UNLOAD, VIEW_STYLE_NORMAL, "unload %s", th->id)
+              : NULL;
     if(act && m->printing)
         action_confirm(act, VS_CONFIRM_UNLOAD_TITLE, VS_CONFIRM_UNLOAD_TEXT, VS_CONFIRM_UNLOAD_OK);
     alert_act(a, m, "clear_errors", VS_ACTION_CLEAR_ERRORS, VIEW_STYLE_DANGER, "%s", "fault clear_errors");

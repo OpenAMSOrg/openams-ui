@@ -251,12 +251,50 @@ mmu_action_kind_t mmu_action_kind_of(const char *line)
     if(!line) return MMU_ACTION_OTHER;
     if(strncmp(line, "load ", 5) == 0) return MMU_ACTION_LOAD;
     if(strncmp(line, "unload ", 7) == 0) return MMU_ACTION_UNLOAD;
+    if(mmu_action_retry_lane(line)) return MMU_ACTION_RETRY;
     return MMU_ACTION_OTHER;
+}
+
+const char *mmu_action_retry_lane(const char *line)
+{
+    static const char verb[] = "fault retry ";
+
+    if(!line || strncmp(line, verb, sizeof(verb) - 1) != 0) return NULL;
+    return line + sizeof(verb) - 1;
+}
+
+bool mmu_lane_id_ok(const char *id)
+{
+    size_t i;
+
+    if(!id || !id[0]) return false;
+    for(i = 0; id[i]; i++) {
+        char c = id[i];
+
+        if(!((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ||
+             c == '_' || c == '.' || c == '-'))
+            return false;
+    }
+    return true;
+}
+
+void mmu_model_retry_sent(mmu_model_t *m, const char *lane_id)
+{
+    int i;
+
+    if(!m || !lane_id) return;
+    for(i = 0; i < (int)m->toolhead_count; i++) {
+        mmu_toolhead_t *th = &m->toolheads[i];
+
+        if(strcmp(th->id, lane_id) != 0) continue;
+        if(th->tc_fault) th->tc_retry_sent = true;
+        return;
+    }
 }
 
 void mmu_model_action_sent(mmu_model_t *m, mmu_action_kind_t kind)
 {
-    if(!m || kind == MMU_ACTION_OTHER) return;
+    if(!m || kind == MMU_ACTION_OTHER || kind == MMU_ACTION_RETRY) return;
     m->action_pending_kind = (uint8_t)kind;
     m->action_pending_seq++;
     m->action_started_kind = MMU_ACTION_OTHER;
@@ -265,6 +303,16 @@ void mmu_model_action_sent(mmu_model_t *m, mmu_action_kind_t kind)
 void mmu_model_action_result(mmu_model_t *m, mmu_action_kind_t kind, bool ok, const char *message)
 {
     if(!m) return;
+    /* The host answered a retry: taken, it ran (and a fault that is still
+     * there is a new one, or the same one left as it was); refused, nothing
+     * ran. Either way Retry may be offered again for what is left. The rest
+     * is any other action's answer. */
+    if(kind == MMU_ACTION_RETRY) {
+        int i;
+
+        for(i = 0; i < (int)m->toolhead_count; i++) m->toolheads[i].tc_retry_sent = false;
+        kind = MMU_ACTION_OTHER;
+    }
     /* The host showed this one running before it answered. A G-code script is
      * answered only once it has run, so a failure now is the run's own
      * outcome, which the host's status already shows, or the display giving

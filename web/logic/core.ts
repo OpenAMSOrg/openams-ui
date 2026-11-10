@@ -16,6 +16,7 @@ import { cut, jsonEqual } from './cstr.ts';
 import {
   actionResult, ActionKind, applyCommands, applyComponentStatus, applyLanes, applyMetadata, applyOpenamsUi,
   applyPrintStats, applySettings, applySpoolList, applyVendorList, drain, MAX_UNITS, newModel, refreshThis,
+  retryLaneOf, retrySent,
 } from './model.ts';
 import type { Model } from './model.ts';
 import { setLanguage } from './strings.ts';
@@ -113,7 +114,7 @@ export class OpenamsLogic implements Core {
     if (kind === 'action_result') {
       if (!isObject(obj)) return false;
       const k = jnum(obj.kind);
-      if (k === null || k < ActionKind.OTHER || k > ActionKind.UNLOAD) return false;
+      if (k === null || k < ActionKind.OTHER || k > ActionKind.RETRY) return false;
       actionResult(m, k as ActionKind, obj.ok === true, typeof obj.message === 'string' ? obj.message : '');
       return true;
     }
@@ -177,7 +178,19 @@ export class OpenamsLogic implements Core {
 
   /** Resolve an action line (a form fills its `{field}` placeholders). */
   action(line: string, form?: Record<string, string | number | boolean> | null): ActionResult {
-    return coreAction(this.model, String(line), form ?? null);
+    const result = coreAction(this.model, String(line), form ?? null);
+    // The caller sends what this returns, so a Retry is sent now: it is not
+    // offered again for that fault until the fault changes or clears, or the
+    // host's answer is applied (`action_result` with ActionKind.RETRY). The
+    // wasm core does the same in core_wasm_action().
+    if (result.kind === 'gcode') {
+      const lane = retryLaneOf(String(line));
+      if (lane !== null) {
+        retrySent(this.model, lane);
+        this.requestFlush();
+      }
+    }
+    return result;
   }
 
   /** Show the view's text in `code` ("en", "qps"). False when no such

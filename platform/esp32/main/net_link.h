@@ -33,6 +33,12 @@ bool net_link_sync(mmu_model_t *m);
  * queued). */
 bool net_link_send_gcode(const char *script, mmu_action_kind_t kind, int *request_id);
 
+/** The display just sent Retry for the failed toolchange on lane @p lane_id
+ * (mmu_action_retry_lane() on the action line): recorded on the shadow model,
+ * so Retry is not offered again for that fault (core_retry_sent()). NULL does
+ * nothing. Called from the LVGL task, right after net_link_send_gcode(). */
+void net_link_retry_sent(const char *lane_id);
+
 /** Send an arbitrary JSON-RPC method.  Always takes ownership of @p params
  * (may be NULL).  @p tag is passed back to the on_rpc_result callback. False
  * when the link was never started or is not READY. */

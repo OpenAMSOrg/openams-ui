@@ -179,7 +179,15 @@ export default class OpenamsView extends Vue {
             // other, a G-code script the printer turned down included, takes
             // the general one (H3).
             const edit = result.kind === 'rpc' && result.method === 'server.openams_spoolman.edit'
-            this.$emit('request', result, (message?: string) => this.ctrl.settle(line, message, edit ? 'edit' : 'action'))
+            // A Retry is sent once: the logic stops offering it when it hands
+            // the script out, and offers it again when the host has answered
+            // and left the fault as it was (a refusal, say). So the answer to
+            // a retry goes back to the logic: `action_result`, kind 3 (retry).
+            const retry = result.kind === 'gcode' && line.startsWith('fault retry ')
+            this.$emit('request', result, (message?: string) => {
+                if (retry) logic.apply('action_result', '', { kind: 3, ok: !message, message: message ?? '' })
+                this.ctrl.settle(line, message, edit ? 'edit' : 'action')
+            })
         }
         return result
     }

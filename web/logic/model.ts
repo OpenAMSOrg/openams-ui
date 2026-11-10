@@ -48,7 +48,7 @@ const ERROR_TEXT = 96;
 const ERROR_ACT = 16;
 const TC_GROUP = GROUP_NAME;          // the toolhead's tc_group: MMU_GROUP_NAME_LEN
 const TC_STEP = 24;                   // tc_step: MMU_TEXT_LEN
-const TC_REASON = 96;                 // tc_reason: MMU_TEXT_LEN * 4
+const TC_REASON = 256;                // tc_reason: MMU_TC_REASON_LEN, a Klipper error message whole up to 255 bytes
 const COMMAND = 32;                   // MMU_COMMAND_LEN: an advertised G-code word with its NUL
 const SPOOL_MATERIAL = 12;
 const SPOOL_VENDOR = 16;
@@ -162,8 +162,21 @@ export interface Toolhead {
    *  panel's Retry continues. An older host never sends it. */
   tcFault: boolean;
   tcUnload: boolean;           // the failed operation is an unload, else a load
+  /** The panel sent Retry for this very fault (this lane, this tcSince) and
+   *  the host has neither answered it nor changed the fault: Retry is not
+   *  offered again. Cleared when the fault changes or clears, when the host
+   *  answers the retry, and by a reset. */
+  tcRetrySent: boolean;
+  /** The lane's plan was already running, unfinished, when this fault
+   *  appeared, so it is an older sequence's leftover and not a retry of this
+   *  fault: it does not hide the fault. Holds while that plan stays as it was
+   *  (tcStaleStep). */
+  tcPlanStale: boolean;
+  tcLaneSeen: boolean;         // `lanes_by_fps` named this lane before: a fault that appears now is new
+  tcStaleStep: number;         // the stale plan's current step when the fault appeared
+  tcSince: number;             // the host's `since` (its clock, seconds), -1 = none: tells one fault from the next
   tcGroup: string;             // a load's target group ("T1"); '' for an unload
-  tcStep: string;              // the plan step that was running; '' = none
+  tcStep: string;              // the plan step that was running: its label when the host gave it one, else its name; '' = none
   tcReason: string;            // what failed, in the host's own words
   runoutActive: boolean;
   runoutNote: string;
@@ -219,24 +232,49 @@ const REFUSAL_LEN = 192;
 /** What an action the display sent does, which is what its answer is about: a
  *  load or an unload the load screen waits on, or anything else. The C's
  *  mmu_action_kind_t. */
-export const ActionKind = { OTHER: 0, LOAD: 1, UNLOAD: 2 } as const;
+export const ActionKind = { OTHER: 0, LOAD: 1, UNLOAD: 2, RETRY: 3 } as const;
 export type ActionKind = (typeof ActionKind)[keyof typeof ActionKind];
 
 /** The kind of the action line `line` (as the display wrote it: "load A2",
- *  "unload A2"), or ActionKind.OTHER for anything else. The C's
- *  mmu_action_kind_of(). */
+ *  "unload A2", "fault retry fps1"), or ActionKind.OTHER for anything else.
+ *  The C's mmu_action_kind_of(). */
 export function actionKindOf(line: string | null | undefined): ActionKind {
   if (!line) return ActionKind.OTHER;
   if (line.startsWith('load ')) return ActionKind.LOAD;
   if (line.startsWith('unload ')) return ActionKind.UNLOAD;
+  if (retryLaneOf(line) !== null) return ActionKind.RETRY;
   return ActionKind.OTHER;
+}
+
+/** The lane of a `fault retry <lane>` line, null for any other line. The C's
+ *  mmu_action_retry_lane(). */
+export function retryLaneOf(line: string | null | undefined): string | null {
+  const verb = 'fault retry ';
+  return line && line.startsWith(verb) ? line.slice(verb.length) : null;
+}
+
+/** Whether `id` can go into a G-code script as a lane: `^[A-Za-z0-9_.-]+$`.
+ *  Anything else (a space, a newline, nothing) builds no script. The C's
+ *  mmu_lane_id_ok(). */
+export function laneIdOk(id: string | null | undefined): boolean {
+  return typeof id === 'string' && /^[A-Za-z0-9_.-]+$/.test(id);
+}
+
+/** The panel just sent Retry for the failed toolchange on lane `laneId`:
+ *  Retry is not offered again for that fault (tcRetrySent). Nothing when the
+ *  lane is unknown or carries no fault. The C's mmu_model_retry_sent(). */
+export function retrySent(m: Model, laneId: string | null | undefined): void {
+  if (laneId === null || laneId === undefined) return;
+  const th = m.toolheads.find((t) => t.id === laneId);
+  if (th && th.tcFault) th.tcRetrySent = true;
 }
 
 /** The display just sent a load or an unload and the host has not reported it
  *  yet, so the load screen says it is starting rather than "Nothing is
  *  loading". The C's mmu_model_action_sent(). */
 export function actionSent(m: Model, kind: ActionKind): void {
-  if (kind === ActionKind.OTHER) return;
+  // A retry is no load the load screen waits on: retrySent() records it.
+  if (kind === ActionKind.OTHER || kind === ActionKind.RETRY) return;
   m.actionPendingKind = kind;
   m.actionPendingSeq = (m.actionPendingSeq + 1) & 0xff;
   m.actionStartedKind = ActionKind.OTHER;
@@ -246,6 +284,14 @@ export function actionSent(m: Model, kind: ActionKind): void {
  *  when it refused, "" when it took the action. The C's
  *  mmu_model_action_result(). */
 export function actionResult(m: Model, kind: ActionKind, ok: boolean, message: string): void {
+  // The host answered a retry: taken, it ran (and a fault that is still there
+  // is a new one, or the same one left as it was); refused, nothing ran.
+  // Either way Retry may be offered again for what is left. The rest is any
+  // other action's answer.
+  if (kind === ActionKind.RETRY) {
+    for (const th of m.toolheads) th.tcRetrySent = false;
+    kind = ActionKind.OTHER;
+  }
   // The host showed this one running before it answered. A G-code script is
   // answered only once it has run, so a failure now is the run's own outcome,
   // which the host's status already shows, or the display giving up the wait
@@ -398,7 +444,8 @@ function toolheadGetOrCreate(m: Model, id: string | null): Toolhead | null {
     loadedExt: -1, busy: Busy.NONE, busyUnit: -1, busySlot: -1, steps: [], stepCurrent: -1,
     stepFailed: -1, stepDetail: '', currentGroup: -1, hasError: false, errorSeverity: Sev.INFO, errorCode: '',
     errorText: '', errorUnit: -1, errorSlot: -1, errorAct: [], errorCount: 0,
-    tcFault: false, tcUnload: false, tcGroup: '', tcStep: '', tcReason: '', runoutActive: false,
+    tcFault: false, tcUnload: false, tcRetrySent: false, tcPlanStale: false, tcLaneSeen: false, tcStaleStep: -1,
+    tcSince: -1, tcGroup: '', tcStep: '', tcReason: '', runoutActive: false,
     runoutNote: '', runoutFromUnit: -1, runoutFromSlot: -1, runoutToUnit: -1, runoutToSlot: -1,
     pressure: -1, setPoint: -1, bandLow: -1, bandHigh: -1,
   };
@@ -925,7 +972,9 @@ function mapStage(th: Toolhead, stage: unknown): void {
     // A step that is not a string leaves its (zeroed) slot empty.
     th.steps.push(typeof step === 'string' ? cut(stepLabel(step, labels), STEP_TEXT) : '');
   }
-  if (typeof index === 'number') th.stepCurrent = i8(index);
+  // Only a value an int8_t holds is a step: anything else is no current
+  // step, never a narrowed one (map_stage() in status_map.c).
+  if (typeof index === 'number' && index >= -128 && index <= 127) th.stepCurrent = i8(index);
 
   // `failed` names a plan entry: its position is the failed step.
   if (typeof failed === 'string') {
@@ -1289,17 +1338,74 @@ export function applySettings(m: Model, obj: unknown): boolean {
  *  toolchange or unload on the lane failed and is not finished. Anything but
  *  an object clears it, so the field going away is the fault being over
  *  (map_toolchange_fault() in status_map.c). */
-function mapToolchangeFault(th: Toolhead, fault: unknown): void {
+function mapToolchangeFault(th: Toolhead, fault: unknown, stage: unknown): void {
+  // `since` tells one fault from the next. What belongs to a fault holds
+  // while `since` does: that Retry was sent for it (tcRetrySent), its step's
+  // label, and whether the plan found on the lane when it appeared is an
+  // older one (tcPlanStale). `stage` is the same lane's, read in the same
+  // status so the two cannot disagree.
+  const had = th.tcFault;
+  const was = th.tcSince;
+  const stepWas = th.tcStep;
+
   th.tcFault = isObject(fault);
   th.tcUnload = false;
+  th.tcSince = -1;
   th.tcGroup = '';
   th.tcStep = '';
   th.tcReason = '';
-  if (!isObject(fault)) return;
+  if (!isObject(fault)) {
+    th.tcRetrySent = false;
+    th.tcPlanStale = false;
+    th.tcStaleStep = -1;
+    th.tcLaneSeen = true;
+    return;
+  }
+
+  if (typeof fault.since === 'number') th.tcSince = fault.since;
+  const same = had && was === th.tcSince;
+
+  // A plan already running, unfinished, in the status that first shows the
+  // fault is not a retry of it: a retry starts after the fault is recorded.
+  // The first status of a connection is not told apart (a retry may be
+  // running when the panel joins), so nothing is stale there.
+  const index = laneStageRunning(stage);
+  if (!same) {
+    th.tcRetrySent = false;
+    th.tcPlanStale = th.tcLaneSeen && index >= 0;
+    th.tcStaleStep = th.tcPlanStale ? index : -1;
+  } else if (th.tcPlanStale && !(index >= 0 && index === th.tcStaleStep)) {
+    th.tcPlanStale = false;
+    th.tcStaleStep = -1;
+  }
+  th.tcLaneSeen = true;
+
   th.tcUnload = jstring(fault, 'kind') === 'unload';
   th.tcGroup = cut(jstring(fault, 'group') ?? '', TC_GROUP);
-  th.tcStep = cut(jstring(fault, 'step') ?? '', TC_STEP);
   th.tcReason = cut(jstring(fault, 'reason') ?? '', TC_REASON);
+
+  // The step as the stepper shows it: the label the plan gives it, else its
+  // name. The plan goes away before the fault does (Clear errors drops it),
+  // so what the same fault was given earlier is kept.
+  const step = jstring(fault, 'step');
+  const labels = isObject(stage) ? stage.labels : null;
+  const label = step !== null && isObject(labels) && Object.prototype.hasOwnProperty.call(labels, step)
+    ? labels[step] : null;
+  if (typeof label === 'string' && label !== '') th.tcStep = cut(label, TC_STEP);
+  else if (same && step !== null && stepWas !== '') th.tcStep = stepWas;
+  else th.tcStep = cut(step ?? '', TC_STEP);
+}
+
+/** The position of the current step when the lane's own `stage`
+ *  (`lanes_by_fps.<l>.stage`, an object) is a plan with a current step that
+ *  has not failed, else -1 (lane_stage_running() in status_map.c). */
+function laneStageRunning(stage: unknown): number {
+  if (!isObject(stage)) return -1;
+  const { plan, index, failed } = stage;
+  if (!Array.isArray(plan) || typeof index !== 'number' || typeof failed === 'string') return -1;
+  const count = Math.min(plan.length, MAX_STEPS);
+  if (index < 0 || index >= count) return -1;
+  return toInt(index);
 }
 
 /** `oams_manager.lanes_by_fps`: pressure and set point per lane (the fast
@@ -1320,7 +1426,7 @@ export function applyLanes(m: Model, lanes: unknown): boolean {
       th.bandLow = f32(band[0]);
       th.bandHigh = f32(band[1]);
     }
-    mapToolchangeFault(th, lane.toolchange_fault);
+    mapToolchangeFault(th, lane.toolchange_fault, lane.stage);
   }
   refreshThis(m);
   return true;

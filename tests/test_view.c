@@ -1583,6 +1583,106 @@ static void test_toolchange_fault(void)
     assert(view_toolhead(&s_local, 0, &th) && !th.alert.present && th.message.tone == VIEW_TONE_NEUTRAL);
 }
 
+/* The 2026-11-09 review of the failed toolchange's card: Retry is offered once
+ * per fault, the card says what the message row says (so the device's alerts
+ * screen shows one card), a lane id that cannot go into a script gets neither
+ * Retry nor Unload, and a plan that was already on the lane when the fault
+ * appeared does not hide it. */
+static void test_toolchange_fault_review(void)
+{
+    view_alerts_t g;
+    view_toolhead_t th;
+    mmu_toolhead_t *t;
+    int i;
+
+    status_map_reset(&s_local);
+    add_unit_to(&s_local, "oams1", 4);
+    s_local.units[0].toolhead = 0;
+    s_local.toolhead_count = 1;
+    t = &s_local.toolheads[0];
+    snprintf(t->id, sizeof(t->id), "fps1");
+    t->current_group = -1;
+    snprintf(s_local.cmd_retry, sizeof(s_local.cmd_retry), "OAMSM_RETRY");
+    t->tc_fault = true;
+    snprintf(t->tc_group, sizeof(t->tc_group), "T1");
+    snprintf(t->tc_step, sizeof(t->tc_step), "feed");
+    snprintf(t->tc_reason, sizeof(t->tc_reason), "No progress");
+
+    /* P1: Retry, then not again while it has been sent for this fault */
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 3);
+    assert(strcmp(g.items[0].actions[0].id, "retry") == 0);
+    t->tc_retry_sent = true;
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 2);
+    for(i = 0; i < g.items[0].action_count; i++) assert(strcmp(g.items[0].actions[i].id, "retry") != 0);
+    /* nor does a lane fault's own retry_load come back in its place */
+    snprintf(s_local.groups[0].name, sizeof(s_local.groups[0].name), "T1");
+    s_local.groups[0].count = 1;
+    s_local.groups[0].members[0].unit = 0;
+    s_local.groups[0].members[0].slot = 1;
+    s_local.group_count = 1;
+    t->has_error = true;
+    t->error_severity = MMU_SEV_PAUSE;
+    t->error_unit = 0;
+    t->error_slot = -1;
+    snprintf(t->error_text, sizeof(t->error_text), "No progress on oams1");
+    snprintf(t->error_act[0], 16, "retry_load");
+    snprintf(t->error_act[1], 16, "clear_errors");
+    t->error_act_count = 2;
+    t->current_group = 0;
+    assert(view_toolhead_alerts(&s_local, 0, &g));
+    for(i = 0; i < g.count; i++) {
+        int k;
+
+        for(k = 0; k < g.items[i].action_count; k++) {
+            assert(strcmp(g.items[i].actions[k].id, "retry") != 0);
+            assert(strcmp(g.items[i].actions[k].id, "retry_load") != 0);
+        }
+    }
+
+    /* P2: with a lane fault, its card is the row's text, not the toolchange's */
+    assert(view_toolhead(&s_local, 0, &th) && strcmp(th.message.text, "No progress on oams1") == 0);
+    assert(view_unit_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].says_message);
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && !g.items[0].says_message);
+    t->has_error = false;
+    t->error_act_count = 0;
+    t->current_group = -1;
+    t->tc_retry_sent = false;
+    /* without one, the failed toolchange's card says the row, step or not */
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].says_message);
+    t->tc_step[0] = '\0';
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].says_message);
+    snprintf(t->tc_step, sizeof(t->tc_step), "feed");
+
+    /* P3: a lane id with a space (or anything outside [A-Za-z0-9_.-]) gets
+     * neither Retry nor Unload; Clear errors stays */
+    snprintf(t->id, sizeof(t->id), "fps1 M112");
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 1);
+    assert(strcmp(g.items[0].actions[0].id, "clear_errors") == 0);
+    snprintf(t->id, sizeof(t->id), "fps1");
+
+    /* P7: a plan already on the lane when the fault appeared hides nothing */
+    snprintf(t->steps[0], sizeof(t->steps[0]), "heat");
+    snprintf(t->steps[1], sizeof(t->steps[1]), "feed");
+    t->step_count = 2;
+    t->step_current = 0;
+    t->step_failed = -1;
+    assert(view_toolhead(&s_local, 0, &th) && !th.alert.present);   /* a retry running */
+    t->tc_plan_stale = true;
+    t->tc_stale_step = 0;
+    assert(view_toolhead(&s_local, 0, &th) && th.alert.present);
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1);
+    assert(strcmp(g.items[0].actions[0].id, "retry") == 0);
+    /* a lane that is loading or unloading always hides it */
+    t->busy = MMU_BUSY_LOAD;
+    assert(view_toolhead(&s_local, 0, &th) && !th.alert.present);
+    t->busy = MMU_BUSY_NONE;
+    t->tc_plan_stale = false;
+    t->tc_stale_step = -1;
+    t->step_count = 0;
+    t->step_current = -1;
+    t->tc_fault = false;
+}
+
 /* ------------------------- 4a: tile tags and dim, pressure scale, labels */
 
 static void test_tags_dim_scale_labels(void)
@@ -2692,6 +2792,7 @@ int main(void)
     test_outline();
     test_alert_levels_and_targets();
     test_toolchange_fault();
+    test_toolchange_fault_review();
     test_system_alert_reaches_no_toolhead();
     test_tile_error_message();
     test_adapter_unknown_is_not_missing();
