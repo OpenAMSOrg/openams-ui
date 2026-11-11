@@ -156,8 +156,8 @@ void platform_language_set(const char *code)
     esp_err_t err;
 
     if(!code) return;
-    /* app_init() applies the stored language on every boot: an unchanged
-     * code costs no flash write. */
+    /* Every boot applies the stored language (app_apply_language(), from
+     * app_init() and app_live_init()): an unchanged code costs no flash write. */
     if(strcmp(s_lang, code) == 0) return;
     snprintf(s_lang, sizeof(s_lang), "%s", code);
     ESP_LOGI(TAG, "language %s", s_lang);

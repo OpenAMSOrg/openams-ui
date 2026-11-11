@@ -12,6 +12,13 @@
  * names also leave the binding unchanged. */
 void app_init(const char *scenario, const char *unit_name);
 
+/** Apply the stored language (platform_language_get()) to the strings and the
+ * font slots, English when nothing usable is stored. Every start-up calls it
+ * before the first screen is drawn - app_init(), app_live_init() and the
+ * simulator's replay - because the slots are what the Geist faces fall back to
+ * for a glyph they lack, and an unset slot has no glyph lookup at all. */
+void app_apply_language(void);
+
 /** Bind the display to @p unit_idx, log the choice and return home. */
 void app_set_this_unit(int unit_idx);
 

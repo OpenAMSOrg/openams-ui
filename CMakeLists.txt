@@ -439,6 +439,34 @@ if(NOT EMSCRIPTEN)
     set_tests_properties(screen_environment PROPERTIES
         ENVIRONMENT "SDL_VIDEODRIVER=dummy")
 
+    # A live boot (app_live_init(), the device on a printer) applies the stored
+    # language and fills the font slots the Geist faces fall back to.
+    file(GLOB_RECURSE MMU_APP_LANGUAGE_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+    )
+    list(APPEND MMU_APP_LANGUAGE_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/platform/sim/display_cfg.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_app_language.c")
+    mmu_languages_filter_sources(MMU_APP_LANGUAGE_SOURCES ${MMU_APP_LANGUAGE_SOURCES})
+    mmu_resolution_filter_sources(MMU_APP_LANGUAGE_SOURCES ${MMU_APP_LANGUAGE_SOURCES})
+
+    add_executable(test_app_language ${MMU_APP_LANGUAGE_SOURCES})
+
+    target_include_directories(test_app_language PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}/platform")
+
+    target_compile_definitions(test_app_language PRIVATE ${MMU_LANGUAGE_DEFINES} ${MMU_UI_DEFINES})
+
+    target_compile_options(test_app_language PRIVATE -Wall -Wextra)
+
+    target_link_libraries(test_app_language PRIVATE lvgl::lvgl m)
+
+    add_test(NAME app_language COMMAND test_app_language)
+    set_tests_properties(app_language PROPERTIES
+        ENVIRONMENT "SDL_VIDEODRIVER=dummy")
+
     # Replay the recorded fixtures through the simulator and compare each
     # model dump against its golden (tests/fixtures/recorded/*.dump). The
     # simulator is a path argument because the script is shared with machines
@@ -473,6 +501,18 @@ if(NOT EMSCRIPTEN)
             PASS_REGULAR_EXPRESSION "SMOKE OK.*AUDIT TOTAL issues=0"
             LABELS slow TIMEOUT 600)
     endforeach()
+
+    # The same walk with no --lang: the replay applies the stored language (none
+    # here: English) and fills the font slots, as a device's boot does; without
+    # them the walk crashed on the first glyph Geist lacks.
+    add_test(NAME smoke_four_units_default_language
+        COMMAND openams-ui-sim --replay
+                "${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/recorded/four_units.json"
+                --smoke --audit)
+    set_tests_properties(smoke_four_units_default_language PROPERTIES
+        ENVIRONMENT "SDL_VIDEODRIVER=dummy"
+        PASS_REGULAR_EXPRESSION "SMOKE OK.*AUDIT TOTAL issues=0"
+        LABELS slow TIMEOUT 600)
 
     # Every openams_ui payload of the fixtures against the host's own schema
     # (found through OPENAMS_ROOT or a sibling checkout; skipped without it).

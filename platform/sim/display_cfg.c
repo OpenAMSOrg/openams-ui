@@ -7,6 +7,7 @@
  */
 #include "app/platform.h"
 #include "app/actions.h"
+#include "sim.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -55,6 +56,11 @@ void platform_language_get(char *out, size_t n)
 {
     if(!out || n == 0) return;
     snprintf(out, n, "%s", s_lang);
+}
+
+void sim_language_preset(const char *code)
+{
+    if(code) snprintf(s_lang, sizeof s_lang, "%s", code);
 }
 
 void platform_language_set(const char *code)

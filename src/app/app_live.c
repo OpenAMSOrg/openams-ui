@@ -3,6 +3,7 @@
  * The live counterpart of app.c (see app_live.h).
  */
 #include "app/app_live.h"
+#include "app/app.h"
 
 #include "lvgl.h"
 #include <stdio.h>
@@ -67,6 +68,10 @@ static bool rebuild_is_safe(void)
 
 void app_live_init(void)
 {
+    /* The stored language, as app_init() applies it: a display on a printer
+     * boots here, and without it came up in English whatever was chosen, with
+     * font slots that crashed on the first glyph Geist lacks. */
+    app_apply_language();
     mmu_model_set_live(true);
     status_map_reset(&g_mmu);
     s_confirm_shown = 0;

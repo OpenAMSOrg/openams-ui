@@ -1346,6 +1346,9 @@ int main(int argc, char **argv)
         for(i = 0; i < view_lang_count(); i++) fprintf(stderr, " %s", view_lang_code(i));
         fprintf(stderr, ")\n");
     }
+    /* Kept as the session's stored language, so the start-up below applies
+     * it again rather than the empty store (English) a device boots with. */
+    if(lang) sim_language_preset(view_lang_code(view_lang_current()));
 
     if(dump && !replay_file) {
         fprintf(stderr, "usage: %s --replay FILE --dump-model\n", argv[0]);
@@ -1451,6 +1454,10 @@ int main(int argc, char **argv)
         s_replay_unit = unit_name;
         status_map_reset(&g_mmu);
 
+        /* The language and its font slots, which app_init() would have set:
+         * without them a glyph Geist lacks ("日本語" in Settings) has no
+         * fallback lookup and the walk crashes. */
+        app_apply_language();
         ui_theme_init();
         ui_nav_init();
 

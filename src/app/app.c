@@ -28,15 +28,21 @@ static void model_timer_cb(lv_timer_t *t)
     mmu_model_tick();
 }
 
-void app_init(const char *scenario, const char *unit_name)
+void app_apply_language(void)
 {
     char lang[LANG_MAX];
 
-    /* Before anything is drawn: the strings and the font slots both have to
-     * be in the stored language by the time the first screen asks for a
-     * glyph. A device with nothing stored (a first boot) lands on English. */
+    /* A device with nothing stored (a first boot) lands on English. */
     platform_language_get(lang, sizeof lang);
     if(!ui_set_language(lang)) (void)ui_set_language("en");
+}
+
+void app_init(const char *scenario, const char *unit_name)
+{
+    /* Before anything is drawn: the strings and the font slots both have to
+     * be in the stored language by the time the first screen asks for a
+     * glyph. */
+    app_apply_language();
 
     mmu_model_init();
     if(scenario && scenario[0]) mmu_model_set_scenario(scenario);

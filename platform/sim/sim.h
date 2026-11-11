@@ -18,4 +18,9 @@ bool sim_capture_bmp(const char *path, bool with_top_layer);
  * exactly as the --smoke/--screenshots walk does. */
 void sim_pump(int n);
 
+/** Keep @p code as the session's stored language, as if it had been chosen in
+ * Settings, without logging it as an action: --lang does this, so every
+ * start-up path (app_init(), app_live_init(), the replay) applies it. */
+void sim_language_preset(const char *code);
+
 #endif /* SIM_H */
