@@ -633,10 +633,13 @@ static void build_drying(lv_obj_t *scr, const mmu_unit_t *u)
         bool cooling = (u->dry_state == MMU_DRY_COOLING);
 
         /* Cooling is automatic, not a running cycle the user can stop again;
-         * Start stays disabled until the unit settles back to idle. */
+         * Start stays disabled until the unit settles back to idle. A unit with
+         * no supply monitor (the AMS 2 Pro: adapter null) reports no adapter at
+         * all, which is unknown, never "unplugged". */
         ui_kit_button(scr, view_str(active ? VS_ENV_STOP : VS_ENV_START),
                       active ? UI_KIT_BTN_NORMAL : UI_KIT_BTN_PRIMARY, EN_PAD, EN_BTN_Y,
-                      UI_HOME_INNER_W, EN_BTN_H, active || !(cooling || !u->power_adapter),
+                      UI_HOME_INNER_W, EN_BTN_H,
+                      active || !(cooling || (u->has_power_adapter && !u->power_adapter)),
                       on_start_stop, NULL);
     }
 }

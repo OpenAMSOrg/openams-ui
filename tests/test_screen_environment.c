@@ -31,7 +31,8 @@
 
 static char s_last_line[192];
 
-/** The screen's Stop sends its action line here. */
+/** The screen's Stop sends its action line here. (A ui_kit button that is
+ * greyed out is simply not clickable.) */
 void platform_action(const char *line)
 {
     snprintf(s_last_line, sizeof s_last_line, "%s", line);
@@ -120,7 +121,7 @@ static void test_a_running_dry_can_be_stopped(void)
     stop = find_label(open_screen(), view_str(VS_ENV_STOP));
     check(stop != NULL, "a dry the host lists no start for (it is running) shows Stop");
     if(!stop) return;
-    check(lv_obj_has_state(lv_obj_get_parent(stop), LV_STATE_DISABLED) == false,
+    check(lv_obj_is_clickable(lv_obj_get_parent(stop)),
           "  and Stop can be pressed");
     lv_obj_send_event(lv_obj_get_parent(stop), LV_EVENT_CLICKED, NULL);
     snprintf(want, sizeof want, "dry %s stop", the_unit()->name);
@@ -143,6 +144,32 @@ static void test_an_idle_unit_offers_start(void)
           "an idle unit that may start a dry shows Start");
 }
 
+/* The AMS 2 Pro reports `adapter: null` (no supply monitor): unknown, never
+ * "unplugged". Start must not stay greyed out for it; a unit whose adapter is
+ * known to be unplugged still cannot start. */
+static void test_start_with_no_adapter_to_report(void)
+{
+    lv_obj_t *start;
+
+    setup_drying(MMU_UNIT_ACT_DRYER_START | MMU_UNIT_ACT_DRYER_STOP);
+    the_unit()->dry_state = MMU_DRY_IDLE;
+    the_unit()->dry_remaining_min = 0;
+    the_unit()->has_power_adapter = false;
+    the_unit()->power_adapter = false;
+    start = find_label(open_screen(), view_str(VS_ENV_START));
+    check(start != NULL && lv_obj_is_clickable(lv_obj_get_parent(start)),
+          "no adapter to report (AMS 2 Pro): Start can be pressed");
+
+    setup_drying(MMU_UNIT_ACT_DRYER_START | MMU_UNIT_ACT_DRYER_STOP);
+    the_unit()->dry_state = MMU_DRY_IDLE;
+    the_unit()->dry_remaining_min = 0;
+    the_unit()->has_power_adapter = true;
+    the_unit()->power_adapter = false;
+    start = find_label(open_screen(), view_str(VS_ENV_START));
+    check(start == NULL || !lv_obj_is_clickable(lv_obj_get_parent(start)),
+          "an adapter known to be unplugged: Start stays greyed out");
+}
+
 int main(void)
 {
     lv_init();
@@ -158,6 +185,7 @@ int main(void)
     test_a_running_dry_can_be_stopped();
     test_no_stop_when_the_host_offers_none();
     test_an_idle_unit_offers_start();
+    test_start_with_no_adapter_to_report();
 
     printf("%s: %d failure(s)\n", s_failures ? "FAILED" : "PASSED", s_failures);
     return s_failures ? 1 : 0;
