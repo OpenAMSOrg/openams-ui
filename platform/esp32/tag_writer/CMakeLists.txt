@@ -17,6 +17,7 @@ set(tw_sources
     "src/bambu_format.cpp"
     "src/sha256.cpp"
     "src/tag.cpp"
+    "src/no_static_dtors.cpp"
 )
 
 if(MMU_TAG_READER STREQUAL "MFRC522")
