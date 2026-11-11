@@ -166,11 +166,14 @@ First setup:
 ```
 wifi "My Network" mypassword
 moonraker ws://<printer-address>:7125/websocket
+unit ams1
 reboot
 ```
 
-No `unit` is needed: the display shows the printer's first unit, which on a
-printer with one AMS is that AMS. With several, see
+`unit ams1` binds the display to the unit named in its `[oams ams1]` section
+of `oams.cfg`; use the name your `oams.cfg` gives the unit. Leave the line out
+if you don't need it: the display then shows the printer's first unit, which
+on a printer with one AMS is that AMS. See
 [Bind the display to one unit](#bind-the-display-to-one-unit).
 
 Each command that saves replies `saved; type reboot to apply`. If the
@@ -199,13 +202,11 @@ calibration screen before anything else. Tap the four targets. See
 Skip this with one AMS on the printer: the display shows it. With several, an
 unbound display shows the first one; bind it to show another.
 
-1. Find the unit's name. Open
-   `http://<printer-address>:7125/printer/objects/list` in a browser. Every
-   `openams_ui <name>` entry is one unit, and `<name>` is the name of its
-   `[oams <name>]` section in `oams.cfg`. A name is a label, not the kind of
-   AMS: the Cortex Bridge setup writes `ams1`, `ams2` and `ams_ht`, and
-   `ams1_2` for a second AMS of one kind; an OpenAMS 1 configuration often
-   says `oams1`.
+1. Find the unit's name in `oams.cfg`: it is the name of the unit's
+   `[oams <name>]` section, so `[oams ams1]` is `ams1`. A name is a label, not
+   the kind of AMS: the Cortex Bridge setup writes `ams1`, `ams2` and
+   `ams_ht`, and `ams1_2` for a second AMS of one kind; an OpenAMS 1
+   configuration often says `oams1`.
 2. On the display's console, type `unit <name>`, then `reboot`.
 3. Check that the home screen shows that unit's spools. Then type `net`:
    once the display has connected, it shows `unit serial:` with the unit's
