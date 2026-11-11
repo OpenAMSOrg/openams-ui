@@ -71,7 +71,7 @@ interface Fixture {
   events: FixtureEvent[];
 }
 
-/** The recorded recorded fixtures, the same ones the Lit gallery played. */
+/** The recorded fixtures, the same ones the Lit gallery played. */
 const fixtures = import.meta.glob(
   ['../../../tests/fixtures/recorded/*.json', '!../../../tests/fixtures/recorded/*.view.json'],
   { import: 'default' },
