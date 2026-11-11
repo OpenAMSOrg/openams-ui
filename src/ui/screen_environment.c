@@ -113,6 +113,17 @@ static bool dry_available(const mmu_unit_t *u)
     return u->can_dry && actions_dry_reason(u)[0] == '\0';
 }
 
+/** A running dry the host lets us stop. The host lists `dryer_start` only while
+ * a start is possible - never during a dry - and keeps `dryer_stop`, so Stop
+ * must not depend on dry_available(): a dry started anywhere (this screen, the
+ * printer's LCD menu, the console) is stopped from here. */
+static bool dry_stoppable(const mmu_unit_t *u)
+{
+    return u->can_dry &&
+           (u->dry_state == MMU_DRY_HEATING || u->dry_state == MMU_DRY_DEHUMIDIFYING) &&
+           (!u->act_known || (u->acts & MMU_UNIT_ACT_DRYER_STOP));
+}
+
 /** The variant sets the drying ceiling: AMS HT 85 C, everything else 65 C. */
 static int unit_t_max(const mmu_unit_t *u)
 {
@@ -661,8 +672,8 @@ static lv_obj_t *build(void)
 
     (void)ui_kit_header(scr, view_str(VS_SCREEN_ENV), true);
 
-    if(dry_available(u)) build_drying(scr, u);
-    else                 build_readout(scr, u, false);
+    if(dry_available(u) || dry_stoppable(u)) build_drying(scr, u);
+    else                                     build_readout(scr, u, false);
 
     s_last_state = u->dry_state;
     timer = lv_timer_create(on_tick, 1000, NULL);

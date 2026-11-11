@@ -412,6 +412,33 @@ if(NOT EMSCRIPTEN)
     set_tests_properties(screen_home_sheet PROPERTIES
         ENVIRONMENT "SDL_VIDEODRIVER=dummy")
 
+    # The drying screen: a running dry can be stopped from it, whoever started it.
+    file(GLOB_RECURSE MMU_SCREEN_ENVIRONMENT_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c"
+    )
+    list(APPEND MMU_SCREEN_ENVIRONMENT_SOURCES
+        "${CMAKE_CURRENT_SOURCE_DIR}/platform/sim/display_cfg.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_screen_environment.c")
+    mmu_languages_filter_sources(MMU_SCREEN_ENVIRONMENT_SOURCES ${MMU_SCREEN_ENVIRONMENT_SOURCES})
+    mmu_resolution_filter_sources(MMU_SCREEN_ENVIRONMENT_SOURCES ${MMU_SCREEN_ENVIRONMENT_SOURCES})
+
+    add_executable(test_screen_environment ${MMU_SCREEN_ENVIRONMENT_SOURCES})
+
+    target_include_directories(test_screen_environment PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        "${CMAKE_CURRENT_SOURCE_DIR}/platform")
+
+    target_compile_definitions(test_screen_environment PRIVATE ${MMU_LANGUAGE_DEFINES} ${MMU_UI_DEFINES})
+
+    target_compile_options(test_screen_environment PRIVATE -Wall -Wextra)
+
+    target_link_libraries(test_screen_environment PRIVATE lvgl::lvgl m)
+
+    add_test(NAME screen_environment COMMAND test_screen_environment)
+    set_tests_properties(screen_environment PROPERTIES
+        ENVIRONMENT "SDL_VIDEODRIVER=dummy")
+
     # Replay the recorded fixtures through the simulator and compare each
     # model dump against its golden (tests/fixtures/recorded/*.dump). The
     # simulator is a path argument because the script is shared with machines
