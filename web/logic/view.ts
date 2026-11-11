@@ -1325,9 +1325,14 @@ function buildToolhead(m: Model, index: number): ViewToolhead {
   const th = m.toolheads[index];
   const thAlert = scanAlerts(m, -1, index);
   const message = buildMessage(m, th);
+  // A plan running with the lane not busy yet (home, heat, cut: before the AMS
+  // moves, whichever interface started the flow) is a load or an unload all the
+  // same; the toolhead holding filament makes it an unload (view.c).
+  const planRunning = th.steps.length > 0 && th.stepCurrent >= 0 && th.stepCurrent < th.steps.length
+    && th.stepFailed < 0;
   const activityKind: ViewToolhead['activity']['kind'] =
     th.hasError || tcFaultShown(th) ? 'error' : th.runoutActive ? 'runout' : th.busy === Busy.LOAD ? 'loading'
-      : th.busy === Busy.UNLOAD ? 'unloading' : 'idle';
+      : th.busy === Busy.UNLOAD ? 'unloading' : planRunning ? (th.loaded ? 'unloading' : 'loading') : 'idle';
 
   // The loaded tool: the hotend icon's overlay and tint only.
   let tool: ViewToolhead['tool'] = null;

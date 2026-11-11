@@ -130,3 +130,50 @@ test('a plan with no labels and no detail is drawn exactly as it always was', as
   }
   bothAgree(p, 'an empty labels object');
 });
+
+// A flow started from another interface (Mainsail, the printer's LCD menu, the
+// console): the home, heat and cut steps run before the AMS moves, so the lane's
+// op has not changed yet. The plan is the flow all the same, and the running
+// step shows from the first one; filament in the toolhead makes it an unload.
+async function setupOp(op: string, bay: string | null, stage: unknown): Promise<Pair> {
+  const p = await bothCores();
+  assert.equal(setLanguageBoth(p, 'en'), true);
+  resetBoth(p);
+  for (const core of [p.c, p.ts]) {
+    core.apply('openams_ui', 'oams1', {
+      unit: 'oams1', family: 'ams1', idx: 1,
+      bays: [{ s: bay ? 'l' : 'r' }, { s: 'r' }, { s: 'r' }, { s: 'r' }],
+      lane: { id: 'fps1', op, bay, stage },
+    });
+  }
+  return p;
+}
+
+test('an unload started elsewhere shows its home step before the AMS moves', async () => {
+  const p = await setupOp('LOADED', 'oams1-0', [['home', 'heat', 'cut', 'retract'], 0, null, null, {}]);
+  for (const core of [p.c, p.ts]) {
+    const a = activity(core);
+    assert.equal(a.kind, 'unloading');
+    assert.equal(a.index, 0);
+    assert.equal(a.steps[a.index], 'Home the axes');
+  }
+  bothAgree(p, 'home before an unload');
+});
+
+test('a load into an empty toolhead started elsewhere shows its home step', async () => {
+  const p = await setupOp('UNLOADED', null, [['home', 'heat', 'feed'], 0, null, null, {}]);
+  for (const core of [p.c, p.ts]) {
+    const a = activity(core);
+    assert.equal(a.kind, 'loading');
+    assert.equal(a.steps[a.index], 'Home the axes');
+  }
+  bothAgree(p, 'home before a load');
+});
+
+test('a plan announced but not entered, or failed, is no load', async () => {
+  for (const stage of [[['home', 'feed'], null, null, null, {}], [['home', 'feed'], 0, 'home', null, {}]]) {
+    const p = await setupOp('UNLOADED', null, stage);
+    for (const core of [p.c, p.ts]) assert.equal(activity(core).kind, 'idle', JSON.stringify(stage));
+    bothAgree(p, JSON.stringify(stage));
+  }
+});

@@ -1964,6 +1964,14 @@ static void build_activity_rest(const mmu_model_t *m, const mmu_toolhead_t *th,
     }
 }
 
+/* Whether the toolhead's plan has a current step that has not failed: the
+ * flow is under way (C2 5.3), whether or not the AMS moves yet. */
+static bool plan_running(const mmu_toolhead_t *th)
+{
+    return th->step_count > 0 && th->step_current >= 0 &&
+           th->step_current < (int)th->step_count && th->step_failed < 0;
+}
+
 static void build_activity(const mmu_model_t *m, const mmu_toolhead_t *th, view_activity_t *out)
 {
     int i, n;
@@ -1973,6 +1981,13 @@ static void build_activity(const mmu_model_t *m, const mmu_toolhead_t *th, view_
     else if(th->runout_active)              out->kind = VIEW_ACTIVITY_RUNOUT;
     else if(th->busy == MMU_BUSY_LOAD)      out->kind = VIEW_ACTIVITY_LOADING;
     else if(th->busy == MMU_BUSY_UNLOAD)    out->kind = VIEW_ACTIVITY_UNLOADING;
+    /* A plan running with the lane not busy yet: the home, heat and cut steps
+     * come before the AMS moves (and between them in a swap), whichever
+     * interface started the flow. It is a load or an unload all the same, so
+     * the step shows from the first one; the toolhead holding filament makes
+     * it an unload, as the load screen reads it. */
+    else if(plan_running(th))               out->kind = th->loaded ? VIEW_ACTIVITY_UNLOADING
+                                                                   : VIEW_ACTIVITY_LOADING;
     else                                    out->kind = VIEW_ACTIVITY_IDLE;
 
     n = th->step_count;
