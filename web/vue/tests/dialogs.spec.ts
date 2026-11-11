@@ -77,9 +77,12 @@ test.describe('dialogs', () => {
         expect(await requests(page)).toEqual([]);
     });
 
+    // Calibrate is asked about on the `idle` card's loaded oams11: on the
+    // tile-states card, the stop fault latched on fps1 (the feeder stall) holds
+    // every motion of that lane, Calibrate included.
     test('a confirm shows the core\'s own words, verbatim', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await clickRing(states, 'oams11');
+        const idle = card(page, 'idle');
+        await clickRing(idle, 'oams11');
         await action(openPopover(page, 'tile'), 'calibrate').click();
 
         const dlg = dialog(page);
@@ -95,8 +98,8 @@ test.describe('dialogs', () => {
     });
 
     test('the confirm\'s own button resolves the action', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await clickRing(states, 'oams11');
+        const idle = card(page, 'idle');
+        await clickRing(idle, 'oams11');
         await action(openPopover(page, 'tile'), 'calibrate').click();
         await dialog(page).locator('[data-action="calibrate"]').click();
         await expect(dialog(page)).toBeHidden();
@@ -106,8 +109,8 @@ test.describe('dialogs', () => {
     });
 
     test('Cancel on a confirm sends nothing', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await clickRing(states, 'oams11');
+        const idle = card(page, 'idle');
+        await clickRing(idle, 'oams11');
         await action(openPopover(page, 'tile'), 'calibrate').click();
         await dialog(page).locator('[data-role="cancel"]').click();
         await expect(dialog(page)).toBeHidden();

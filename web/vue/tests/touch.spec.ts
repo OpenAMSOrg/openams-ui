@@ -36,14 +36,16 @@ test.describe('a touchscreen', () => {
     });
 
     test('a tap on a dimmed tile action says its reason too', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await clickTile(states, 'oams11');
+        // The `idle` card: on the tile-states card the stop fault latched on
+        // fps1 would be the reason for every motion of oams11's lane.
+        const idle = card(page, 'idle');
+        await clickTile(idle, 'oams11');
         const load = action(openPopover(page, 'tile'), 'load');
         // oams11 holds the loaded T0, so its Load cannot run.
         await expect(load).toHaveAttribute('aria-disabled', 'true');
         await settled(page);
         await load.tap({ force: true });
-        await expect(message(states)).toHaveText('This spool is already loaded');
+        await expect(message(idle)).toHaveText('This spool is already loaded');
         expect(await requests(page)).toEqual([]);
     });
 

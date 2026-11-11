@@ -4,17 +4,22 @@ import { action, card, clickTile, dialog, expectRequests, message, open, openPop
 // What an action asks the host for, and what happens while it waits
 // (UNIFIED_UI.md 8: the panel emits `request` and the host sends it;
 // PRINCIPLES.md 9: a press is shown at once and never sent twice).
+//
+// A Load is pressed on the `idle` card's oams12, a ready ASA in T1. The
+// tile-states card cannot be used for it: its lane fps1 has a stop fault
+// latched (the feeder stall), and a stop fault holds every motion on its lane,
+// in the fault's own words.
 test.describe('requests', () => {
     test.beforeEach(async ({ page }) => {
         await open(page, { state: 'sheet', width: 1200 });
     });
 
     test('a gcode action is emitted as `request`, with the core\'s script', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await clickTile(states, 'oams12');
+        const idle = card(page, 'idle');
+        await clickTile(idle, 'oams12');
         await action(openPopover(page, 'tile'), 'load').click();
         // The payload is the ActionResult itself, nothing wrapped around it.
-        expect(await requests(page)).toEqual([{ kind: 'gcode', script: 'OPENAMS_LOAD GROUP=T3 SLOT=5' }]);
+        expect(await requests(page)).toEqual([{ kind: 'gcode', script: 'OPENAMS_LOAD GROUP=T1 SLOT=5' }]);
     });
 
     test('an rpc action is emitted as `request`, with its method and params', async ({ page }) => {
@@ -33,8 +38,8 @@ test.describe('requests', () => {
     });
 
     test('a double click on Load is one request, not two', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await clickTile(states, 'oams12');
+        const idle = card(page, 'idle');
+        await clickTile(idle, 'oams12');
         const load = action(openPopover(page, 'tile'), 'load');
         // The fastest a hand can manage: the first click sends and closes the
         // menu, so the second finds nothing to press.
@@ -42,7 +47,7 @@ test.describe('requests', () => {
         expect(await requests(page)).toHaveLength(1);
         // Opened again while the printer has not answered, the menu still
         // refuses a second Load.
-        await clickTile(states, 'oams12');
+        await clickTile(idle, 'oams12');
         const again = action(openPopover(page, 'tile'), 'load');
         await expect(again).toHaveAttribute('data-pending', 'true');
         await again.click();
@@ -50,21 +55,21 @@ test.describe('requests', () => {
     });
 
     test('choosing an action closes the menu; a dimmed one leaves it open', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await clickTile(states, 'oams12');
+        const idle = card(page, 'idle');
+        await clickTile(idle, 'oams12');
         const menu = openPopover(page, 'tile');
         await action(menu, 'load').click();
         await expect(page.locator('[data-popover]:popover-open')).toHaveCount(0);
 
-        await clickTile(states, 'oams12');
+        await clickTile(idle, 'oams12');
         const dimmed = openPopover(page, 'tile').locator('[data-enabled="false"]').first();
         await dimmed.click({ force: true });
         await expect(page.locator('[data-popover]:popover-open')).toHaveCount(1);
     });
 
     test('the press is shown at once, and the panel is quiet until then', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await clickTile(states, 'oams12');
+        const idle = card(page, 'idle');
+        await clickTile(idle, 'oams12');
         const load = action(openPopover(page, 'tile'), 'load');
         await expect(load).not.toHaveAttribute('data-pending', 'true');
         await expectRequests(page, 0);
@@ -72,7 +77,7 @@ test.describe('requests', () => {
         // The request went out on the same click, and the menu closed; opened
         // again, the action shows its pressed state.
         await expectRequests(page, 1);
-        await clickTile(states, 'oams12');
+        await clickTile(idle, 'oams12');
         const again = action(openPopover(page, 'tile'), 'load');
         await expect(again).toHaveAttribute('data-pending', 'true');
         // And the reason: the second click is refused while it waits.
@@ -100,16 +105,16 @@ test.describe('requests', () => {
 
     test('a stalled press says the printer did not answer', async ({ page }) => {
         test.setTimeout(30_000);
-        const states = card(page, 'tile-states');
-        await clickTile(states, 'oams12');
+        const idle = card(page, 'idle');
+        await clickTile(idle, 'oams12');
         const load = action(openPopover(page, 'tile'), 'load');
         await load.click();
         await expectRequests(page, 1);
         // Nothing answers for the full wait.
-        await expect(message(states)).toHaveText('No response from the printer', { timeout: 12_000 });
-        await expect(message(states)).toHaveClass(/tone-error/);
+        await expect(message(idle)).toHaveText('No response from the printer', { timeout: 12_000 });
+        await expect(message(idle)).toHaveClass(/tone-error/);
         // And the press is released, so the action can be tried again.
-        await clickTile(states, 'oams12');
+        await clickTile(idle, 'oams12');
         await expect(action(openPopover(page, 'tile'), 'load')).not.toHaveAttribute('data-pending', 'true');
     });
 
