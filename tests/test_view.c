@@ -482,17 +482,21 @@ static void test_save_and_load_action(void)
     assert(!edit_field(&acts, a, "material")->required);
     assert(strcmp(a->form.submit_label, "Save edit") == 0);
 
-    /* the host cannot take an edit: dimmed, with Edit spool's own reason */
+    /* the host cannot take an edit: Spoolman is optional, so the bay's Load is
+     * the plain load (nothing to save the answer to), and only Edit spool is
+     * dimmed, with its own reason */
     g_mmu.spoolman_online = false;
     assert(view_tile_actions(&g_mmu, 0, 1, &acts));
     a = find_action(&acts, "load");
-    assert(!a->enabled && a->reason == view_str(VS_REASON_SPOOLMAN_OFFLINE));
-    assert(a->reason == find_action(&acts, "edit_spool")->reason);
+    assert(a->enabled && !a->form.present);
+    assert(strcmp(a->line, "load oams12") == 0);
+    assert(find_action(&acts, "edit_spool")->reason == view_str(VS_REASON_SPOOLMAN_OFFLINE));
     g_mmu.spoolman_edit = false;
     assert(view_tile_actions(&g_mmu, 0, 1, &acts));
     a = find_action(&acts, "load");
-    assert(!a->enabled && a->reason == view_str(VS_REASON_EDIT_NO_SPOOLMAN));
-    assert(a->reason == find_action(&acts, "edit_spool")->reason);
+    assert(a->enabled && !a->form.present);
+    assert(strcmp(a->line, "load oams12") == 0);
+    assert(find_action(&acts, "edit_spool")->reason == view_str(VS_REASON_EDIT_NO_SPOOLMAN));
     /* a known bay is not dimmed by that: nothing about it needs the edit */
     assert(view_tile_actions(&g_mmu, 0, 0, &acts));
     a = find_action(&acts, "load");
@@ -1100,8 +1104,11 @@ static void test_confirm_action(void)
     assert(find_action(&acts, "confirm_spool") == NULL);
 
     /* --- an unidentified bay waiting too: every form keeps its fields (the
-     * pool holds both spool editors, the assign and group forms and this one) */
+     * pool holds both spool editors, the assign and group forms and this one).
+     * The Load that saves first needs a Spoolman to save to. */
     build_actions_model(&s_local, 2);
+    s_local.spoolman_edit = true;
+    s_local.spoolman_online = true;
     s_local.units[0].slots[1].info_source = MMU_INFO_UNKNOWN;
     s_local.units[0].slots[1].pending_confirmation = true;
     assert(view_tile_actions(&s_local, 0, 1, &acts));

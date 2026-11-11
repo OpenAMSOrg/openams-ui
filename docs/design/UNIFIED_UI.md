@@ -274,7 +274,7 @@ The host keeps a lane's failed toolchange, Load or Unload until it is finished (
 ### 4f. Finish the job (owner, 2026-10-02; principle 13)
 
 - **Heating and homing are steps.** A load, unload or toolchange that needs heat heats as the plan's first step instead of refusing. During a print, the print's temperature applies and the macros never change it.
-- **An unknown spool is completed just in time.** Load on an unknown spool opens the spool form ("Save and load"); the load runs once Spoolman has it. The 235 °C fallback is only for paths that cannot show a form.
+- **An unknown spool is completed just in time.** Load on an unknown spool opens the spool form ("Save and load"); the load runs once Spoolman has it. Spoolman is optional: when it is not set up or is offline there is nothing to save to, and Load is the plain load. The 235 °C fallback is only for paths that cannot show a form.
 
 ## 5. Design tokens (`design/tokens.json`)
 
