@@ -115,8 +115,11 @@ export function build(core: Core, sc: Scenario): View {
       core.apply('openams_ui', u.name, {
         v: 1, unit: u.name, idx: u.idx, family: u.family, serial: '', online: u.online ?? true, ready: true, cal: 'c',
         lane: laneObject(lane),
+        // No `a` on a bay: the sheet's printer does not list what a bay offers,
+        // like the device's demo, so the display's own rules decide what is
+        // dimmed. An empty `a` would be a printer that withholds every motion.
         bays: u.bays.map((b, i) => ({
-          id: u.idx * 4 + i, s: b.s, cal: 'c', a: '', sp: b.link ? { id: u.idx * 10 + i, src: b.link } : null,
+          id: u.idx * 4 + i, s: b.s, cal: 'c', sp: b.link ? { id: u.idx * 10 + i, src: b.link } : null,
         })),
         groups,
         env: u.env === undefined ? { t: 24, rh: 31 } : u.env,
