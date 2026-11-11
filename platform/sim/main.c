@@ -47,6 +47,9 @@
  *                         built-in scenario or a fixture.
  *   --bind-unit NAME      with --moonraker: bind to the `openams_ui NAME`
  *                         object instead of the first one the server lists.
+ *   --bind-serial SERIAL  with --moonraker: the bound unit's serial, found
+ *                         before the name (as a display stores it); the
+ *                         binding to store is printed as `MOONRAKER bound`.
  *   --dump-model-after S  with --moonraker: after S seconds, print the same
  *                         dump as --dump-model and exit 0 (headless, for
  *                         tests; no window is opened).
@@ -169,6 +172,17 @@ platform_link_t platform_link_status(char *detail, size_t n)
         break;
     }
     return PLATFORM_LINK_READY;
+}
+
+unsigned platform_link_units(char *names, size_t n)
+{
+    char wait[48];
+
+    if(names && n) names[0] = '\0';
+    if(!s_moonraker_url || mc_link() != MC_LINK_KLIPPY_WAIT ||
+       mc_wait_reason(wait, sizeof wait) != MC_WAIT_NO_UNIT)
+        return 0;
+    return mc_units_seen(names, n);
 }
 
 /* --action: UI lines to inject through platform_action() once the link is
@@ -990,6 +1004,7 @@ static core_t *s_core;
 /* -------------------------------------------------------- live Moonraker link */
 
 static const char *s_bind_unit;
+static const char *s_bind_serial;
 static double s_dump_after_s = -1.0;
 static double s_dump_view_after_s = -1.0;
 static bool s_mc_socket_up;    /* ws handshake up and mc_on_connected() called */
@@ -1014,6 +1029,29 @@ static void moonraker_link_cb(void *ctx, mc_link_t state)
 
     (void)ctx;
     printf("MOONRAKER link=%s\n", link_name(state));
+    if(state == MC_LINK_KLIPPY_WAIT) {
+        char detail[48];
+        char names[64];
+
+        switch(mc_wait_reason(detail, sizeof detail)) {
+        case MC_WAIT_NO_OPENAMS:
+            printf("MOONRAKER no openams_ui object\n");
+            break;
+        case MC_WAIT_NO_UNIT:
+            (void)mc_units_seen(names, sizeof names);
+            printf("MOONRAKER no unit %s; the printer has: %s\n", detail, names);
+            break;
+        default:
+            break;
+        }
+    }
+    else if(state == MC_LINK_READY) {
+        static const char *const how[] = { "none", "first", "serial", "name", "only" };
+        char unit[48];
+        mc_pick_t pick = mc_unit_pick(unit, sizeof unit);
+
+        printf("MOONRAKER unit=%s by=%s\n", unit, how[pick]);
+    }
     fflush(stdout);
     if(state == MC_LINK_DOWN || state == MC_LINK_KLIPPY_WAIT) {
         for(i = 0; i < (int)g_mmu.unit_count; i++) g_mmu.units[i].connected = false;
@@ -1026,6 +1064,14 @@ static void moonraker_link_cb(void *ctx, mc_link_t state)
          * the very first connect, when there is nothing to drop yet. */
         core_reset(s_core, true);
     }
+}
+
+/* A display stores this binding; the simulator only says it. */
+static void moonraker_bound_cb(void *ctx, const char *unit, const char *serial)
+{
+    (void)ctx;
+    printf("MOONRAKER bound unit=%s serial=%s\n", unit, serial[0] ? serial : "-");
+    fflush(stdout);
 }
 
 static bool moonraker_send_cb(void *ctx, const char *text, size_t len)
@@ -1121,7 +1167,9 @@ static void moonraker_init(void)
     cb.on_link = moonraker_link_cb;
     cb.on_gcode_result = moonraker_gcode_cb;
     cb.on_rpc_result = moonraker_rpc_cb;
+    cb.on_bound = moonraker_bound_cb;
     mc_init(&cb, s_bind_unit);
+    mc_bind_serial(s_bind_serial);
 
     s_mc_socket_up = false;
     s_mc_first_try = true;
@@ -1289,6 +1337,9 @@ int main(int argc, char **argv)
         else if(strcmp(argv[i], "--bind-unit") == 0 && i + 1 < argc) {
             s_bind_unit = argv[++i];
         }
+        else if(strcmp(argv[i], "--bind-serial") == 0 && i + 1 < argc) {
+            s_bind_serial = argv[++i];
+        }
         else if(strcmp(argv[i], "--dump-model-after") == 0 && i + 1 < argc) {
             s_dump_after_s = atof(argv[++i]);
             if(s_dump_after_s < 0.0) {
@@ -1311,7 +1362,7 @@ int main(int argc, char **argv)
             s_actions[s_action_count++] = argv[++i];
         }
         else {
-            fprintf(stderr, "usage: %s [--scenario NAME] [--unit NAME] [--lang CODE] [--zoom N] [--smoke] [--audit] [--screenshots DIR] [--gallery DIR] [--bench-builds N] [--replay FILE] [--replay-speed X] [--dump-model] [--dump-view] [--moonraker URL] [--bind-unit NAME] [--dump-model-after SECONDS] [--dump-view-after SECONDS] [--action LINE]\n",
+            fprintf(stderr, "usage: %s [--scenario NAME] [--unit NAME] [--lang CODE] [--zoom N] [--smoke] [--audit] [--screenshots DIR] [--gallery DIR] [--bench-builds N] [--replay FILE] [--replay-speed X] [--dump-model] [--dump-view] [--moonraker URL] [--bind-unit NAME] [--bind-serial SERIAL] [--dump-model-after SECONDS] [--dump-view-after SECONDS] [--action LINE]\n",
                     argv[0]);
             return 1;
         }

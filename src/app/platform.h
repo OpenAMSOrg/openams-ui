@@ -59,4 +59,9 @@ typedef enum {
 
 platform_link_t platform_link_status(char *detail, size_t n);
 
+/** With PLATFORM_LINK_NO_UNIT, the units the printer does have ("ams1,
+ * ams1_2"), so the screen can say what to bind to; "" otherwise. Returns how
+ * many there are. */
+unsigned platform_link_units(char *names, size_t n);
+
 #endif /* PLATFORM_H */

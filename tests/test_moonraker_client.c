@@ -86,6 +86,10 @@ typedef struct {
     int gcode_id;
     int gcode_ok;
     char gcode_msg[128];
+
+    int bound_count;        /* on_bound: the binding to store */
+    char bound_unit[64];
+    char bound_serial[64];
 } harness_t;
 
 static harness_t h;
@@ -171,6 +175,14 @@ static void h_on_gcode_result(void *ctx, int request_id, bool ok, const char *me
     snprintf(h.gcode_msg, sizeof h.gcode_msg, "%s", message ? message : "");
 }
 
+static void h_on_bound(void *ctx, const char *unit, const char *serial)
+{
+    (void)ctx;
+    h.bound_count++;
+    snprintf(h.bound_unit, sizeof h.bound_unit, "%s", unit ? unit : "");
+    snprintf(h.bound_serial, sizeof h.bound_serial, "%s", serial ? serial : "");
+}
+
 static mc_callbacks_t cbs = {
     .ctx = &h,
     .send_text = h_send,
@@ -178,6 +190,7 @@ static mc_callbacks_t cbs = {
     .on_component_status = h_on_component_status,
     .on_link = h_on_link,
     .on_gcode_result = h_on_gcode_result,
+    .on_bound = h_on_bound,
 };
 
 static void reset(void)
@@ -1091,6 +1104,9 @@ static void test_list_scan(void)
 {
     char big[24000];
     char name[200];
+    char unit[64];
+    char detail[64];
+    char names[96];
     size_t o = 0;
     int i;
 
@@ -1122,11 +1138,42 @@ static void test_list_scan(void)
     assert(mc_link() == MC_LINK_KLIPPY_WAIT);
     mc_deinit();
 
-    /* The bound unit is not in the list (another unit is): same. */
-    start_to_list("oams9");
-    list_reply("\"openams_ui oams1\", \"toolhead\"");
+    /* The bound unit is not in the list, and the printer has one unit: that
+     * one, the printer's only unit, and the binding stays as it was (a
+     * display set up with the guide's old "unit oams1" on a printer whose
+     * Cortex Bridge config calls its AMS ams1). */
+    start_to_list("oams1");
+    list_reply("\"openams_ui ams1\", \"toolhead\"");
+    assert_subscribed_to("openams_ui ams1", false, true);
+    assert(mc_unit_pick(unit, sizeof unit) == MC_PICK_ONLY && strcmp(unit, "ams1") == 0);
+    mc_deinit();
+
+    /* Two units and neither is the bound one: wait, and name both. */
+    start_to_list("oams1");
+    list_reply("\"openams_ui ams1\", \"toolhead\", \"openams_ui ams1_2\"");
     assert(h.sent == 2);
     assert(mc_link() == MC_LINK_KLIPPY_WAIT);
+    assert(mc_wait_reason(detail, sizeof detail) == MC_WAIT_NO_UNIT);
+    assert(strcmp(detail, "oams1") == 0);
+    assert(mc_units_seen(names, sizeof names) == 2 && strcmp(names, "ams1, ams1_2") == 0);
+    mc_deinit();
+
+    /* Bound, and no openams_ui object at all: OpenAMS is what is missing,
+     * not the unit. */
+    start_to_list("oams1");
+    list_reply("\"gcode\", \"toolhead\"");
+    assert(h.sent == 2);
+    assert(mc_wait_reason(detail, sizeof detail) == MC_WAIT_NO_OPENAMS);
+    assert(mc_units_seen(names, sizeof names) == 0 && names[0] == '\0');
+    mc_deinit();
+
+    /* More units than the list holds: it ends in "...". */
+    start_to_list("x");
+    list_reply("\"openams_ui unit_aaaaaaaaaa\", \"openams_ui unit_bbbbbbbbbb\", "
+               "\"openams_ui unit_cccccccccc\", \"openams_ui unit_dddddddddd\", "
+               "\"openams_ui unit_eeeeeeeeee\"");
+    assert(mc_units_seen(names, sizeof names) == 5);
+    assert(strcmp(names, "unit_aaaaaaaaaa, unit_bbbbbbbbbb, unit_cccccccccc, ...") == 0);
     mc_deinit();
 
     /* A list that omits oams_manager and toolhead subscribes without them. */
@@ -1284,6 +1331,174 @@ static void test_component_status_error(void)
     mc_deinit();
 }
 
+/* ------------------------------------------------- binding by serial --- */
+
+/** Connect bound to @p unit and @p serial, leaving the list request (id 2)
+ *  pending. */
+static void start_bound(const char *unit, const char *serial)
+{
+    reset();
+    mc_init(&cbs, unit);
+    mc_bind_serial(serial);
+    mc_on_connected(0);
+    assert(text_in("{\"jsonrpc\": \"2.0\", \"result\": {\"klippy_state\": \"ready\"}, \"id\": 1}", 0));
+    assert_frame_method(1, "printer.objects.list", 2);
+}
+
+/** Answer request @p id with `{"status": {<body>}}`. */
+static void status_reply(int id, const char *body)
+{
+    char text[2048];
+
+    snprintf(text, sizeof text,
+             "{\"jsonrpc\":\"2.0\",\"id\":%d,\"result\":{\"eventtime\":0,\"status\":{%s}}}",
+             id, body);
+    assert(text_in(text, 0));
+}
+
+/** The subscribe (frame @p frame, id @p id) went to @p unit; answer it with
+ *  the unit's @p serial_json ("\"S-A\"" or "null"). */
+static void subscribed_reply(int frame, int id, const char *unit, const char *serial_json)
+{
+    char object[96];
+    char body[256];
+
+    snprintf(object, sizeof object, "\"openams_ui %s\"", unit);
+    assert_frame_method(frame, "printer.objects.subscribe", id);
+    assert(strstr(h.frames[frame], object) != NULL);
+    snprintf(body, sizeof body, "%s:{\"v\":1,\"unit\":\"%s\",\"serial\":%s}", object, unit,
+             serial_json);
+    status_reply(id, body);
+    assert(mc_link() == MC_LINK_READY);
+}
+
+static void test_bind_by_serial(void)
+{
+    char unit[64];
+    char detail[64];
+    char names[96];
+
+    printf("bind_by_serial\n");
+
+    /* Bound by name only (every display before serials): the name, and the
+     * serial its object publishes is learned and handed over to be stored. */
+    start_bound("ams1", NULL);
+    list_reply("\"openams_ui ams1\", \"openams_ui ams2\"");
+    subscribed_reply(2, 3, "ams1", "\"S-A\"");
+    assert(mc_unit_pick(unit, sizeof unit) == MC_PICK_NAME && strcmp(unit, "ams1") == 0);
+    assert(h.bound_count == 1);
+    assert(strcmp(h.bound_unit, "ams1") == 0 && strcmp(h.bound_serial, "S-A") == 0);
+    /* Klipper restarts: the same unit, nothing new to store. */
+    assert(text_in("{\"jsonrpc\":\"2.0\",\"method\":\"notify_klippy_disconnected\"}", 0));
+    mc_on_disconnected(0);
+    mc_on_connected(60000);
+    assert(text_in("{\"jsonrpc\": \"2.0\", \"result\": {\"klippy_state\": \"ready\"}, \"id\": 5}", 60000));
+    assert(text_in("{\"jsonrpc\":\"2.0\",\"id\":6,\"result\":{\"objects\":"
+                   "[\"openams_ui ams1\",\"openams_ui ams2\"]}}", 60000));
+    /* The serial is known now, and there are two units: ask for theirs. */
+    assert_frame_method(h.sent - 1, "printer.objects.query", 7);
+    status_reply(7, "\"openams_ui ams1\":{\"serial\":\"S-A\"},\"openams_ui ams2\":{\"serial\":\"S-C\"}");
+    subscribed_reply(h.sent - 1, 8, "ams1", "\"S-A\"");
+    assert(mc_unit_pick(unit, sizeof unit) == MC_PICK_SERIAL);
+    assert(h.bound_count == 1);
+    mc_deinit();
+
+    /* Renamed in oams.cfg (oams1 is now ams1_2, beside another AMS 1): the
+     * units' serials are asked for, the bound one wins, and the new name is
+     * handed over to be stored. */
+    start_bound("oams1", "S-B");
+    list_reply("\"openams_ui ams1\", \"toolhead\", \"openams_ui ams1_2\"");
+    assert(h.sent == 3);
+    assert_frame_method(2, "printer.objects.query", 3);
+    assert(strstr(h.frames[2], "\"openams_ui ams1\":[\"serial\"]") != NULL);
+    assert(strstr(h.frames[2], "\"openams_ui ams1_2\":[\"serial\"]") != NULL);
+    assert(strstr(h.frames[2], "toolhead") == NULL);
+    status_reply(3, "\"openams_ui ams1\":{\"serial\":\"S-A\"},\"openams_ui ams1_2\":{\"serial\":\"S-B\"}");
+    subscribed_reply(3, 4, "ams1_2", "\"S-B\"");
+    assert(strstr(h.frames[3], "\"toolhead\"") != NULL);
+    assert(mc_unit_pick(unit, sizeof unit) == MC_PICK_SERIAL && strcmp(unit, "ams1_2") == 0);
+    assert(h.bound_count == 1);
+    assert(strcmp(h.bound_unit, "ams1_2") == 0 && strcmp(h.bound_serial, "S-B") == 0);
+    mc_deinit();
+
+    /* The serial wins over the name: the name now belongs to another AMS. */
+    start_bound("ams1", "S-B");
+    list_reply("\"openams_ui ams1\", \"openams_ui ams1_2\"");
+    status_reply(3, "\"openams_ui ams1\":{\"serial\":\"S-A\"},\"openams_ui ams1_2\":{\"serial\":\"S-B\"}");
+    subscribed_reply(3, 4, "ams1_2", "\"S-B\"");
+    assert(h.bound_count == 1 && strcmp(h.bound_unit, "ams1_2") == 0);
+    mc_deinit();
+
+    /* Serials not read yet (a unit publishes null until it has its
+     * identity): the name, and the stored serial is kept, not cleared. */
+    start_bound("ams1", "S-B");
+    list_reply("\"openams_ui ams1\", \"openams_ui ams1_2\"");
+    status_reply(3, "\"openams_ui ams1\":{\"serial\":null},\"openams_ui ams1_2\":{\"serial\":null}");
+    subscribed_reply(3, 4, "ams1", "null");
+    assert(mc_unit_pick(unit, sizeof unit) == MC_PICK_NAME);
+    assert(h.bound_count == 0);
+    mc_deinit();
+
+    /* Neither the serial nor the name, two units: wait, naming them. */
+    start_bound("oams1", "S-X");
+    list_reply("\"openams_ui ams1\", \"openams_ui ams1_2\"");
+    status_reply(3, "\"openams_ui ams1\":{\"serial\":\"S-A\"},\"openams_ui ams1_2\":{\"serial\":\"S-B\"}");
+    assert(h.sent == 3);
+    assert(mc_link() == MC_LINK_KLIPPY_WAIT);
+    assert(mc_wait_reason(detail, sizeof detail) == MC_WAIT_NO_UNIT && strcmp(detail, "oams1") == 0);
+    assert(mc_units_seen(names, sizeof names) == 2 && strcmp(names, "ams1, ams1_2") == 0);
+    assert(h.bound_count == 0);
+    mc_deinit();
+
+    /* Only a serial bound (no name): the wait names the serial. */
+    start_bound(NULL, "S-X");
+    list_reply("\"openams_ui ams1\", \"openams_ui ams1_2\"");
+    status_reply(3, "\"openams_ui ams1\":{\"serial\":\"S-A\"},\"openams_ui ams1_2\":{\"serial\":\"S-B\"}");
+    assert(mc_wait_reason(detail, sizeof detail) == MC_WAIT_NO_UNIT && strcmp(detail, "S-X") == 0);
+    mc_deinit();
+
+    /* One unit, renamed: no query (there is nothing to tell apart); its
+     * subscribe result has the bound serial, so it is still this display's
+     * unit, and the new name is stored. */
+    start_bound("oams1", "S-A");
+    list_reply("\"openams_ui ams1\"");
+    subscribed_reply(2, 3, "ams1", "\"S-A\"");
+    assert(mc_unit_pick(unit, sizeof unit) == MC_PICK_SERIAL && strcmp(unit, "ams1") == 0);
+    assert(h.bound_count == 1);
+    assert(strcmp(h.bound_unit, "ams1") == 0 && strcmp(h.bound_serial, "S-A") == 0);
+    mc_deinit();
+
+    /* One unit that is another AMS: shown (it is all there is), but the
+     * binding is not moved onto it. */
+    start_bound("oams1", "S-X");
+    list_reply("\"openams_ui ams1\"");
+    subscribed_reply(2, 3, "ams1", "\"S-A\"");
+    assert(mc_unit_pick(unit, sizeof unit) == MC_PICK_ONLY);
+    assert(h.bound_count == 0);
+    mc_deinit();
+
+    /* Unbound: the first unit; nothing is stored, so it stays "the first". */
+    start_bound(NULL, NULL);
+    list_reply("\"openams_ui ams2\", \"openams_ui ams1\"");
+    subscribed_reply(2, 3, "ams2", "\"S-C\"");
+    assert(mc_unit_pick(unit, sizeof unit) == MC_PICK_FIRST);
+    assert(h.bound_count == 0);
+    mc_deinit();
+
+    /* An error answer to the serial query starts over. */
+    start_bound("ams1", "S-B");
+    list_reply("\"openams_ui ams1\", \"openams_ui ams1_2\"");
+    assert(text_in("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-1,\"message\":\"x\"},\"id\":3}", 0));
+    assert_frame_method(3, "server.info", 4);
+    mc_deinit();
+
+    /* A serial too long to store is ignored: bound by name only. */
+    start_bound("ams1", "0123456789012345678901234567890123456789");
+    list_reply("\"openams_ui ams1\", \"openams_ui ams1_2\"");
+    assert_subscribed_to("openams_ui ams1", false, false);
+    mc_deinit();
+}
+
 int main(void)
 {
     test_connect_flow();
@@ -1301,6 +1516,7 @@ int main(void)
     test_malformed();
     test_oversized();
     test_list_scan();
+    test_bind_by_serial();
     test_dropped_broadcasts();
     test_component_status_error();
     printf("test_moonraker_client: all tests passed\n");

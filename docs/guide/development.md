@@ -66,6 +66,10 @@ they run fast. On a machine with no display, prefix `SDL_VIDEODRIVER=dummy`.
 ```
 
 `--bind-unit NAME` binds to that `openams_ui` object instead of the first one.
+`--bind-serial SERIAL` adds the unit's serial, found before the name, as a
+display stores it; the binding a display would store prints as
+`MOONRAKER bound unit=... serial=...`, and the chosen unit as
+`MOONRAKER unit=... by=first|serial|name|only`.
 
 ### Dumps and injected actions
 

@@ -34,6 +34,12 @@ platform_link_t platform_link_status(char *detail, size_t n)
     return PLATFORM_LINK_READY;
 }
 
+unsigned platform_link_units(char *names, size_t n)
+{
+    if(names && n) names[0] = '\0';
+    return 0;
+}
+
 /* No physical touchscreen to calibrate here: the browser has none either. */
 void platform_touch_calibrate(void)
 {

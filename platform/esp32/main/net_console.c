@@ -90,6 +90,8 @@ static void print_settings(void)
     printf("password: %s\n", cfg.password[0] ? "set" : "none");
     printf("moonraker: %s\n", cfg.moonraker_url[0] ? cfg.moonraker_url : "(none)");
     printf("unit: %s\n", cfg.bind_unit[0] ? cfg.bind_unit : "(first unit)");
+    if(cfg.bind_serial[0]) printf("unit serial: %s\n", cfg.bind_serial);
+    else if(cfg.bind_unit[0]) printf("unit serial: (stored on the next connect)\n");
     if(net_wifi_is_up()) {
         printf("wifi: up, ip %s\n", net_wifi_ip());
     }
@@ -149,7 +151,10 @@ static void cmd_unit(int argc, char **argv)
 {
     net_config_t cfg;
     net_config_load(&cfg);
+    /* A new binding (or none): the old unit's serial goes with it, and the
+     * new one's is learned on the next connect. */
     cfg.bind_unit[0] = '\0';
+    cfg.bind_serial[0] = '\0';
     if(argc >= 2) {
         strlcpy(cfg.bind_unit, argv[1], sizeof(cfg.bind_unit));
     }

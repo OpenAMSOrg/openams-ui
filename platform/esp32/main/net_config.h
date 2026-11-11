@@ -13,11 +13,14 @@ typedef struct {
     char ssid[33];
     char password[65];
     char moonraker_url[128]; /* "ws://host:7125/websocket"; "" = demo mode */
-    char bind_unit[32];      /* "" = the first openams_ui unit */
+    char bind_unit[48];      /* "" = the first openams_ui unit */
+    char bind_serial[33];    /* the bound unit's serial, learned on connect;
+                              * found before the name, so a rename in oams.cfg
+                              * keeps the binding ("" = not known yet) */
 } net_config_t;
 
 /* Zeroes *out first. Returns true if an SSID is stored. */
 bool net_config_load(net_config_t *out);
 
-/* Writes all four keys; true on success. */
+/* Writes every key; true on success. */
 bool net_config_save(const net_config_t *cfg);

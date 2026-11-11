@@ -32,12 +32,15 @@
 #define MC_UI_PREFIX "openams_ui "
 #define MC_OBJECT_NAME_MAX 64
 #define MC_UNIT_NAME_MAX 48
+#define MC_SERIAL_MAX 33     /* the 24-hex-digit AMS IDs, and room to spare */
+#define MC_SEEN_MAX 64       /* "ams1, ams1_2, ams_ht" for the not-found wait */
 #define MC_MAX_PENDING 8
 
 /** Which request an id belongs to. */
 typedef enum {
     MC_REQ_SERVER_INFO,
     MC_REQ_OBJECTS_LIST,
+    MC_REQ_SERIALS,  /**< printer.objects.query of every unit's serial */
     MC_REQ_SUBSCRIBE,
     MC_REQ_COMPONENT_STATUS,
     MC_REQ_GCODE,
@@ -56,14 +59,21 @@ typedef struct {
     mc_callbacks_t cb;
     mc_link_t link;
 
-    /* Configured by mc_init. */
+    /* Configured by mc_init and mc_bind_serial, and followed as the bound
+     * unit is found (on_bound). */
     bool bound;
     char bound_unit[MC_UNIT_NAME_MAX];
+    char bound_serial[MC_SERIAL_MAX];
 
     /* Chosen from printer.objects.list. */
     char object_name[MC_OBJECT_NAME_MAX];
     char unit[MC_UNIT_NAME_MAX];
+    mc_pick_t pick;
     bool have_object;
+
+    /* The openams_ui units of the last object list, for the not-found wait. */
+    char seen[MC_SEEN_MAX];
+    unsigned seen_count;
 
     /* oams_manager (C2 4.9/6.5, settings, lanes_by_fps and commands) is only fetched
      * when the host's object list carries it. */
@@ -130,6 +140,27 @@ void mc_init(const mc_callbacks_t *cb, const char *bound_unit)
         mmu_copy_text(g_mc.bound_unit, sizeof(g_mc.bound_unit), bound_unit);
     }
     g_mc.backoff_ms = MC_BACKOFF_MIN_MS;
+}
+
+void mc_bind_serial(const char *serial)
+{
+    g_mc.bound_serial[0] = '\0';
+    if(serial && serial[0] && strlen(serial) < sizeof g_mc.bound_serial) {
+        memcpy(g_mc.bound_serial, serial, strlen(serial) + 1);
+        g_mc.bound = true;
+    }
+}
+
+mc_pick_t mc_unit_pick(char *unit, size_t n)
+{
+    if(unit && n) snprintf(unit, n, "%s", g_mc.pick == MC_PICK_NONE ? "" : g_mc.unit);
+    return g_mc.pick;
+}
+
+unsigned mc_units_seen(char *names, size_t n)
+{
+    if(names && n) snprintf(names, n, "%s", g_mc.seen);
+    return g_mc.seen_count;
 }
 
 void mc_deinit(void)
@@ -429,15 +460,18 @@ static bool mc_join(char *dst, size_t dst_size, const char *prefix, const char *
 
 /**
  * What printer.objects.list's names say, folded as they go by so the list
- * itself is never held: the wanted `openams_ui <unit>` object (the bound
- * unit, or the first one when unbound), and whether `oams_manager` and
- * `toolhead` are present. Both the raw scan and the cJSON fallback feed it.
+ * itself is never held: the `openams_ui <unit>` objects (how many, the first,
+ * whether the bound name is one, and their names for the not-found wait), and
+ * whether `oams_manager` and `toolhead` are present. Both the raw scan and the
+ * cJSON fallback feed it.
  */
 typedef struct {
-    char wanted[MC_OBJECT_NAME_MAX]; /**< bound: the exact name; else "" */
-    bool wanted_ok;                  /**< false: the bound name cannot fit */
-    bool found;
-    char ui_name[MC_OBJECT_NAME_MAX];
+    unsigned count;                /**< openams_ui units listed */
+    char first[MC_UNIT_NAME_MAX];  /**< the first of them */
+    bool named;                    /**< the bound name is one of them */
+    char seen[MC_SEEN_MAX];
+    bool seen_cut;                 /**< seen ended in "..." */
+    cJSON *serials;                /**< the serial query's objects (a serial is bound) */
     bool have_oams_manager;
     bool have_toolhead;
 } mc_list_t;
@@ -445,42 +479,189 @@ typedef struct {
 static void mc_list_begin(mc_list_t *l)
 {
     memset(l, 0, sizeof *l);
-    l->wanted_ok = !g_mc.bound ||
-                   mc_join(l->wanted, sizeof l->wanted, MC_UI_PREFIX, g_mc.bound_unit);
+    /* Only a bound serial needs the units' serials; NULL (no memory) falls
+     * back to the name. A unit or two, so this heap stays small however long
+     * the list is. */
+    if(g_mc.bound_serial[0]) l->serials = cJSON_CreateObject();
+}
+
+/** Add @p unit to the "a, b" list, or end it with "..." once it is full. */
+static void mc_list_seen(mc_list_t *l, const char *unit)
+{
+    size_t len = strlen(l->seen);
+    const char *sep = len ? ", " : "";
+
+    if(l->seen_cut) return;
+    /* Room for this name and a later ", ..." */
+    if(len + strlen(sep) + strlen(unit) + 5 < sizeof l->seen) {
+        snprintf(l->seen + len, sizeof l->seen - len, "%s%s", sep, unit);
+    } else {
+        snprintf(l->seen + len, sizeof l->seen - len, "%s...", sep);
+        l->seen_cut = true;
+    }
 }
 
 /** Fold one decoded object name (NUL-terminated, never truncated). */
 static void mc_list_add(mc_list_t *l, const char *name)
 {
-    if(strcmp(name, "oams_manager") == 0) l->have_oams_manager = true;
-    else if(strcmp(name, "toolhead") == 0) l->have_toolhead = true;
+    static const char *const serial_field[] = { "serial" };
+    const size_t plen = strlen(MC_UI_PREFIX);
+    const char *unit;
 
-    if(l->found) return;
-    if(g_mc.bound) {
-        if(!l->wanted_ok || strcmp(name, l->wanted) != 0) return;
-    } else if(strncmp(name, MC_UI_PREFIX, strlen(MC_UI_PREFIX)) != 0) {
+    if(strcmp(name, "oams_manager") == 0) {
+        l->have_oams_manager = true;
         return;
     }
-    l->found = true;
-    memcpy(l->ui_name, name, strlen(name) + 1);
+    if(strcmp(name, "toolhead") == 0) {
+        l->have_toolhead = true;
+        return;
+    }
+    if(strncmp(name, MC_UI_PREFIX, plen) != 0) return;
+    unit = name + plen;
+    if(unit[0] == '\0' || strlen(unit) >= MC_UNIT_NAME_MAX) return;
+
+    if(l->count == 0) memcpy(l->first, unit, strlen(unit) + 1);
+    l->count++;
+    mc_list_seen(l, unit);
+    if(g_mc.bound_unit[0] && strcmp(unit, g_mc.bound_unit) == 0) l->named = true;
+    if(l->serials) {
+        cJSON *fields = cJSON_CreateStringArray(serial_field, 1);
+
+        if(!fields || !cJSON_AddItemToObject(l->serials, name, fields)) {
+            cJSON_Delete(fields);
+            cJSON_Delete(l->serials);
+            l->serials = NULL;
+        }
+    }
 }
 
-/** Adopt the list's outcome: the chosen object, or "no projection yet". */
-static void mc_list_finish(const mc_list_t *l, uint32_t now_ms)
+/** Subscribe to `openams_ui <unit>`, chosen by @p pick. */
+static void mc_adopt(const char *unit, mc_pick_t pick, uint32_t now_ms)
 {
-    const char *unit = l->ui_name + strlen(MC_UI_PREFIX);
+    /* Units longer than MC_UNIT_NAME_MAX were never folded, so both fit. */
+    (void)mc_join(g_mc.object_name, sizeof g_mc.object_name, MC_UI_PREFIX, unit);
+    if(unit != g_mc.unit) memcpy(g_mc.unit, unit, strlen(unit) + 1);
+    g_mc.pick = pick;
+    mc_send_subscribe(now_ms);
+}
 
-    if(!l->found || unit[0] == '\0' || strlen(unit) >= sizeof g_mc.unit) {
-        /* No projection yet; the retry loop will look again. */
-        if(g_mc.bound) mc_enter_klippy_wait(now_ms, MC_WAIT_NO_UNIT, g_mc.bound_unit);
-        else mc_enter_klippy_wait(now_ms, MC_WAIT_NO_OPENAMS, NULL);
-        return;
+/**
+ * The bound serial is not among the units (or is not known): the bound name,
+ * else the printer's only unit, else wait and say which units there are.
+ */
+static void mc_pick_by_name(bool named, const char *only, unsigned count, uint32_t now_ms)
+{
+    if(count == 0) mc_enter_klippy_wait(now_ms, MC_WAIT_NO_OPENAMS, NULL);
+    else if(named) mc_adopt(g_mc.bound_unit, MC_PICK_NAME, now_ms);
+    else if(count == 1) mc_adopt(only, MC_PICK_ONLY, now_ms);
+    else mc_enter_klippy_wait(now_ms, MC_WAIT_NO_UNIT,
+                              g_mc.bound_unit[0] ? g_mc.bound_unit : g_mc.bound_serial);
+}
+
+/** Ask for every unit's serial (@p objects, owned). False when it could not
+ *  be sent; the caller then goes by name. */
+static bool mc_send_serials(cJSON *objects, uint32_t now_ms)
+{
+    cJSON *params = cJSON_CreateObject();
+
+    if(!params || !cJSON_AddItemToObject(params, "objects", objects)) {
+        cJSON_Delete(params);
+        cJSON_Delete(objects);
+        return false;
     }
-    memcpy(g_mc.object_name, l->ui_name, strlen(l->ui_name) + 1);
-    memcpy(g_mc.unit, unit, strlen(unit) + 1);
+    g_mc.now_ms = now_ms;
+    return mc_send_request("printer.objects.query", params, MC_REQ_SERIALS) >= 0;
+}
+
+/** Adopt the list's outcome: the chosen object, the serial query, or "no
+ *  projection yet". */
+static void mc_list_finish(mc_list_t *l, uint32_t now_ms)
+{
+    g_mc.pick = MC_PICK_NONE;
     g_mc.have_oams_manager = l->have_oams_manager;
     g_mc.have_toolhead = l->have_toolhead;
-    mc_send_subscribe(now_ms);
+    memcpy(g_mc.seen, l->seen, sizeof g_mc.seen);
+    g_mc.seen_count = l->count;
+
+    if(l->count > 0 && !g_mc.bound) {
+        cJSON_Delete(l->serials);
+        mc_adopt(l->first, MC_PICK_FIRST, now_ms);
+        return;
+    }
+    /* With one unit there is nothing to tell apart: the subscribe result
+     * carries its serial (mc_note_binding). */
+    if(l->serials && l->count > 1) {
+        cJSON *objects = l->serials;
+
+        l->serials = NULL;
+        if(mc_send_serials(objects, now_ms)) return;
+    }
+    cJSON_Delete(l->serials);
+    l->serials = NULL;
+    /* No projection yet, or not the bound one: the retry loop looks again. */
+    mc_pick_by_name(l->named, l->first, l->count, now_ms);
+}
+
+/** The units' serials: the one with the bound serial, else by name. */
+static void mc_handle_serials(const cJSON *result, uint32_t now_ms)
+{
+    const cJSON *status = result ? cJSON_GetObjectItemCaseSensitive(result, "status") : NULL;
+    const size_t plen = strlen(MC_UI_PREFIX);
+    const cJSON *item;
+    char first[MC_UNIT_NAME_MAX] = "";
+    unsigned count = 0;
+    bool named = false;
+
+    if(cJSON_IsObject(status)) {
+        cJSON_ArrayForEach(item, status) {
+            const char *unit;
+            const cJSON *serial;
+
+            if(!item->string || strncmp(item->string, MC_UI_PREFIX, plen) != 0) continue;
+            unit = item->string + plen;
+            if(unit[0] == '\0' || strlen(unit) >= MC_UNIT_NAME_MAX) continue;
+            serial = cJSON_GetObjectItemCaseSensitive(item, "serial");
+            if(cJSON_IsString(serial) && serial->valuestring[0] &&
+               strcmp(serial->valuestring, g_mc.bound_serial) == 0) {
+                mc_adopt(unit, MC_PICK_SERIAL, now_ms);
+                return;
+            }
+            if(count++ == 0) memcpy(first, unit, strlen(unit) + 1);
+            if(g_mc.bound_unit[0] && strcmp(unit, g_mc.bound_unit) == 0) named = true;
+        }
+    }
+    mc_pick_by_name(named, first, count, now_ms);
+}
+
+/**
+ * The subscribe result has the chosen unit's serial. A unit found by its
+ * serial or its name is this display's: follow a new name, learn a serial
+ * not known before, and tell the platform to store them. A unit that has not
+ * read its identity yet publishes no serial; the stored one is kept.
+ */
+static void mc_note_binding(const cJSON *obj)
+{
+    const cJSON *sn = cJSON_GetObjectItemCaseSensitive(obj, "serial");
+    const char *serial = NULL;
+    bool changed = false;
+
+    if(cJSON_IsString(sn) && sn->valuestring[0] &&
+       strlen(sn->valuestring) < sizeof g_mc.bound_serial)
+        serial = sn->valuestring;
+    /* The printer's only unit, renamed, is still this display's by serial. */
+    if(g_mc.pick == MC_PICK_ONLY && serial && strcmp(serial, g_mc.bound_serial) == 0)
+        g_mc.pick = MC_PICK_SERIAL;
+    if(g_mc.pick != MC_PICK_NAME && g_mc.pick != MC_PICK_SERIAL) return;
+
+    if(strcmp(g_mc.bound_unit, g_mc.unit) != 0) {
+        memcpy(g_mc.bound_unit, g_mc.unit, strlen(g_mc.unit) + 1);
+        changed = true;
+    }
+    if(serial && strcmp(g_mc.bound_serial, serial) != 0) {
+        memcpy(g_mc.bound_serial, serial, strlen(serial) + 1);
+        changed = true;
+    }
+    if(changed && g_mc.cb.on_bound) g_mc.cb.on_bound(g_mc.cb.ctx, g_mc.bound_unit, g_mc.bound_serial);
 }
 
 static void mc_handle_server_info(const cJSON *result, uint32_t now_ms)
@@ -529,6 +710,9 @@ static void mc_handle_subscribe(const cJSON *result, uint32_t now_ms)
                                ? cJSON_GetObjectItemCaseSensitive(status, "oams_manager")
                                : NULL;
 
+    /* Before READY, so the link callback sees how the unit was found. */
+    if(cJSON_IsObject(obj)) mc_note_binding(obj);
+
     /* READY fires first (a no-op the very first time; on a reconnect it is
      * the consumer's cue - see on_link's contract - to drop whatever it owns
      * before this fresh result repopulates it), then the fresh objects. */
@@ -564,6 +748,9 @@ static void mc_handle_result(mc_req_kind_t kind, int id, int tag, const cJSON *r
         break;
     case MC_REQ_OBJECTS_LIST:
         mc_handle_objects_list(result, now_ms);
+        break;
+    case MC_REQ_SERIALS:
+        mc_handle_serials(result, now_ms);
         break;
     case MC_REQ_SUBSCRIBE:
         mc_handle_subscribe(result, now_ms);
@@ -1012,7 +1199,10 @@ static bool mc_scan_objects_list(const mc_top_t *t, uint32_t now_ms)
     if(r != 0 || !arr) return false;
 
     mc_list_begin(&l);
-    if(!mc_scan_names(arr, end, &l)) return false;
+    if(!mc_scan_names(arr, end, &l)) {
+        cJSON_Delete(l.serials);
+        return false;
+    }
     mc_pending_clear_kind(MC_REQ_OBJECTS_LIST);
     mc_list_finish(&l, now_ms);
     return true;

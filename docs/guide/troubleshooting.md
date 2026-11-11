@@ -55,8 +55,9 @@ The link state is `down`, `connecting`, `klippy-wait` or `ready`.
 | Log repeats `Sec-WebSocket-Accept not found` with `esp_ws_handshake_status_code=200` | the URL reaches the Mainsail web page (port 80), not Moonraker | `moonraker ws://<printer-address>:7125/websocket`, then `reboot` |
 | Log says `klippy-wait: Klipper is not ready (...)` | Moonraker is up, Klipper is not (the state is in brackets) | start Klipper, or fix the error Mainsail shows |
 | Log says `klippy-wait: the printer has no openams_ui object` | the printer runs `klipper_openams` or an OpenAMS from before the display objects | install the current OpenAMS: [Moving from klipper_openams](https://github.com/OpenAMSOrg/openams/blob/main/docs/guide/install.md#moving-from-klipper_openams) |
-| Log says `klippy-wait: no "openams_ui <name>" object` | `unit` names a unit the printer does not have | `unit <real name>`, or `unit` alone for the first unit, then `reboot` |
-| Link `ready` but the screen is empty and `shadow units=0` | `unit` names a unit that does not exist | `net` shows the stored name; run `unit <name>` with the real one, or `unit` alone |
+| Log says `klippy-wait: no "openams_ui <name>" object ...; the printer has: <names>` | the bound unit is not on the printer (neither its name nor its stored serial), and the printer has several units | `unit <name>` with one of the names listed, or `unit` alone for the first unit, then `reboot` |
+| Log says `the bound unit, <name>, is not on this printer; showing its only unit, <unit>` | the bound unit is gone and the printer has one unit, so the display shows that one | nothing is needed; `unit` alone, then `reboot`, clears the old setting |
+| Log says `binding stored: unit <name>, serial <serial>` | the display learned its unit's serial, or followed the unit to a new name | nothing; `net` shows the binding |
 | Log shows `send failed; the request will time out and retry` | the socket dropped mid-request | it retries; if it repeats, check Wi-Fi signal |
 | Log shows `dropping a WebSocket message over N bytes` | a status message larger than the receive limit | report it with the log line |
 | Display shows demo data | Wi-Fi or URL missing, see `live=0` in `ui` | store both, `reboot` |
@@ -73,7 +74,7 @@ printer" and one line saying why:
 | Waiting for Moonraker (disconnected) | Moonraker does not answer, or answers wrong | check that Moonraker runs, the URL (`:7125/websocket`) and `trusted_clients` |
 | Waiting for Klipper (...) | Klipper is starting (`startup`), stopped (`disconnected`) or in error (`shutdown`, `error`) | start Klipper or fix its error |
 | Waiting for OpenAMS (not found) | no `openams_ui` objects: `klipper_openams` or an old OpenAMS | install the current OpenAMS |
-| Waiting for ... (not found) | the `unit` setting names a unit that does not exist | `unit <real name>` or `unit` |
+| Waiting for ... (not found): ams1, ams1_2 | the bound unit is not among the printer's units, which follow the colon | `unit <name>` with one of them, or `unit` alone, then `reboot` |
 
 During an outage the same line shows in the message row, over the last known
 units, which are shown offline. A screen with the backlight on and nothing at

@@ -70,7 +70,7 @@ static int s_pause_depth;   /* >0: the link is stopped on purpose (tag writer sc
 static bool s_paused;       /* mirrors s_pause_depth>0, for net_task */
 static uint32_t s_recreate_at;   /* net_task may rebuild a missing client at/after this */
 static uint32_t s_resumed_at;    /* when the last pause ended */
-static char s_bind[32];
+static char s_bind[48];   /* the stored binding's name, for the log */
 
 /* What each outstanding G-code request was, so the answer can name the action
  * it is about. Moonraker's ids are small and go up one at a time, and the
@@ -215,6 +215,46 @@ static void on_component_status_cb(void *ctx, const cJSON *status)
     s_dirty = true;
 }
 
+/* Which unit the link went to, and why: a stored binding the printer does
+ * not have is worth a warning even though the screen works. */
+static void log_unit_pick(void)
+{
+    char unit[48];
+
+    switch(mc_unit_pick(unit, sizeof unit)) {
+    case MC_PICK_FIRST:
+        ESP_LOGI(TAG, "showing %s, the printer's first unit (no unit is bound)", unit);
+        break;
+    case MC_PICK_SERIAL:
+    case MC_PICK_NAME:
+        ESP_LOGI(TAG, "showing %s, the unit this display is bound to", unit);
+        break;
+    case MC_PICK_ONLY:
+        ESP_LOGW(TAG, "the bound unit, %s, is not on this printer; showing its only unit, %s "
+                      "(\"unit\" alone binds to whichever unit there is)",
+                 s_bind[0] ? s_bind : "(by serial)", unit);
+        break;
+    case MC_PICK_NONE:
+        break;
+    }
+}
+
+/* The bound unit was found under a new name (renamed in oams.cfg), or its
+ * serial was seen for the first time: store both, so the next boot finds the
+ * same unit. Runs in the WebSocket task under s_lock, once per change. */
+static void on_bound_cb(void *ctx, const char *unit, const char *serial)
+{
+    net_config_t cfg;
+
+    (void)ctx;
+    net_config_load(&cfg);
+    snprintf(cfg.bind_unit, sizeof cfg.bind_unit, "%s", unit);
+    snprintf(cfg.bind_serial, sizeof cfg.bind_serial, "%s", serial);
+    snprintf(s_bind, sizeof s_bind, "%s", unit);
+    if(net_config_save(&cfg))
+        ESP_LOGI(TAG, "binding stored: unit %s, serial %s", unit, serial[0] ? serial : "(none)");
+}
+
 static void on_link_cb(void *ctx, mc_link_t state)
 {
     int i;
@@ -231,10 +271,15 @@ static void on_link_cb(void *ctx, mc_link_t state)
             ESP_LOGW(TAG, "Moonraker link klippy-wait: the printer has no openams_ui object "
                           "(is OpenAMS installed and up to date?)");
             break;
-        case MC_WAIT_NO_UNIT:
+        case MC_WAIT_NO_UNIT: {
+            char names[64];
+
+            (void)mc_units_seen(names, sizeof names);
             ESP_LOGW(TAG, "Moonraker link klippy-wait: no \"openams_ui %s\" object "
-                          "(the unit this display is bound to)", detail);
+                          "(the unit this display is bound to); the printer has: %s. "
+                          "Bind with \"unit <name>\", or \"unit\" for the first", detail, names);
             break;
+        }
         default:
             ESP_LOGI(TAG, "Moonraker link klippy-wait");
             break;
@@ -242,6 +287,7 @@ static void on_link_cb(void *ctx, mc_link_t state)
     }
     else {
         ESP_LOGI(TAG, "Moonraker link %s", link_state_name(state));
+        if(state == MC_LINK_READY) log_unit_pick();
     }
     /* Every change: while there is no printer data the home screen says
      * where the link is, so it has to be redrawn. */
@@ -534,7 +580,9 @@ void net_link_start(const net_config_t *cfg)
     cb.on_link = on_link_cb;
     cb.on_gcode_result = on_gcode_result_cb;
     cb.on_rpc_result = on_rpc_result_cb;
+    cb.on_bound = on_bound_cb;
     mc_init(&cb, s_bind[0] ? s_bind : NULL);
+    mc_bind_serial(cfg->bind_serial);
 
     if(!client_create()) return;
 
@@ -729,4 +777,18 @@ platform_link_t platform_link_status(char *detail, size_t n)
     }
     xSemaphoreGive(s_lock);
     return status;
+}
+
+unsigned platform_link_units(char *names, size_t n)
+{
+    unsigned count = 0;
+    char wait[48];
+
+    if(names && n) names[0] = '\0';
+    if(!s_lock || !s_url[0]) return 0;
+    xSemaphoreTake(s_lock, portMAX_DELAY);
+    if(mc_link() == MC_LINK_KLIPPY_WAIT && mc_wait_reason(wait, sizeof wait) == MC_WAIT_NO_UNIT)
+        count = mc_units_seen(names, n);
+    xSemaphoreGive(s_lock);
+    return count;
 }

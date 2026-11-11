@@ -92,11 +92,46 @@ typedef struct {
      *  mc_send_rpc(); @p result is the JSON result on success (NULL on error);
      *  @p error is the message on failure (NULL on success). */
     void (*on_rpc_result)(void *ctx, int tag, const cJSON *result, const char *error);
+
+    /**
+     * The bound unit was found under a name or a serial other than the
+     * binding the client was given (mc_init, mc_bind_serial): its name
+     * changed in oams.cfg, or this is the first time its serial was seen.
+     * Store both, so the next start finds the same unit. Never called for an
+     * unbound display or for the only-unit fallback (mc_unit_pick).
+     */
+    void (*on_bound)(void *ctx, const char *unit, const char *serial);
 } mc_callbacks_t;
 
 /** Bind to `openams_ui <bound_unit>`. A NULL @p bound_unit takes the first
  *  `openams_ui ...` object `printer.objects.list` reports. */
 void mc_init(const mc_callbacks_t *cb, const char *bound_unit);
+
+/**
+ * The bound unit's serial (the `serial` its openams_ui object publishes: the
+ * AMS's own ID, or the CAN UUID of an older unit), stored from an earlier
+ * connect. Call after mc_init and before mc_on_connected; NULL or "" when
+ * none is known. The unit is then found by its serial first and by its name
+ * second, so a unit renamed in oams.cfg is still this display's unit, and of
+ * two AMS of one kind the right one is picked.
+ */
+void mc_bind_serial(const char *serial);
+
+/** How the subscribed unit was chosen. */
+typedef enum {
+    MC_PICK_NONE,    /**< nothing chosen yet */
+    MC_PICK_FIRST,   /**< unbound: the first openams_ui object listed */
+    MC_PICK_SERIAL,  /**< the unit with the bound serial */
+    MC_PICK_NAME,    /**< the unit with the bound name */
+    MC_PICK_ONLY     /**< neither is on the printer: its only unit */
+} mc_pick_t;
+
+/** How the current unit was chosen, its name copied into @p unit. */
+mc_pick_t mc_unit_pick(char *unit, size_t n);
+
+/** The openams_ui units the last object list named, as "ams1, ams1_2"
+ *  (cut short with "..." past @p n), and how many there were. */
+unsigned mc_units_seen(char *names, size_t n);
 
 /** Drop the stored status copy. The client cannot be used again until
  *  `mc_init`. */
@@ -143,7 +178,9 @@ typedef enum {
     MC_WAIT_NONE,
     MC_WAIT_KLIPPY,      /**< Klipper is not ready; detail = its state */
     MC_WAIT_NO_OPENAMS,  /**< ready, but no `openams_ui <unit>` object at all */
-    MC_WAIT_NO_UNIT      /**< ready, but no `openams_ui <bound unit>`; detail = the unit */
+    MC_WAIT_NO_UNIT      /**< ready, several units and none is the bound one; detail =
+                          *   the bound unit (its serial when no name is bound);
+                          *   mc_units_seen() names the units there are */
 } mc_wait_t;
 
 /** The reason, with its detail (Klipper's state or the bound unit) copied

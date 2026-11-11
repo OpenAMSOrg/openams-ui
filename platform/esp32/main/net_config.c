@@ -42,6 +42,7 @@ bool net_config_load(net_config_t *out)
     load_str(h, "pass", out->password, sizeof(out->password));
     load_str(h, "url", out->moonraker_url, sizeof(out->moonraker_url));
     load_str(h, "unit", out->bind_unit, sizeof(out->bind_unit));
+    load_str(h, "unit_sn", out->bind_serial, sizeof(out->bind_serial));
     nvs_close(h);
 
     return out->ssid[0] != '\0';
@@ -58,6 +59,7 @@ bool net_config_save(const net_config_t *cfg)
     if(err == ESP_OK) err = nvs_set_str(h, "pass", cfg->password);
     if(err == ESP_OK) err = nvs_set_str(h, "url", cfg->moonraker_url);
     if(err == ESP_OK) err = nvs_set_str(h, "unit", cfg->bind_unit);
+    if(err == ESP_OK) err = nvs_set_str(h, "unit_sn", cfg->bind_serial);
     if(err == ESP_OK) err = nvs_commit(h);
     nvs_close(h);
     if(err != ESP_OK) {

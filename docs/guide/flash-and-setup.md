@@ -150,7 +150,7 @@ shows on screen. Type carefully; the console cannot show you your typo. Commands
 |---------|--------|
 | `wifi <ssid> [password]` | store Wi-Fi credentials; quote an SSID with spaces |
 | `moonraker <url>` | store the Moonraker WebSocket URL; must start with `ws://` |
-| `unit <name>` | bind to one `openams_ui` unit; `unit` alone clears it |
+| `unit <name>` | bind to one unit by its name ([Bind the display to one unit](#bind-the-display-to-one-unit)); `unit` alone clears it, and the display shows the first unit |
 | `net` | show stored settings, Wi-Fi state and IP |
 | `ota status` | show the running and other OTA slot |
 | `ota <url> [force]` | download and boot a firmware image |
@@ -166,9 +166,12 @@ First setup:
 ```
 wifi "My Network" mypassword
 moonraker ws://<printer-address>:7125/websocket
-unit oams1
 reboot
 ```
+
+No `unit` is needed: the display shows the printer's first unit, which on a
+printer with one AMS is that AMS. With several, see
+[Bind the display to one unit](#bind-the-display-to-one-unit).
 
 Each command that saves replies `saved; type reboot to apply`. If the
 credentials do not save, it prints `error: could not save to NVS`. A line
@@ -179,9 +182,6 @@ Notes:
 - Nothing is compiled in. With no SSID stored, the display runs in demo mode
   with dummy data. With an SSID but no Moonraker URL, it joins Wi-Fi and stays
   in demo mode.
-- `unit` takes the name Moonraker reports for the unit (the part after
-  `openams_ui`). Without it, the display binds to the first unit listed. You
-  can also bind from the screen: Menu, then "This unit".
 - The Moonraker URL is Moonraker's own port and path,
   `ws://<printer-address>:7125/websocket`, not the address you open Mainsail
   at. `ws://192.168.1.20` (port 80) reaches the Mainsail web page and never
@@ -193,6 +193,43 @@ Notes:
 On the first boot with no stored touch calibration, the display runs the
 calibration screen before anything else. Tap the four targets. See
 [using.md](using.md).
+
+## Bind the display to one unit
+
+Skip this with one AMS on the printer: the display shows it. With several, an
+unbound display shows the first one; bind it to show another.
+
+1. Find the unit's name. Open
+   `http://<printer-address>:7125/printer/objects/list` in a browser. Every
+   `openams_ui <name>` entry is one unit, and `<name>` is the name of its
+   `[oams <name>]` section in `oams.cfg`. A name is a label, not the kind of
+   AMS: the Cortex Bridge setup writes `ams1`, `ams2` and `ams_ht`, and
+   `ams1_2` for a second AMS of one kind; an OpenAMS 1 configuration often
+   says `oams1`.
+2. On the display's console, type `unit <name>`, then `reboot`.
+3. Check that the home screen shows that unit's spools. Then type `net`:
+   once the display has connected, it shows `unit serial:` with the unit's
+   serial, 24 hex digits.
+
+You never look up or type the serial. It is the ID the unit's controller
+reports (an OpenAMS 1 board without that ID reports its CAN UUID), not a
+number printed on the AMS. The display reads it from the printer on the first
+connect after `unit` and stores it with the name. From then on it looks for
+the serial first and the name second, so renaming the unit in `oams.cfg`, or
+running the Cortex Bridge setup again, keeps the binding: the display follows
+the unit and stores its new name. With two AMS of one kind, it keeps the one
+you bound. `unit` with another name, or `unit` alone, forgets the serial.
+
+To see a unit's serial on the printer, open
+`http://<printer-address>:7125/printer/objects/query?openams_ui%20<name>=serial`.
+The answer ends in `"serial": "<24 hex digits>"`. `null` means the unit has not
+reported one yet (it is still starting, or its firmware has no ID); the display
+then goes by the name alone and stores the serial once it appears.
+
+If the bound unit is gone from the printer, a printer with one unit shows that
+unit and the setting stays as it was. With several units, the display waits
+and lists their names on the home screen and in the log; see
+[troubleshooting.md](troubleshooting.md#what-the-screen-says-while-it-waits).
 
 ## Check that it works
 

@@ -1210,6 +1210,16 @@ static bool link_status_text(char *note, size_t n)
         return false;
     }
     vs_format(id, note, n, &arg, 1);
+    /* Not found among several units: name them, the words to bind with. The
+     * names are the printer's own, so they need no translation. */
+    if(id == VS_HOME_LINK_NO_UNIT && platform_link_units(detail, sizeof detail) > 0) {
+        size_t len = strlen(note);
+
+        if(len + 2 < n) {
+            memcpy(note + len, ": ", 3);
+            (void)mmu_copy_text(note + len + 2, n - len - 2, detail);
+        }
+    }
     return true;
 }
 
