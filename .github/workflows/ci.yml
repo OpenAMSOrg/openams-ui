@@ -46,10 +46,13 @@ jobs:
 
       # The same UI at 800x480, the 5 inch board's resolution: the 480x320 grid
       # drawn at 1.5x (docs/VISUAL_SPEC_800.md). Only the screens depend on it.
+      # Every test the next step runs (ctest -R '^screen_') is built here: one
+      # left out is reported "Not Run" and fails the step.
       - name: Build at 800x480
         run: |
           cmake -S . -B build-800 -DCMAKE_BUILD_TYPE=Release -DMMU_UI_RESOLUTION=800x480
-          cmake --build build-800 -j --target openams-ui-sim test_screen_edit test_screen_update
+          cmake --build build-800 -j --target openams-ui-sim test_screen_edit test_screen_update \
+            test_screen_home_sheet test_screen_environment
 
       - name: Smoke + layout audit at 800x480
         run: |
