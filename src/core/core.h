@@ -12,7 +12,10 @@
  * object moonraker_client (or, later, a web host's own store) delivers.
  *
  * Pure C: no LVGL, no platform headers. The owned copies are heap cJSON, not
- * static storage, so a core adds nothing to the static-DRAM gate.
+ * static storage, so a core adds nothing to the static-DRAM gate. Only the
+ * kinds that arrive as diffs keep one; the kinds that arrive whole
+ * (component_status, spool_list, vendor_list, metadata) keep only a hash, as
+ * the 4 inch board's heap cannot spare a copy of each.
  */
 
 #ifndef CORE_H
@@ -42,14 +45,26 @@ void core_destroy(core_t *core);
 void core_reset(core_t *core, bool keep_alerts);
 
 /**
+ * Free every owned copy but leave the model as it is, so the screen keeps
+ * the units' last state. Call this when the socket goes down: nothing can
+ * be merged until a new subscribe, whose result core_reset() then replaces
+ * everything with, and on a reconnect the heap the copies held is what the
+ * new handshake needs (the 4 inch board could not reconnect with them held).
+ * Not for a Klipper restart under a live socket, where Moonraker may still
+ * send diffs that need the copies to merge into.
+ */
+void core_drop_copies(core_t *core);
+
+/**
  * Merge @p obj's top-level keys into the copy @p core owns for (@p kind,
  * @p name): each key already in the copy is replaced, each new key is added
  * (the rule moonraker_client's own merge used to apply, now owned here so a
- * future web host can feed the same raw diffs from its store). `spool_list`,
- * `vendor_list` and `metadata` are whole results rather than diffs, so they replace the
- * owned copy outright instead of merging into it.
+ * future web host can feed the same raw diffs from its store).
+ * `component_status`, `spool_list`, `vendor_list` and `metadata` arrive
+ * whole rather than as diffs: they are mapped straight from @p obj, and no
+ * copy of them is kept, only a hash to tell whether the next one differs.
  *
- * The merged (or replaced) copy is then handed to the matching
+ * The merged copy (or the whole object) is then handed to the matching
  * `status_map_apply_*()`:
  *   - "openams_ui" (@p name = the unit)  -> status_map_apply_openams_ui()
  *   - "oams_manager"                     -> status_map_apply_settings() on
@@ -77,9 +92,10 @@ void core_reset(core_t *core, bool keep_alerts);
  * @p name is ignored (may be NULL) for every kind but "openams_ui", which
  * keeps one owned copy per unit.
  *
- * Returns true when the owned copy actually changed content (a proxy for
- * "the model changed": the appliers are deterministic functions of that
- * copy, so an unchanged copy cannot have mapped to a different model). An
+ * Returns true when the owned copy (or the whole object's hash) actually
+ * changed (a proxy for "the model changed": the appliers are deterministic
+ * functions of it, so an unchanged one cannot have mapped to a different
+ * model). An
  * unrecognized @p kind, or @p obj of the wrong JSON type for @p kind
  * (an object for every kind but "spool_list" and "vendor_list", which are arrays), returns
  * false without touching anything.

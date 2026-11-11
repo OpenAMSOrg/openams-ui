@@ -347,7 +347,7 @@ export type ActionResult =
 export type ObjectKind =
   | 'openams_ui'         // name = the unit ("openams_ui oams1" -> "oams1")
   | 'oams_manager'
-  | 'component_status'
+  | 'component_status'   // a whole status each time, not a diff
   | 'print_stats'
   | 'toolhead'
   | 'spool_list'         // a whole result (an array), not a diff

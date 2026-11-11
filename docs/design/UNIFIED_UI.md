@@ -345,6 +345,9 @@ core_reset(keep_alerts)             // on every printer reset (Mainsail: printer
 core_apply(kind, name, json) -> changed
                                     // merges the object's top-level keys into a copy the core owns (mc_merge_object's rule),
                                     // then maps the merged copy. Diffs and whole objects are both correct.
+                                    // component_status, spool_list, vendor_list and metadata arrive whole: they are
+                                    // mapped straight from the object and only a hash is kept (the 4 inch board's heap).
+core_drop_copies()                  // C only (net_link.c, sim): frees the copies when the socket drops; the model stays
                                     // kind: "openams_ui" (name = unit), "oams_manager", "component_status", "print_stats",
                                     //       "toolhead", "spool_list", "metadata"
 core_view() -> json                 // view_json()

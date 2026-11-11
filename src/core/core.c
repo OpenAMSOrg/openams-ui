@@ -9,11 +9,12 @@
 #include "backend/status_map.h"
 #include "view/strings.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* One openams_ui copy per unit, plus one singleton copy each for
+/* One openams_ui entry per unit, plus one singleton entry each for
  * oams_manager, component_status, print_stats, toolhead, spool_list,
  * vendor_list and metadata. */
 #define CORE_MAX_ENTRIES (MMU_MAX_UNITS + 7)
@@ -30,7 +31,13 @@ _Static_assert(sizeof("component_status") <= CORE_KIND_LEN, "a core kind must fi
 typedef struct {
     char kind[CORE_KIND_LEN];
     char name[CORE_NAME_LEN];
-    cJSON *copy;        /**< heap; NULL only right after a failed duplicate */
+    /** A kind sent as diffs: the merged copy (heap). NULL for a kind sent
+     *  whole, after a failed duplicate, and after core_drop_copies(). */
+    cJSON *copy;
+    /** A kind sent whole: what the last one hashed to, so an unchanged one
+     *  reports no change without a copy to compare against. */
+    uint32_t hash;
+    bool hashed;
 } core_entry_t;
 
 struct core {
@@ -83,6 +90,38 @@ static void entry_clear_all(core_t *core)
     for(i = 0; i < core->entry_count; i++) cJSON_Delete(core->entries[i].copy);
     memset(core->entries, 0, sizeof(core->entries));
     core->entry_count = 0;
+}
+
+/* ------------------------------------------------------------- the hash */
+
+/* FNV-1a over a cJSON tree: each item's type, key and value, and the end of
+ * each object or array. It allocates nothing, which is the point: a kind
+ * that arrives whole is mapped straight from the message, and this is all
+ * that is kept of it to tell whether the next one differs. A collision only
+ * costs one skipped redraw of a change the next update shows anyway. */
+static uint32_t hash_bytes(uint32_t h, const void *data, size_t n)
+{
+    const unsigned char *p = data;
+
+    while(n--) {
+        h ^= *p++;
+        h *= 16777619u;
+    }
+    return h;
+}
+
+static uint32_t hash_json(uint32_t h, const cJSON *item)
+{
+    const cJSON *child;
+    unsigned char type = (unsigned char)(item->type & 0xff);
+
+    h = hash_bytes(h, &type, 1);
+    if(item->string) h = hash_bytes(h, item->string, strlen(item->string) + 1);
+    if(cJSON_IsNumber(item)) h = hash_bytes(h, &item->valuedouble, sizeof item->valuedouble);
+    else if(cJSON_IsString(item) && item->valuestring)
+        h = hash_bytes(h, item->valuestring, strlen(item->valuestring) + 1);
+    for(child = item->child; child; child = child->next) h = hash_json(h, child);
+    return hash_bytes(h, "}", 1);
 }
 
 /* ------------------------------------------------------------- the merge */
@@ -138,6 +177,17 @@ void core_destroy(core_t *core)
     free(core);
 }
 
+void core_drop_copies(core_t *core)
+{
+    int i;
+
+    if(!core) return;
+    for(i = 0; i < core->entry_count; i++) {
+        cJSON_Delete(core->entries[i].copy);
+        core->entries[i].copy = NULL;
+    }
+}
+
 void core_reset(core_t *core, bool keep_alerts)
 {
     mmu_alert_t saved[MMU_MAX_ALERTS];
@@ -170,14 +220,19 @@ void core_reset(core_t *core, bool keep_alerts)
 
 /* ------------------------------------------------------------------ apply */
 
-/* "spool_list"/"metadata": whole results, not diffs, so the owned copy is
- * replaced outright. @p want_array picks spool_list's shape (an array) over
- * every other kind's (an object). Returns whether the copy's content changed. */
-static bool apply_replace(core_t *core, const char *kind, const char *name,
-                          const cJSON *obj, bool want_array)
+/* "component_status", "spool_list", "vendor_list" and "metadata" arrive
+ * whole, never as diffs, so nothing has to be merged and no copy is kept:
+ * each is mapped straight from @p obj, and only its hash is remembered. On
+ * the 4 inch board (no PSRAM) a kept copy of the Spoolman status alone was
+ * about 7 KB of heap with eight bays, a spool list far more, and the board
+ * has about 10 KB to spare. @p want_array picks the list kinds' shape (an
+ * array) over the others' (an object). Returns whether it differs from the
+ * last one. */
+static bool apply_whole(core_t *core, const char *kind, const char *name,
+                        const cJSON *obj, bool want_array)
 {
     core_entry_t *e;
-    cJSON *before;
+    uint32_t hash;
     bool changed;
 
     if(want_array ? !cJSON_IsArray(obj) : !cJSON_IsObject(obj)) return false;
@@ -185,18 +240,15 @@ static bool apply_replace(core_t *core, const char *kind, const char *name,
     e = entry_get_or_create(core, kind, name);
     if(!e) return false;
 
-    before = e->copy;
-    e->copy = cJSON_Duplicate(obj, true);
-    if(!e->copy) {
-        e->copy = before;   /* keep the old copy rather than lose it */
-        return false;
-    }
-    changed = !(before && cJSON_Compare(before, e->copy, true));
-    cJSON_Delete(before);
+    hash = hash_json(2166136261u, obj);
+    changed = !e->hashed || e->hash != hash;
+    e->hash = hash;
+    e->hashed = true;
 
-    if(strcmp(kind, "spool_list") == 0) status_map_apply_spool_list(core->model, e->copy);
-    else if(strcmp(kind, "vendor_list") == 0) status_map_apply_vendor_list(core->model, e->copy);
-    else if(strcmp(kind, "metadata") == 0) status_map_apply_metadata(core->model, e->copy);
+    if(strcmp(kind, "spool_list") == 0) status_map_apply_spool_list(core->model, obj);
+    else if(strcmp(kind, "vendor_list") == 0) status_map_apply_vendor_list(core->model, obj);
+    else if(strcmp(kind, "metadata") == 0) status_map_apply_metadata(core->model, obj);
+    else if(strcmp(kind, "component_status") == 0) status_map_apply_component_status(core->model, obj);
 
     mmu_model_refresh_this(core->model);
     return changed;
@@ -229,9 +281,6 @@ static bool apply_merge(core_t *core, const char *kind, const char *name, const 
         if(cJSON_IsObject(lanes)) status_map_apply_lanes(core->model, lanes);
         /* absent on an older host: then no retry word, and no Retry */
         status_map_apply_commands(core->model, cJSON_GetObjectItemCaseSensitive(e->copy, "commands"));
-    }
-    else if(strcmp(kind, "component_status") == 0) {
-        status_map_apply_component_status(core->model, e->copy);
     }
     else if(strcmp(kind, "print_stats") == 0) {
         status_map_apply_print_stats(core->model, e->copy);
@@ -277,13 +326,13 @@ bool core_apply(core_t *core, const char *kind, const char *name, const cJSON *o
     if(!core || !core->model || !kind || !obj) return false;
 
     if(strcmp(kind, "action_result") == 0) return apply_action_result(core, obj);
-    if(strcmp(kind, "spool_list") == 0) return apply_replace(core, kind, ename, obj, true);
-    if(strcmp(kind, "vendor_list") == 0) return apply_replace(core, kind, ename, obj, true);
-    if(strcmp(kind, "metadata") == 0) return apply_replace(core, kind, ename, obj, false);
+    if(strcmp(kind, "spool_list") == 0) return apply_whole(core, kind, ename, obj, true);
+    if(strcmp(kind, "vendor_list") == 0) return apply_whole(core, kind, ename, obj, true);
+    if(strcmp(kind, "metadata") == 0) return apply_whole(core, kind, ename, obj, false);
+    if(strcmp(kind, "component_status") == 0) return apply_whole(core, kind, ename, obj, false);
 
     if(strcmp(kind, "openams_ui") != 0 && strcmp(kind, "oams_manager") != 0 &&
-       strcmp(kind, "component_status") != 0 && strcmp(kind, "print_stats") != 0 &&
-       strcmp(kind, "toolhead") != 0)
+       strcmp(kind, "print_stats") != 0 && strcmp(kind, "toolhead") != 0)
         return false;
 
     return apply_merge(core, kind, ename, obj);

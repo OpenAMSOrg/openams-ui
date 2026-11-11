@@ -119,21 +119,24 @@ export class OpenamsLogic implements Core {
       return true;
     }
 
-    // spool_list, vendor_list and metadata are whole results, so the owned copy is replaced.
-    if (kind === 'spool_list' || kind === 'vendor_list' || kind === 'metadata') {
-      if (kind === 'metadata' ? !isObject(obj) : !Array.isArray(obj)) return false;
+    // component_status, spool_list, vendor_list and metadata arrive whole, never
+    // as diffs: each is mapped as it is, and the copy kept is only what the next
+    // one is compared with (the C core keeps just a hash; the 4 inch board's heap).
+    if (kind === 'component_status' || kind === 'spool_list' || kind === 'vendor_list' || kind === 'metadata') {
+      if (kind === 'metadata' || kind === 'component_status' ? !isObject(obj) : !Array.isArray(obj)) return false;
       const e = this.entry(kind, name);
       if (!e) return false;
       const changed = !(e.copy !== null && jsonEqual(e.copy, obj));
       e.copy = obj;
       if (kind === 'spool_list') applySpoolList(m, obj);
       else if (kind === 'vendor_list') applyVendorList(m, obj);
+      else if (kind === 'component_status') applyComponentStatus(m, obj);
       else applyMetadata(m, obj);
       refreshThis(m);
       return changed;
     }
 
-    if (!['openams_ui', 'oams_manager', 'component_status', 'print_stats', 'toolhead'].includes(kind)) return false;
+    if (!['openams_ui', 'oams_manager', 'print_stats', 'toolhead'].includes(kind)) return false;
     if (!isObject(obj)) return false;
 
     const e = this.entry(kind, name);
@@ -149,8 +152,6 @@ export class OpenamsLogic implements Core {
       if (isObject(copy.lanes_by_fps)) applyLanes(m, copy.lanes_by_fps);
       // absent on an older host: then no retry word, and no Retry
       applyCommands(m, copy.commands);
-    } else if (kind === 'component_status') {
-      applyComponentStatus(m, copy);
     } else if (kind === 'print_stats') {
       applyPrintStats(m, copy);
     }

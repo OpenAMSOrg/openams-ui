@@ -315,8 +315,10 @@ test('a host without the edit endpoint sends no `edit`, so the action is dimmed,
   for (const core of [p.c, p.ts]) {
     assert.equal(editOf(core, 0).enabled, true);
     core.apply('component_status', null, { ...status(false), edit: undefined });
+    // the host sends its status whole each time, so nothing of the one before
+    // (its `edit: true`) is kept: this host has no edit endpoint
+    assert.equal(editOf(core, 0).enabled, false);
   }
-  // the merged copy keeps `edit: true` from before: a host sends it whole each time, so a status without it is older
   const d = firstDiff(p.c.view(), p.ts.view());
   assert.equal(d, null, d ?? '');
 });

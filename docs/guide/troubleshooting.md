@@ -58,6 +58,7 @@ The link state is `down`, `connecting`, `klippy-wait` or `ready`.
 | Log says `klippy-wait: no "openams_ui <name>" object ...; the printer has: <names>` | the bound unit is not on the printer (neither its name nor its stored serial), and the printer has several units | `unit <name>` with one of the names listed, or `unit` alone for the first unit, then `reboot` |
 | Log says `the bound unit, <name>, is not on this printer; showing its only unit, <unit>` | the bound unit is gone and the printer has one unit, so the display shows that one | nothing is needed; `unit` alone, then `reboot`, clears the old setting |
 | Log says `binding stored: unit <name>, serial <serial>` | the display learned its unit's serial, or followed the unit to a new name | nothing; `net` shows the binding |
+| 4 inch board: after a Wi-Fi drop the link never comes back; the log repeats `rejected a N-byte message` or `Could not lock ws-client` | firmware from before 2026-11-11 kept its copy of the printer's state through a reconnect and had no heap left to read the printer's answers | update the display firmware; `reboot` brings it back until then |
 | Log shows `send failed; the request will time out and retry` | the socket dropped mid-request | it retries; if it repeats, check Wi-Fi signal |
 | Log shows `dropping a WebSocket message over N bytes` | a status message larger than the receive limit | report it with the log line |
 | Display shows demo data | Wi-Fi or URL missing, see `live=0` in `ui` | store both, `reboot` |
@@ -97,13 +98,15 @@ the core did not take <kind> <name> (heap free N, largest block N)
    A refused status object leaves the home screen empty.
 4. Run `ui` twice. A `flushes=` count that does not grow while the link is
    `ready` suggests the screen task is not drawing.
-5. A log line `rejected a N-byte message (free heap N, largest block N)` is the
-   same cause one step earlier.
+5. A log line `rejected a N-byte message (free heap N, largest block N)` or
+   `no room for a N-byte message (free heap N, largest block N)` is the same
+   cause one step earlier.
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
 | `the core did not take ...` | heap too small for the object's copy | reboot; if it repeats, keep the `ui` output and the log line and report it |
-| `rejected a N-byte message` | no block big enough for the message | same as above; reboot first |
+| `rejected a N-byte message` | no block big enough for the message's parse | same as above; reboot first |
+| `no room for a N-byte message` | no block big enough to put a long message together | same as above; reboot first |
 | `failed to allocate a N-byte DMA draw buffer` | not enough contiguous internal RAM for the draw buffer | the display halts; reflash a smaller build |
 | `spi_bus_initialize(SPI2_HOST) failed` or `spi_bus_add_device (panel) failed` | bus setup failed | check wiring, then the board |
 | White or smeared image | SPI clock too fast | `PANEL_SPI_HZ` to `20000000` ([hardware.md](hardware.md)) |

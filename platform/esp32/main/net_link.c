@@ -46,7 +46,7 @@
 static const char *TAG = "net_link";
 
 /* A Moonraker status message is a JSON object of a few kilobytes; one this
- * large is not one we can use, so it is dropped rather than grown for. */
+ * large is not one we can use, so it is dropped rather than taken room for. */
 #define RX_MAX 8192
 
 /* The live model, written only by the network side (under the lock) and
@@ -116,10 +116,15 @@ static uint32_t s_down_since;
 static QueueHandle_t s_txq;
 
 /* One received message may span several frames (text then continuation) and
- * each frame may be handed over in several chunks, so this is the message
- * being reassembled, not the chunk. */
-static char *s_rx;
-static size_t s_rx_len;
+ * each frame may be handed over in several chunks. A message that arrives
+ * whole in one chunk (every status diff, and most replies) is read where the
+ * client put it; only a longer one is put together here, in a buffer taken
+ * for that message and freed once it has been read. A buffer kept for the
+ * largest message was 8 KB of the 4 inch board's heap, which has about 10 KB
+ * to spare: with that little left, Wi-Fi itself failed and the link went
+ * down. */
+static char *s_rx;      /* the message being put together; NULL between messages */
+static size_t s_rx_len, s_rx_cap;
 static bool s_rx_drop; /* the message does not fit; ignore it to its end */
 
 /* What the home screen names while there is no printer data (see
@@ -299,6 +304,13 @@ static void on_link_cb(void *ctx, mc_link_t state)
         for(i = 0; i < (int)s_shadow->unit_count; i++) s_shadow->units[i].connected = false;
         s_dirty = true;
     }
+    /* The socket is gone, so nothing merges into the core's copies until the
+     * next subscribe replaces them all: free them now. On the 4 inch board
+     * they are 10 KB or more, and a reconnect that still held them had no
+     * heap left to read the printer's answers (rejected, again and again, and
+     * the link never came back after a Wi-Fi drop). The model, and so the
+     * screen, keeps the units' last state. */
+    if(state == MC_LINK_DOWN) core_drop_copies(s_core);
     else if(state == MC_LINK_READY) {
         /* A fresh subscribe result is about to be applied (moonraker_client
          * reaches READY before dispatching it): drop whatever copies and
@@ -346,12 +358,47 @@ static void on_rpc_result_cb(void *ctx, int tag, const cJSON *result, const char
 
 /* ------------------------------------------------------------- transport */
 
-/* One chunk of a data frame: append it to the message under construction and
- * deliver the message once its final frame (and that frame's final chunk)
- * has arrived. */
+/* Hand one whole message to the client. A message it refused (malformed, or
+ * the heap could not hold its parse) is otherwise invisible: the handshake
+ * just stalls. One line per 5 s keeps a broadcast storm off the log. */
+static void rx_deliver(const char *text, size_t len)
+{
+    static uint32_t s_last_reject_ms;
+    uint32_t t;
+
+    if(mc_on_text(text, len, now_ms())) return;
+    t = now_ms();
+    if(s_last_reject_ms == 0 || (uint32_t)(t - s_last_reject_ms) >= 5000) {
+        s_last_reject_ms = t ? t : 1;
+        ESP_LOGW(TAG, "rejected a %u-byte message (free heap %u, largest block %u)",
+                 (unsigned)len,
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT),
+                 (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+    }
+}
+
+/* Forget the message being put together, and give its buffer back. */
+static void rx_reset(void)
+{
+    free(s_rx);
+    s_rx = NULL;
+    s_rx_len = s_rx_cap = 0;
+}
+
+/* The message being put together cannot be kept: drop it, and the rest of it
+ * when a later chunk or frame still carries some. */
+static void rx_give_up(const esp_websocket_event_data_t *d, bool complete)
+{
+    rx_reset();
+    s_rx_drop = !(complete && d->fin);
+}
+
+/* One chunk of a data frame: read a message that came whole in place, or put
+ * a longer one together and read it once its final frame (and that frame's
+ * final chunk) has arrived. */
 static void on_ws_data(const esp_websocket_event_data_t *d)
 {
-    int complete;
+    bool complete;
 
     if(d->data_len <= 0 || d->payload_offset < 0) return;
     complete = (d->payload_offset + d->data_len == d->payload_len);
@@ -360,34 +407,49 @@ static void on_ws_data(const esp_websocket_event_data_t *d)
         if(complete && d->fin) s_rx_drop = false;
         return;
     }
-    if(s_rx_len + (size_t)d->data_len > RX_MAX) {
-        ESP_LOGW(TAG, "dropping a WebSocket message over %d bytes", RX_MAX);
-        s_rx_len = 0;
-        s_rx_drop = !(complete && d->fin); /* a later frame carries the rest */
+
+    if(!s_rx && d->payload_offset == 0 && complete && d->fin) {
+        rx_deliver(d->data_ptr, (size_t)d->data_len);   /* mc_on_text reads only len bytes */
+        return;
+    }
+
+    /* A frame's first chunk: its header gave its whole length, so take room
+     * for all of it now (on top of the frames before it, for a message sent
+     * in several). */
+    if(d->payload_offset == 0) {
+        size_t need = s_rx_len + (size_t)d->payload_len;
+        char *grown;
+
+        if(need > RX_MAX) {
+            ESP_LOGW(TAG, "dropping a WebSocket message over %d bytes", RX_MAX);
+            rx_give_up(d, complete);
+            return;
+        }
+        if(need > s_rx_cap) {
+            grown = realloc(s_rx, need);
+            if(!grown) {
+                ESP_LOGW(TAG, "no room for a %u-byte message (free heap %u, largest block %u)",
+                         (unsigned)need,
+                         (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT),
+                         (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
+                rx_give_up(d, complete);
+                return;
+            }
+            s_rx = grown;
+            s_rx_cap = need;
+        }
+    }
+    /* A chunk that does not continue what was started is not ours to guess at. */
+    if(!s_rx || s_rx_len + (size_t)d->data_len > s_rx_cap) {
+        rx_give_up(d, complete);
         return;
     }
 
     memcpy(s_rx + s_rx_len, d->data_ptr, (size_t)d->data_len);
     s_rx_len += (size_t)d->data_len;
-
     if(complete && d->fin) {
-        s_rx[s_rx_len] = '\0';
-        if(!mc_on_text(s_rx, s_rx_len, now_ms())) {
-            /* A message the client refused (malformed, or the heap could not
-             * hold its parse) is otherwise invisible: the handshake just
-             * stalls. One line per 5 s keeps a broadcast storm off the log. */
-            static uint32_t s_last_reject_ms;
-            uint32_t t = now_ms();
-
-            if(s_last_reject_ms == 0 || (uint32_t)(t - s_last_reject_ms) >= 5000) {
-                s_last_reject_ms = t ? t : 1;
-                ESP_LOGW(TAG, "rejected a %u-byte message (free heap %u, largest block %u)",
-                         (unsigned)s_rx_len,
-                         (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT),
-                         (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_8BIT));
-            }
-        }
-        s_rx_len = 0;
+        rx_deliver(s_rx, s_rx_len);
+        rx_reset();
     }
 }
 
@@ -451,6 +513,8 @@ static void on_ws_event(void *arg, esp_event_base_t base, int32_t id, void *even
         if(mc_link() != MC_LINK_DOWN) s_down_since = now;
         mc_on_disconnected(now);
         txq_drop_all();
+        rx_reset();   /* half a message from the old socket would corrupt the next one */
+        s_rx_drop = false;
         break;
     case WEBSOCKET_EVENT_DATA:
         /* Text (1) and its continuation (0) only; ping/pong/close payloads
@@ -555,11 +619,10 @@ void net_link_start(const net_config_t *cfg)
      * strings). A model grown past the DRAM holes lands there otherwise and
      * panics with LoadStoreError on the first byte store. */
     s_shadow = heap_caps_malloc(sizeof(mmu_model_t), MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    s_rx = heap_caps_malloc(RX_MAX + 1, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     s_lock = xSemaphoreCreateMutex();
     s_client_lock = xSemaphoreCreateMutex();
     s_txq = xQueueCreate(TXQ_DEPTH, sizeof(char *));
-    if(!s_shadow || !s_rx || !s_lock || !s_client_lock || !s_txq) {
+    if(!s_shadow || !s_lock || !s_client_lock || !s_txq) {
         ESP_LOGE(TAG, "no memory for the link — staying in demo mode");
         return;
     }

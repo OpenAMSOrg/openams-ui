@@ -1056,6 +1056,9 @@ static void moonraker_link_cb(void *ctx, mc_link_t state)
     if(state == MC_LINK_DOWN || state == MC_LINK_KLIPPY_WAIT) {
         for(i = 0; i < (int)g_mmu.unit_count; i++) g_mmu.units[i].connected = false;
     }
+    /* As on the display (net_link.c): the socket is gone, so the copies have
+     * nothing to merge until the next subscribe replaces them. */
+    if(state == MC_LINK_DOWN) core_drop_copies(s_core);
     else if(state == MC_LINK_READY) {
         /* A fresh subscribe result is about to be applied (moonraker_client
          * reaches READY before dispatching it): drop whatever the core owns

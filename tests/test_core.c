@@ -13,7 +13,9 @@
 #undef NDEBUG
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "core/core.h"
@@ -307,6 +309,134 @@ static void test_tag_read_rides_on_bays(void)
     cJSON_Delete(bays);
 }
 
+/* cJSON's allocator, counted: the blocks it has live. Whatever the core
+ * still holds after the test frees its own input is the core's. */
+static long s_live;
+
+static void *count_malloc(size_t n)
+{
+    void *p = malloc(n);
+
+    if(p) s_live++;
+    return p;
+}
+
+static void count_free(void *p)
+{
+    if(p) s_live--;
+    free(p);
+}
+
+static void count_heap(bool on)
+{
+    cJSON_Hooks hooks = { count_malloc, count_free };
+
+    cJSON_InitHooks(on ? &hooks : NULL);
+    s_live = 0;
+}
+
+/* The kinds that arrive whole keep no copy (the 4 inch board has no heap to
+ * spare for the Spoolman status, about 7 KB with eight bays), still reach the
+ * model every time, and report a change only when the content changed. */
+static void test_whole_kinds_keep_no_copy(void)
+{
+    static const char *const status_a =
+        "{\"schema_version\":1,\"edit\":true,\"stop\":true,\"spoolman_online\":true,"
+        "\"queued_writes\":0,\"bays\":{"
+        "\"oams1-0\":{\"state\":\"linked\",\"spool_id\":10,\"source\":\"manual\","
+        "\"pending_confirmation\":false,\"error\":null,"
+        "\"spool\":{\"material\":\"ABS\",\"color_hex\":\"000000\",\"vendor\":\"Acme\",\"remaining_g\":640}},"
+        "\"oams1-1\":{\"state\":\"unlinked\",\"spool_id\":null,\"source\":\"none\","
+        "\"pending_confirmation\":false,\"error\":null,\"spool\":null}}}";
+    static const char *const status_b =
+        "{\"schema_version\":1,\"edit\":true,\"stop\":true,\"spoolman_online\":false,"
+        "\"queued_writes\":0,\"bays\":{}}";
+    static const char *const spools =
+        "[{\"id\":10,\"archived\":false,\"remaining_weight\":640,"
+        "\"filament\":{\"material\":\"ABS\",\"color_hex\":\"000000\",\"vendor\":{\"name\":\"Acme\"}}}]";
+    mmu_model_t m;
+    core_t *core;
+    cJSON *obj;
+
+    status_map_reset(&m);
+    core = core_create(&m);
+    assert(core);
+    count_heap(true);
+
+    obj = cJSON_Parse(status_a);
+    assert(obj);
+    assert(core_apply(core, "component_status", NULL, obj) == true);
+    assert(m.spoolman_online && m.spoolman_edit && m.spoolman_stop);
+    /* the same status again: mapped, but nothing changed */
+    m.spoolman_online = false;
+    assert(core_apply(core, "component_status", NULL, obj) == false);
+    assert(m.spoolman_online);
+    cJSON_Delete(obj);
+    assert(s_live == 0);
+
+    obj = cJSON_Parse(status_b);
+    assert(obj);
+    assert(core_apply(core, "component_status", NULL, obj) == true);
+    assert(!m.spoolman_online);
+    cJSON_Delete(obj);
+    assert(s_live == 0);
+
+    obj = cJSON_Parse(spools);
+    assert(obj);
+    assert(core_apply(core, "spool_list", NULL, obj) == true);
+    assert(core_apply(core, "spool_list", NULL, obj) == false);
+    cJSON_Delete(obj);
+    assert(s_live == 0);
+
+    count_heap(false);
+    core_destroy(core);
+}
+
+/* On a dropped socket the copies are freed (net_link.c), but the model, and
+ * so the screen, keeps the units' last state; the reconnect's reset and
+ * subscribe result then rebuild them. */
+static void test_drop_copies_keeps_model(void)
+{
+    static const char *const full =
+        "{\"unit\":\"oams1\",\"idx\":2,\"family\":\"ams1\","
+        "\"bays\":[{\"s\":\"l\"},{\"s\":\"r\"}],\"act\":[\"rfid_scan\"],"
+        "\"lane\":{\"id\":\"fps1\",\"op\":\"LOADED\",\"bay\":\"oams1-0\"}}";
+    mmu_model_t m;
+    core_t *core;
+    cJSON *obj;
+
+    status_map_reset(&m);
+    core = core_create(&m);
+    assert(core);
+    count_heap(true);
+
+    obj = cJSON_Parse(full);
+    assert(obj);
+    assert(core_apply(core, "openams_ui", "oams1", obj));
+    cJSON_Delete(obj);
+    assert(s_live > 0);   /* a kind sent as diffs keeps its merged copy */
+
+    core_drop_copies(core);
+    assert(s_live == 0);
+    assert(m.unit_count == 1);
+    assert(m.units[0].slot_count == 2);
+    assert(m.units[0].host_idx == 2);
+    core_drop_copies(core);   /* twice is harmless */
+
+    /* the reconnect: READY resets, then the subscribe result applies */
+    core_reset(core, true);
+    obj = cJSON_Parse(full);
+    assert(obj);
+    assert(core_apply(core, "openams_ui", "oams1", obj));
+    assert(m.unit_count == 1 && m.units[0].slot_count == 2);
+    cJSON_Delete(obj);
+
+    core_destroy(core);
+    assert(s_live == 0);
+    count_heap(false);
+    core_drop_copies(NULL);
+}
+
 int main(void)
 {
     test_merge_survives_diff();
@@ -317,6 +447,8 @@ int main(void)
     test_component_status_keeps_applying();
     test_retry_sent_and_answered();
     test_tag_read_rides_on_bays();
+    test_whole_kinds_keep_no_copy();
+    test_drop_copies_keeps_model();
 
     printf("test_core: ok\n");
     return 0;

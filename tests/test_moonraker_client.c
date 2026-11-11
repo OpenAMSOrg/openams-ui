@@ -259,6 +259,22 @@ static cJSON *fixture_payload(const char *kind)
 
 /* -------------------------------------------------------------- driving --- */
 
+/* Hand mc_on_text @p len bytes of @p text in a buffer of exactly that size,
+ * with no NUL after them: the display reads a message that came in one chunk
+ * straight from the WebSocket client's buffer (net_link.c), so the client
+ * must never read past @p len. Under AddressSanitizer a byte too far fails. */
+static bool on_text_unterminated(const char *text, size_t len, uint32_t now_ms)
+{
+    char *copy = malloc(len ? len : 1);
+    bool ok;
+
+    assert(copy);
+    memcpy(copy, text, len);
+    ok = mc_on_text(copy, len, now_ms);
+    free(copy);
+    return ok;
+}
+
 static void feed(cJSON *msg, uint32_t now_ms)
 {
     char *text;
@@ -267,7 +283,7 @@ static void feed(cJSON *msg, uint32_t now_ms)
     assert(msg);
     text = cJSON_PrintUnformatted(msg);
     assert(text);
-    ok = mc_on_text(text, strlen(text), now_ms);
+    ok = on_text_unterminated(text, strlen(text), now_ms);
     free(text);
     cJSON_Delete(msg);
     assert(ok);
@@ -1067,7 +1083,7 @@ static void budget_end(void)
 /** Feed raw text; returns mc_on_text's answer. */
 static bool text_in(const char *text, uint32_t now_ms)
 {
-    return mc_on_text(text, strlen(text), now_ms);
+    return on_text_unterminated(text, strlen(text), now_ms);
 }
 
 /** Connect and answer server.info, leaving the list request (id 2) pending. */
