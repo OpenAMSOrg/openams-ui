@@ -573,9 +573,12 @@ static void net_task(void *arg)
          * stopped client waits for the reconnect backoff; a link down for
          * LINK_STUCK_MS with no connection is restarted as a safety net. */
         xSemaphoreTake(s_client_lock, portMAX_DELAY);
-        if(!s_paused && !s_client && now >= s_recreate_at && !reader_holds_heap(now)) {
+        /* Built only once Wi-Fi has an address: started before that, its first
+         * connect fails ("Host is unreachable") and reads like a dropped link.
+         * A new client has LINK_STUCK_MS to connect before the safety net. */
+        if(!s_paused && !s_client && now >= s_recreate_at && !reader_holds_heap(now) && net_wifi_is_up()) {
             s_recreate_at = now + 1000;   /* retry at most once a second */
-            client_create();
+            if(client_create()) s_down_since = now;
         }
         if(!s_paused && s_client && down && ((s_ws_stopped && due) ||
                     ((now - s_down_since) >= LINK_STUCK_MS && !esp_websocket_client_is_connected(s_client)))) {
@@ -647,8 +650,8 @@ void net_link_start(const net_config_t *cfg)
     mc_init(&cb, s_bind[0] ? s_bind : NULL);
     mc_bind_serial(cfg->bind_serial);
 
-    if(!client_create()) return;
-
+    /* net_task builds and starts the client once Wi-Fi has an address, and
+     * builds it again if that fails (a short heap), so nothing is started here. */
     xTaskCreate(net_task, "netlink", 4096, NULL, 3, NULL);
     (void)ws_cfg;
 }
