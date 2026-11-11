@@ -92,7 +92,7 @@ bool ui_nav_goto(ui_screen_id_t id)
     ui_nav_modal_close_all();
     ui_theme_init();
 
-    /* One screen of the pool at a time. A screen is up to ~45 KB of a 96 KB
+    /* One screen of the pool at a time. A screen is up to ~45 KB of a 94 KB
      * pool, so building the next one while the previous is still alive needed
      * two of them at once, and a screen change in some languages ran the pool
      * out. The previous screen is released first, by loading an empty one in

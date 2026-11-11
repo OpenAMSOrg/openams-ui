@@ -308,7 +308,7 @@ CMakeLists.txt           simulator build
   SDL2 directly and uses plain C file I/O for the BMP encoder and static
   buffers for snapshot capture.
 - **Memory budget = the 4 inch board's.** `lv_conf.h` caps LVGL's own heap
-  (`LV_MEM_SIZE`) at 96 KB at either resolution — enough for objects, styles
+  (`LV_MEM_SIZE`) at 94 KB at either resolution — enough for objects, styles
   and strings, but far too small for a full 480x320 snapshot buffer (RGB888
   alone is 461 KB). `--screenshots` therefore hands `lv_snapshot_take_to_draw_buf()`
   its own statically-allocated buffers instead of using `lv_snapshot_take()`,

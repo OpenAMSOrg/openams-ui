@@ -49,8 +49,14 @@
      * of static DRAM the ESP32 no longer had. Measured 2026-09-28: the full
      * smoke walk (276 screens, 506 modals) peaks at 65,432 bytes, so 96 KB
      * keeps it near 67% of the pool, under the walk's 90% failure threshold
-     * with about 20 KB to spare. Re-measure before adding heavy screens. */
-    #define LV_MEM_SIZE (96 * 1024)
+     * with about 20 KB to spare. Re-measured 2026-11-10, when the ESP32 image
+     * with the spool tag writer had fallen under its 20 000-byte static DRAM
+     * floor: the walk now peaks at 51,336 bytes (51,512 replaying four units,
+     * 51,824 at 800x480), on the 64-bit simulator, whose objects are larger
+     * than the ESP32's. 94 KB keeps that near 56% of the pool, with about
+     * 30 KB to spare under the 90% threshold, and gives the ESP32 2 KB of
+     * static DRAM back. Re-measure before adding heavy screens. */
+    #define LV_MEM_SIZE (94 * 1024)
 
     /* The ES3C50P and ES3C43P (ESP32-S3, platform/esp32/main/board.h) have 8 MB
      * of PSRAM, and their internal RAM holds code as well as data: the pool is
