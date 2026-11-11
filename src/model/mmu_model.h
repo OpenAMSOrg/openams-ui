@@ -41,6 +41,11 @@
 
 /* ------------------------------------------------------------------ types */
 
+/* The model's structs keep each enum value in a uint8_t, with the enum named
+ * in its comment: an enum field is four bytes, and the 4 inch board holds the
+ * model twice (g_mmu in static RAM, the network copy on the heap), with 72
+ * slots, 6 units and 4 toolheads in each. */
+
 typedef enum {
     MMU_UNIT_4SLOT,   /**< AMS-style four-lane unit */
     MMU_UNIT_HT,      /**< single-slot high-temperature drier */
@@ -141,8 +146,8 @@ typedef struct {
     char material[MMU_TEXT_LEN];
     char brand[MMU_TEXT_LEN];
     int16_t remaining_pct;                  /**< -1 = unknown */
-    mmu_info_source_t info_source;
-    mmu_slot_state_t state;
+    uint8_t info_source;                    /**< mmu_info_source_t */
+    uint8_t state;                          /**< mmu_slot_state_t */
     int16_t nozzle_min_c;                   /**< -1 = unknown */
     int16_t nozzle_max_c;                   /**< -1 = unknown */
     int16_t k_value_x1000;                  /**< -1 = unknown, else PA * 1000 */
@@ -152,7 +157,7 @@ typedef struct {
     int16_t remaining_g;                    /**< grams left, -1 = unknown */
     int16_t initial_g;                      /**< `spool.initial_g`, the spool's own size in grams; -1 = unknown */
     int16_t flow_k_x1000;                   /**< `spool.flow_k`, the spool's own pressure advance; -1 = unknown, else PA * 1000 */
-    mmu_cal_state_t cal_state;              /**< PTFE calibration state */
+    uint8_t cal_state;                      /**< mmu_cal_state_t: PTFE calibration state */
     bool positioning;                       /**< firmware is positioning a new spool */
     int16_t global_id;                      /**< `bays[i].id`, the host's own bay id; -1 = unknown */
     bool acts_known;                        /**< the host sent `bays[i].a`; false (an older host, the demo): nothing is withheld */
@@ -199,11 +204,11 @@ typedef struct {
 
 typedef struct {
     char name[MMU_UNIT_NAME_LEN];           /**< "A", "B", "HT-A"; the host's own name, cut to fit */
-    mmu_unit_kind_t kind;
-    mmu_variant_t variant;                  /**< hardware family ("AMS", ...) */
+    uint8_t kind;                           /**< mmu_unit_kind_t */
+    uint8_t variant;                        /**< mmu_variant_t: hardware family ("AMS", ...) */
     char title[MMU_TEXT_LEN];               /**< the product name the host's family carries ("BoxTurtle", "ERCF 2.0"); "" = mmu_variant_name(variant) */
     uint8_t slot_count;
-    mmu_side_t side;                        /**< dual-extruder binding */
+    uint8_t side;                           /**< mmu_side_t: dual-extruder binding */
     bool connected;
     /* capabilities */
     bool has_humidity_level;                /**< five-step A..E */
@@ -216,7 +221,7 @@ typedef struct {
     int16_t humidity_pct;                   /**< -1 = none */
     int16_t temp_c;                         /**< -100 = none */
     int16_t ambient_c;                      /**< room temperature COOLING settles toward */
-    mmu_dry_state_t dry_state;
+    uint8_t dry_state;                      /**< mmu_dry_state_t */
     int16_t dry_target_c;
     int16_t dry_remaining_min;
     bool dry_rotate;
@@ -231,9 +236,9 @@ typedef struct {
     bool act_known;                         /**< the host sent `act`; false (an older host, the demo): nothing is withheld */
     uint8_t acts;                           /**< MMU_UNIT_ACT_* bits of the entries `act` lists */
     bool dry_unlisted;                      /**< `act` is known and lacks `dryer_start`: drying is unavailable, whatever `dryer` says */
-    int16_t host_idx;                       /**< the unit's top-level `idx` (C2 6.2); -1 = unknown */
     char lane[MMU_LANE_ID_LEN];                          /**< the unit's `lane.id` FPS lane (C2 6.2); "" = unknown */
     int8_t toolhead;                        /**< index into mmu_model_t.toolheads[]; -1 = unknown */
+    int16_t host_idx;                       /**< the unit's top-level `idx` (C2 6.2); -1 = unknown */
     mmu_slot_t slots[MMU_MAX_SLOTS_PER_UNIT];
 } mmu_unit_t;
 
@@ -255,7 +260,7 @@ typedef struct {
     bool toolhead_sensor;
 
     /* load / unload in progress */
-    mmu_busy_t busy;
+    uint8_t busy;                           /**< mmu_busy_t */
     int8_t busy_unit;
     int8_t busy_slot;
     char steps[MMU_MAX_STEPS][MMU_TEXT_LEN * 2];
@@ -269,7 +274,7 @@ typedef struct {
 
     /* active error (the lane fault, C2 5.7) */
     bool has_error;
-    mmu_severity_t error_severity;
+    uint8_t error_severity;                 /**< mmu_severity_t */
     char error_code[40];
     char error_text[MMU_TEXT_LEN * 4];
     int8_t error_unit;
@@ -325,7 +330,7 @@ typedef struct {
 
 typedef struct {
     bool present;
-    mmu_side_t side;
+    uint8_t side;                           /**< mmu_side_t */
     uint32_t color;
     char material[MMU_TEXT_LEN];
 } mmu_ext_spool_t;
@@ -355,8 +360,8 @@ typedef enum {
 typedef struct {
     char text[MMU_TEXT_LEN * 2];            /**< MMU_ALERT_PLAIN only */
     uint8_t kind;                           /**< mmu_alert_kind_t */
+    uint8_t severity;                       /**< mmu_severity_t */
     int16_t arg[3];                         /**< the numbers of a composed alert */
-    mmu_severity_t severity;
     int8_t unit;                            /**< the unit it is about; -1 = none */
     int8_t toolhead;                        /**< the toolhead (FPS lane) it is about; -1 = none */
     bool lane_fault;                        /**< a lane fault's history entry (the live fault is on its toolhead) */
@@ -462,7 +467,7 @@ typedef struct {
     bool toolhead_sensor;
 
     /* load / unload in progress */
-    mmu_busy_t busy;
+    uint8_t busy;                           /**< mmu_busy_t */
     int8_t busy_unit;
     int8_t busy_slot;
     char steps[MMU_MAX_STEPS][MMU_TEXT_LEN * 2];
@@ -479,7 +484,7 @@ typedef struct {
 
     /* active error */
     bool has_error;
-    mmu_severity_t error_severity;
+    uint8_t error_severity;                 /**< mmu_severity_t */
     char error_code[40]; /* contract fault codes are identifiers; never truncate */
     char error_text[MMU_TEXT_LEN * 4]; /* longer than *3: fits the longest scenario error message without -Wformat-truncation */
     int8_t error_unit;
