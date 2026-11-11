@@ -16,7 +16,7 @@ test.describe('save and load', () => {
      *  about. The gallery reads the recording as a module, and the page is
      *  handed the same events with that one status after them. */
     const withSpoolman = async (page: Page) => {
-        await page.route(/vams\/idle\.json\?import/, async (route) => {
+        await page.route(/fixtures\/recorded\/idle\.json\?import/, async (route) => {
             const raw = await route.fetch({ url: route.request().url().replace('?import', '') });
             const fixture = await raw.json();
             fixture.events.push({
