@@ -424,6 +424,7 @@
         "unit": "box",
         "idx": 1,
         "family": "boxturtle",
+        "serial": null,
         "online": true,
         "ready": true,
         "cal": "u",

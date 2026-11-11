@@ -27,7 +27,7 @@ import sys
 
 SKIP = 77
 HERE = os.path.dirname(os.path.abspath(__file__))
-FIXTURES = os.path.join(HERE, "fixtures", "vams")
+FIXTURES = os.path.join(HERE, "fixtures", "recorded")
 KINDS = {"openams_ui", "c2_status", "component_status"}
 
 
@@ -99,6 +99,9 @@ def main():
                 errors.append(f"{where}: family_map does not say {unit} is {payload.get('family')}")
             checked += 1
 
+    # A folder that moved would otherwise pass with nothing checked.
+    if checked == 0:
+        errors.append(f"no openams_ui payload found under {FIXTURES}")
     for line in errors:
         print("FAIL " + line)
     if errors:

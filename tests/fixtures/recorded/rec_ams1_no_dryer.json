@@ -2,7 +2,9 @@
   "scenario": "rec_ams1_no_dryer",
   "seed": 30086023,
   "schema_version": 2,
-  "family_map": {},
+  "family_map": {
+    "ams_a": "ams1"
+  },
   "events": [
     {
       "t": 0.0,
