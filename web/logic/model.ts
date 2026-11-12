@@ -17,7 +17,7 @@ export const MAX_UNITS = 6;
 export const MAX_SLOTS_PER_UNIT = 12;
 export const MAX_STEPS = 8;
 export const MAX_ALERTS = 8;
-export const MAX_GROUPS = 8;
+export const MAX_GROUPS = 24;   // MMU_MAX_GROUPS: six units of four bays
 export const MAX_GROUP_MEMBERS = 8;
 
 /** The two choices of the "Change group..." list that are not a group: the
@@ -29,7 +29,7 @@ export const GROUP_CHOICE_NEW = -2;
 export const MAX_SPOOLS = 16;
 export const MAX_VENDORS = 64;   // MMU_MAX_VENDORS: Spoolman's own plus the curated brands
 const VENDOR_LEN = 32;
-export const MAX_TOOLS = 8;
+export const MAX_TOOLS = 24;    // MMU_MAX_TOOLS: T0..T23
 export const MAX_TOOLHEADS = 4;
 /** The alert queue between a mapping call and the history (one apply). */
 export const MAX_PENDING_ALERTS = 4;

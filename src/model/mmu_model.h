@@ -21,7 +21,7 @@
 #define MMU_TEXT_LEN            24
 #define MMU_STEP_DETAIL_LEN     32  /**< a step's own detail ("250 °C"), which the
                                       *  running step is drawn with beside it */
-#define MMU_MAX_GROUPS          8
+#define MMU_MAX_GROUPS          24   /* six units of four bays, one group each */
 #define MMU_MAX_GROUP_MEMBERS   8
 #define MMU_MAX_SPOOLS          16
 #define MMU_MAX_VENDORS         64  /**< the vendors the edit form offers: Spoolman's
@@ -30,7 +30,7 @@
                                       *  is 30 of them */
 #define MMU_REFUSAL_LEN         192 /**< a host refusal, whole: "Heat the extruder before an OpenAMS toolchange. ..." runs about 100 bytes */
 #define MMU_VENDOR_LEN          32  /**< a vendor's name, whole: a longer one is not offered, never cut */
-#define MMU_MAX_TOOLS           8   /**< Maximum number of slicer tools (T0..T7). */
+#define MMU_MAX_TOOLS           24  /**< Maximum number of slicer tools (T0..T23). */
 #define MMU_MAX_TOOLHEADS       4   /**< FPS lanes a display's model can hold at once. */
 #define MMU_UNIT_NAME_LEN       32  /**< a unit's name with its NUL: 31 characters. The host sets no limit, so a longer one is cut at a character boundary by every writer AND every lookup (cut the key first, then compare), which keeps a long name one unit instead of a new one per update. */
 #define MMU_GROUP_NAME_LEN      16  /**< a group's name with its NUL */

@@ -11,6 +11,7 @@ import { bothCores, firstDiff, resetBoth } from './compare.ts';
 import type { Pair } from './compare.ts';
 import { build } from './synth.ts';
 import type { Scenario } from './synth.ts';
+import { MAX_GROUPS } from '../model.ts';
 import type { ActionResult, Core, ViewAction, ViewUnit } from '../types.ts';
 
 const spool = (color: string, pct: number, over = {}) => ({ s: 'r', material: 'ASA', color, pct, link: 'm', ...over });
@@ -260,27 +261,57 @@ test('the bays that hold no group are listed under the unit that holds them', as
 test('a full table still offers the two sentinels', async () => {
   const p = await bothCores();
   resetBoth(p);
-  const bays = Array.from({ length: 9 }, (_, i) => spool('#1c1c1c', 50, i === 0 ? { s: 'l' } : {}));
-  const groups = Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`T${i}`, [`oams1-${i}`]]));
+  // MAX_GROUPS groups over three units of nine bays, and one bay left over.
+  const unitBays = (u: number) => Array.from({ length: 9 }, (_, i) =>
+    spool('#1c1c1c', 50, u === 0 && i === 0 ? { s: 'l' } : {}));
+  const groups = Object.fromEntries(Array.from({ length: MAX_GROUPS }, (_, i) =>
+    [`T${i}`, [`oams${1 + Math.floor(i / 9)}-${i % 9}`]]));
   const sc: Scenario = {
-    units: [{ name: 'oams1', idx: 1, family: 'ams2', lane: 'fps1', bays }],
+    units: [0, 1, 2].map((u) => ({ name: `oams${u + 1}`, idx: u + 1, family: 'ams2', lane: 'fps1', bays: unitBays(u) })),
     groups,
     lanes: [{ id: 'fps1', ext: 'extruder', op: 'LOADED', bay: 'oams1-0', group: 'T0' }],
   };
+  const last = MAX_GROUPS % 9;          // the first bay of oams3 no group holds
   for (const core of await view(p, sc)) {
-    const f = changeGroup(core, 'oams1', 8).form!.fields[0];
-    assert.equal(f.options.length, 10);
+    const f = changeGroup(core, 'oams3', last).form!.fields[0];
+    assert.equal(f.options.length, MAX_GROUPS + 2);
     assert.deepEqual(f.options.slice(-2), [
       { value: -1, label: 'No group' },
       { value: -2, label: 'New group' },
     ]);
   }
-  // "New group" still names a group, and the host is the one that refuses the
-  // ninth: the mapper's job is to say what the choice means, not to guess.
-  assert.deepEqual(gcode(both(p, 'change group -2 oams19')), [
-    'OAMSM_CREATE_GROUP GROUP=T8',
-    'OAMSM_ASSIGN_BAY GROUP=T8 OAMS=oams1 BAY=8',
+  // "New group" still names a group, and the host is the one that refuses
+  // one too many: the mapper's job is to say what the choice means.
+  assert.deepEqual(gcode(both(p, `change group -2 oams3${last + 1}`)), [
+    `OAMSM_CREATE_GROUP GROUP=T${MAX_GROUPS}`,
+    `OAMSM_ASSIGN_BAY GROUP=T${MAX_GROUPS} OAMS=oams3 BAY=${last}`,
   ]);
+});
+
+test('a ninth group is listed and can be chosen (T8 for an AMS HT)', async () => {
+  // voron350, 2026-11-12: T0-T7 on an AMS 1 and an AMS 2 Pro and T8 on the
+  // AMS HT; the panel kept eight groups and T8 could not be chosen.
+  const p = await bothCores();
+  resetBoth(p);
+  const four = () => Array.from({ length: 4 }, () => spool('#1c1c1c', 50));
+  const groups: Record<string, string[]> = {};
+  for (let i = 0; i < 4; i++) groups[`T${i}`] = [`ams1-${i}`];
+  for (let i = 0; i < 4; i++) groups[`T${i + 4}`] = [`ams2-${i}`];
+  groups.T8 = ['ams_ht-0'];
+  const sc: Scenario = {
+    units: [
+      { name: 'ams1', idx: 1, family: 'ams1', lane: 'fps', bays: four() },
+      { name: 'ams2', idx: 2, family: 'ams2', lane: 'fps', bays: four() },
+      { name: 'ams_ht', idx: 3, family: 'ams_ht', lane: 'fps', bays: [spool('#1c1c1c', 50)] },
+    ],
+    groups,
+    lanes: [{ id: 'fps', ext: 'extruder', op: 'UNLOADED' }],
+  };
+  for (const core of await view(p, sc)) {
+    const f = changeGroup(core, 'ams1', 0).form!.fields[0];
+    assert.ok(f.options.some((o) => o.label === 'T8'), JSON.stringify(f.options));
+    assert.equal(f.options.length, 9 + 2);
+  }
 });
 
 /* ------------------------------------- the host edits the groups at runtime */
