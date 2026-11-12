@@ -55,8 +55,12 @@
      * 51,824 at 800x480), on the 64-bit simulator, whose objects are larger
      * than the ESP32's. 94 KB keeps that near 56% of the pool, with about
      * 30 KB to spare under the 90% threshold, and gives the ESP32 2 KB of
-     * static DRAM back. Re-measure before adding heavy screens. */
-    #define LV_MEM_SIZE (94 * 1024)
+     * static DRAM back. Re-measured 2026-11-12, when 24 groups and tools
+     * instead of 8 (528 + 32 bytes of the model) put the same image 299 bytes
+     * under the floor again: the walk peaks at 51,400 bytes, so 93 KB keeps
+     * it near 54% and gives the ESP32 another 1 KB. Re-measure before adding
+     * heavy screens. */
+    #define LV_MEM_SIZE (93 * 1024)
 
     /* The ES3C50P and ES3C43P (ESP32-S3, platform/esp32/main/board.h) have 8 MB
      * of PSRAM, and their internal RAM holds code as well as data: the pool is

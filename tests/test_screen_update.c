@@ -68,7 +68,7 @@ static void check(bool ok, const char *what)
 /* ------------------------------------------------------------- snapshots */
 
 /* lv_snapshot_take() would draw its 480x320 RGB565 buffer (300 KB) out of
- * LVGL's own 94 KB pool, which cannot hold it; the simulator hands
+ * LVGL's own 93 KB pool, which cannot hold it; the simulator hands
  * lv_snapshot_take_to_draw_buf() statically allocated buffers for the same
  * reason, and this does too. Two of them: the screen updated in place, and the
  * one a fresh build draws. */
