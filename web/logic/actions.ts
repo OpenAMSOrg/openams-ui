@@ -192,6 +192,13 @@ const unitMay = (m: Model, unit: number, act: number): boolean => {
   return !u.actKnown || (u.acts & act) !== 0;
 };
 
+/** Whether a dryer start on @p u may turn the spools: only when the host lists
+ *  `dryer_rotate` in the unit's `act` (Cortex Bridge firmware 20); a host too
+ *  old to list `act` never takes ROTATE=1. actions_may_rotate() in the C. */
+export function mayRotate(u: Unit): boolean {
+  return u.actKnown && (u.acts & UnitAct.DRYER_ROTATE) !== 0;
+}
+
 /** Why a unit cannot dry, in the current language: '' when it can. A unit whose
  *  `act` lacks `dryer_start` is worded here, live, so a language change reaches
  *  it; any other reason is the host's own words (cannotDryReason).
@@ -400,13 +407,21 @@ function dispatch(w: Writer, line: string, m: Model): Mapped {
       const target = s.int();
       if (target !== null && s.literal('C', false)) {
         const hours = s.int();
-        if (hours !== null && s.literal('h', false) && s.atEnd()) {
+        // A start may end in `rotate 0|1`: 1 turns the spools while it dries.
+        let rot: number | null = 0;
+        let ok = hours !== null && s.literal('h', false);
+        if (ok && !s.atEnd()) {
+          rot = s.literal('rotate', true) ? s.int() : null;
+          ok = (rot === 0 || rot === 1) && s.atEnd();
+        }
+        if (ok && hours !== null && s.atEnd()) {
           const unit = unitFind(m, a);
           if (unit < 0) return NOT_MINE;
           const idx = unitHostIdx(m, unit);
           if (idx < 0) return refuse(str('REASON_UNIT_UNKNOWN'));
           if (!unitMay(m, unit, UnitAct.DRYER_START)) return refuse(dryReason(m.units[unit]));
-          w.cmd(`OAMS_DRYER_START OAMS=${idx} TARGET=${target} DURATION=${(hours * 3600) | 0}`);
+          if (rot && !mayRotate(m.units[unit])) return refuse(str('REASON_NOT_SUPPORTED'));
+          w.cmd(`OAMS_DRYER_START OAMS=${idx} TARGET=${target} DURATION=${(hours * 3600) | 0}${rot ? ' ROTATE=1' : ''}`);
           return { rc: 1, script: '' };
         }
       }

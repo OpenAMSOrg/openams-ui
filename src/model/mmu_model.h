@@ -188,6 +188,9 @@ enum {
     MMU_UNIT_ACT_DRYER_STOP = 1u << 1,
     MMU_UNIT_ACT_CLEAR_FAULT = 1u << 2,
     MMU_UNIT_ACT_RFID_SCAN = 1u << 3,
+    /* The dryer start may turn the spools (OAMS_DRYER_START ROTATE=1, Cortex
+     * Bridge firmware 20): the only place a "rotate" choice is offered. */
+    MMU_UNIT_ACT_DRYER_ROTATE = 1u << 4,
 };
 
 /** A named, ordered group ("T0", ...): a tool or material request the

@@ -113,6 +113,50 @@ test('drying follows act: no dryer_start, the reason is set; no dryer_stop, stop
   assert.equal(action(p.ts, 'dry_stop')?.reason, NOT_SUPPORTED);
 });
 
+/** `name`'s steps with `dryer_rotate` added wherever `act` lists `dryer_start`:
+ *  a host whose units turn their spools while drying (Cortex Bridge firmware 20). */
+function withRotate(name: string): ReturnType<typeof fixtureSteps> {
+  const add = (o: unknown): unknown => {
+    if (Array.isArray(o)) return o.map(add);
+    if (o === null || typeof o !== 'object') return o;
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(o)) out[k] = add(v);
+    const act = out.act;
+    if (Array.isArray(act) && act.includes('dryer_start') && !act.includes('dryer_rotate')) {
+      out.act = [...act, 'dryer_rotate'];
+    }
+    return out;
+  };
+  return fixtureSteps(name).map((s) => ({ ...s, obj: add(s.obj) }));
+}
+
+test('a unit that lists dryer_rotate offers the choice and sends ROTATE=1, in both cores', async () => {
+  const p = await bothCores();
+  resetBoth(p);
+  setLanguageBoth(p, 'en');
+  for (const s of withRotate('cap_full')) {
+    p.c.apply(s.kind as never, s.name, s.obj);
+    p.ts.apply(s.kind as never, s.name, s.obj);
+  }
+  assert.equal(firstDiff(p.c.view(), p.ts.view()), null);
+  const a = action(p.c, 'dry_start');
+  assert.ok(a?.line.endsWith(' rotate {rotate}'), a?.line);
+  const field = a?.form?.fields.find((f) => f.id === 'rotate');
+  assert.equal(field?.kind, 'toggle');
+  assert.equal(field?.value, 0);
+  sent(p, 'dry full1 start 50C 4h rotate 1', 'OAMS_DRYER_START OAMS=1 TARGET=50 DURATION=14400 ROTATE=1');
+  sent(p, 'dry full1 start 50C 4h rotate 0', 'OAMS_DRYER_START OAMS=1 TARGET=50 DURATION=14400');
+});
+
+test('a unit without dryer_rotate has no choice and refuses rotate 1, in both cores', async () => {
+  const p = await loaded('cap_full');
+  const a = action(p.c, 'dry_start');
+  assert.ok(a && !a.line.includes('rotate'), a?.line);
+  assert.equal(a?.form?.fields.some((f) => f.id === 'rotate'), false);
+  refused(p, 'dry full1 start 50C 4h rotate 1', NOT_SUPPORTED);
+  sent(p, 'dry full1 start 50C 4h rotate 0', 'OAMS_DRYER_START OAMS=1 TARGET=50 DURATION=14400');
+});
+
 test('the dryer reason is worded in the language in use, also after a switch', async () => {
   const p = await loaded('cap_ams2_no_dryer_actions');
   for (const code of langCodes()) {

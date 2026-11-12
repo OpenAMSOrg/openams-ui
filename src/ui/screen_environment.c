@@ -383,7 +383,12 @@ static void do_start(void)
     u->dry_target_c = (int16_t)s_target_c;
     u->dry_remaining_min = (int16_t)(s_hours * 60);
     s_total_min = s_hours * 60;
-    actions_log("dry %s start %dC %dh", u->name, s_target_c, s_hours);
+    /* The choice reaches the host only where it lists dryer_rotate. */
+    if(actions_may_rotate(u))
+        actions_log("dry %s start %dC %dh rotate %d", u->name, s_target_c, s_hours,
+                    u->dry_rotate ? 1 : 0);
+    else
+        actions_log("dry %s start %dC %dh", u->name, s_target_c, s_hours);
     ui_nav_refresh_async();
 }
 
@@ -413,6 +418,14 @@ static void on_start_stop(lv_event_t *e)
 
 /* ----------------------------------------------------------------- sheets */
 
+static void on_sheet_rotate(lv_event_t *e)
+{
+    lv_obj_t *sw = lv_event_get_target_obj(e);
+
+    if(!sw || s_unit < 0 || s_unit >= (int)g_mmu.unit_count) return;
+    g_mmu.units[s_unit].dry_rotate = ui_kit_switch_get(sw);
+}
+
 static void on_sheet_start(lv_event_t *e)
 {
     (void)e;
@@ -441,6 +454,11 @@ static void open_dry_confirm(void)
                             VS_ARG_N("tmin", DRY_T_MIN), VS_ARG_N("tmax", unit_t_max(u)),
                             VS_ARG_N("hmin", DRY_H_MIN), VS_ARG_N("hmax", DRY_H_MAX) }, 6);
     ui_sheet_row(sheet, UI_ICON_FIRE, head, detail, NULL, NULL, false);
+    /* Cortex Bridge firmware 20: the unit can turn its spools while it dries.
+     * The choice is kept per unit until the display restarts. */
+    if(actions_may_rotate(u))
+        ui_sheet_switch_row(sheet, UI_ICON_ROTATE_RIGHT, view_str(VS_SET_ROTATE), u->dry_rotate,
+                            on_sheet_rotate, NULL);
 
     ui_sheet_button(sheet, view_str(VS_BTN_START), on_sheet_start, NULL, true);
 }

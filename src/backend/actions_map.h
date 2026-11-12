@@ -134,4 +134,11 @@ int actions_check(const char *line, const mmu_model_t *m, const char **why);
  */
 const char *actions_dry_reason(const mmu_unit_t *u);
 
+/**
+ * Whether a dryer start on @p u may turn the spools (`dry <unit> start ...
+ * rotate 1`, OAMS_DRYER_START ROTATE=1): only when the host lists
+ * `dryer_rotate` in the unit's `act` (Cortex Bridge firmware 20).
+ */
+bool actions_may_rotate(const mmu_unit_t *u);
+
 #endif /* ACTIONS_MAP_H */

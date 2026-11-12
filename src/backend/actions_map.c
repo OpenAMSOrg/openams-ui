@@ -275,6 +275,13 @@ static bool unit_may(const mmu_unit_t *u, uint8_t act)
     return !u->act_known || (u->acts & act);
 }
 
+/* Spool rotation is offered only where the host lists it: a host too old to
+ * list `act` never takes ROTATE=1. */
+bool actions_may_rotate(const mmu_unit_t *u)
+{
+    return u && u->act_known && (u->acts & MMU_UNIT_ACT_DRYER_ROTATE);
+}
+
 /* `load <slot>`: OPENAMS_LOAD wants the group by name and the bay by the
  * host's own id, so a bay outside a group, or one the host has not identified,
  * cannot be addressed (the -1 cases). Returns 0 when @p id is no slot of the
@@ -552,11 +559,21 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
     /* `dry <unit> target|hours|preset ...` only edits the pending UI values,
      * so only start and stop reach the host. `%n` makes the match exact: the
      * tail has to end where the parse does. It stays -1 unless the format got
-     * as far as it, so the arg[n] below never looks before the string. */
+     * as far as it, so the arg[n] below never looks before the string. A
+     * start may end in `rotate 0|1`: 1 turns the spools while it dries. */
     arg = rest(line, "dry");
     if(arg) {
+        int rot = 0;
+        bool ok;
+
         n = -1;
-        if(sscanf(arg, "%39s start %dC %dh%n", a, &t, &h, &n) == 3 && n >= 0 && arg[n] == '\0') {
+        ok = sscanf(arg, "%39s start %dC %dh%n", a, &t, &h, &n) == 3 && n >= 0 && arg[n] == '\0';
+        if(!ok) {
+            n = -1;
+            ok = sscanf(arg, "%39s start %dC %dh rotate %d%n", a, &t, &h, &rot, &n) == 4 && n >= 0 &&
+                 arg[n] == '\0' && (rot == 0 || rot == 1);
+        }
+        if(ok) {
             unit = unit_find(m, a);
             if(unit < 0) return 0;
             gi = unit_host_idx(m, unit);
@@ -568,7 +585,12 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
                 *why = actions_dry_reason(&m->units[unit]);
                 return -1;
             }
-            wr_cmd(w, "OAMS_DRYER_START OAMS=%d TARGET=%d DURATION=%d", gi, t, h * 3600);
+            if(rot && !actions_may_rotate(&m->units[unit])) {
+                *why = view_str(VS_REASON_NOT_SUPPORTED);
+                return -1;
+            }
+            wr_cmd(w, "OAMS_DRYER_START OAMS=%d TARGET=%d DURATION=%d%s", gi, t, h * 3600,
+                   rot ? " ROTATE=1" : "");
             return 1;
         }
 

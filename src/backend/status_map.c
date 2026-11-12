@@ -821,6 +821,7 @@ static void map_unit_caps(mmu_unit_t *u, const cJSON *ready, const cJSON *act)
         { "dryer_stop", MMU_UNIT_ACT_DRYER_STOP },
         { "clear_fault", MMU_UNIT_ACT_CLEAR_FAULT },
         { "rfid_scan", MMU_UNIT_ACT_RFID_SCAN },
+        { "dryer_rotate", MMU_UNIT_ACT_DRYER_ROTATE },
     };
     size_t i;
 

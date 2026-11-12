@@ -52,6 +52,12 @@ void ui_sheet_header(lv_obj_t *sheet, int32_t swatch_rgb, const char *right_text
 lv_obj_t *ui_sheet_row(lv_obj_t *sheet, const char *icon, const char *label,
                        const char *reason, lv_event_cb_t cb, void *user, bool primary);
 
+/** A 44 px row with a switch at its right instead of a chevron: @p cb runs
+ * on each flip (read the state with ui_kit_switch_get() on the event target).
+ * Returns the switch. */
+lv_obj_t *ui_sheet_switch_row(lv_obj_t *sheet, const char *icon, const char *label, bool on,
+                              lv_event_cb_t cb, void *user);
+
 /** A 36 px button in the strip along the bottom of the body. The strip is
  * created by the first call; buttons share its width. */
 lv_obj_t *ui_sheet_button(lv_obj_t *sheet, const char *label, lv_event_cb_t cb,

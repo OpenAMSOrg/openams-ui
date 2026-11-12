@@ -117,6 +117,9 @@ export const BayAct = {
 /** The unit actions `act` lists that the display offers, one bit each. */
 export const UnitAct = {
   DRYER_START: 1, DRYER_STOP: 2, CLEAR_FAULT: 4, RFID_SCAN: 8,
+  // The dryer start may turn the spools (OAMS_DRYER_START ROTATE=1, Cortex
+  // Bridge firmware 20): the only place a "rotate" choice is offered.
+  DRYER_ROTATE: 16,
 } as const;
 
 export interface Group {
@@ -1014,6 +1017,7 @@ function mapUnitCaps(u: Unit, ready: unknown, act: unknown): void {
     if (arrayHas(act, 'dryer_stop')) u.acts |= UnitAct.DRYER_STOP;
     if (arrayHas(act, 'clear_fault')) u.acts |= UnitAct.CLEAR_FAULT;
     if (arrayHas(act, 'rfid_scan')) u.acts |= UnitAct.RFID_SCAN;
+    if (arrayHas(act, 'dryer_rotate')) u.acts |= UnitAct.DRYER_ROTATE;
   }
 
   u.dryUnlisted = u.actKnown && (u.acts & UnitAct.DRYER_START) === 0;

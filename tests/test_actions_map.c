@@ -1077,6 +1077,22 @@ static void test_host_lists(void)
     cap_refused("dry dry1 start 50C 4h", "The dryer's power adapter is not connected.");
     assert(strcmp(g_mmu.units[0].cannot_dry_reason, "The dryer's power adapter is not connected.") == 0);
 
+    /* spool rotation while drying (Cortex Bridge firmware 20): ROTATE=1 only
+     * where `act` lists dryer_rotate; `rotate 0` is the plain start */
+    build_host("cap_full", -1);
+    cap_refused("dry full1 start 50C 4h rotate 1", "Not supported on this unit yet");
+    cap_ok("dry full1 start 50C 4h rotate 0", "OAMS_DRYER_START OAMS=1 TARGET=50 DURATION=14400");
+    assert(!actions_may_rotate(&g_mmu.units[0]));
+    g_mmu.units[0].acts |= MMU_UNIT_ACT_DRYER_ROTATE;
+    assert(actions_may_rotate(&g_mmu.units[0]));
+    cap_ok("dry full1 start 50C 4h rotate 1",
+           "OAMS_DRYER_START OAMS=1 TARGET=50 DURATION=14400 ROTATE=1");
+    cap_ok("dry full1 start 50C 4h", "OAMS_DRYER_START OAMS=1 TARGET=50 DURATION=14400");
+    assert(actions_map("dry full1 start 50C 4h rotate 2", &g_mmu, line, sizeof line) == 0);
+    assert(actions_map("dry full1 start 50C 4h rotate", &g_mmu, line, sizeof line) == 0);
+    g_mmu.units[0].act_known = false;        /* a host too old to list `act` */
+    assert(!actions_may_rotate(&g_mmu.units[0]));
+
     /* the dryer's stop alone is missing */
     build_host("cap_ams_ht_one_bay", -1);
     assert(!g_mmu.units[0].dry_unlisted);

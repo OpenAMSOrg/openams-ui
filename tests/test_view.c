@@ -404,6 +404,17 @@ static void test_edit_action(void)
     assert(view_palette_color(3) == 0x000000 && strcmp(view_palette_name(3), "black") == 0);
     assert(strcmp(view_color_name(0x0A2989), "blue") == 0);
     assert(strcmp(view_color_name(0x101010), "black") == 0);
+    /* as the eye sees them (CIE94), not by plain RGB distance */
+    for(int i = 0; i < view_palette_count(); i++)
+        assert(strcmp(view_color_name(view_palette_color(i)), view_palette_name(i)) == 0);
+    assert(strcmp(view_color_name(0x0056B8), "blue") == 0);       /* cobalt: was cyan */
+    assert(strcmp(view_color_name(0xB57EDC), "purple") == 0);     /* lavender: was silver */
+    assert(strcmp(view_color_name(0xFF7F50), "orange") == 0);     /* coral: was pink */
+    assert(strcmp(view_color_name(0x98FF98), "green") == 0);      /* mint: was silver */
+    assert(strcmp(view_color_name(0x36454F), "gray") == 0);       /* charcoal: was forest green */
+    assert(strcmp(view_color_name(0x8BD5EE), "turquoise") == 0);  /* ice blue: was silver */
+    assert(strcmp(view_color_name(0xFEC600), "yellow") == 0);     /* sunflower */
+    assert(strcmp(view_color_name(0x6F5034), "brown") == 0);      /* cocoa */
 }
 
 /* "Load" on a bay nobody has identified carries the spool form, so the load the

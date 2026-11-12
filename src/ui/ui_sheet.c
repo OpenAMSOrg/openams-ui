@@ -13,6 +13,7 @@
 #include "app/actions.h"
 #include "ui/ui_fx.h"
 #include "ui/ui_icons.h"
+#include "ui/ui_kit.h"
 #include "ui/ui_nav.h"
 #include "ui/ui_theme.h"
 #include "view/strings.h"
@@ -572,6 +573,34 @@ lv_obj_t *ui_sheet_row(lv_obj_t *sheet, const char *icon, const char *label, con
     }
     ui_sheet_fit(sheet);
     return row;
+}
+
+lv_obj_t *ui_sheet_switch_row(lv_obj_t *sheet, const char *icon, const char *label, bool on,
+                              lv_event_cb_t cb, void *user)
+{
+    lv_obj_t *body = ui_sheet_body(sheet);
+    lv_obj_t *row, *l, *sw;
+
+    if(!body) return NULL;
+
+    row = mk_box(body, 0, 0, UI_SCREEN_W, 44);
+
+    if(body_rows(body) > 0) {
+        l = mk_box(row, SHEET_TEXT_X, 0, SHEET_LINE_X2 - SHEET_TEXT_X, 1);
+        lv_obj_set_style_bg_color(l, UI_COL_LINE, 0);
+        lv_obj_set_style_bg_opa(l, LV_OPA_COVER, 0);
+    }
+    if(icon) {
+        l = mk_text(row, icon, UI_FONT_ICON, UI_COL_TEXT_DIM);
+        lv_obj_align(l, LV_ALIGN_LEFT_MID, UI_PAD_XXL, 0);
+    }
+    l = mk_text(row, label, UI_FONT_M, UI_COL_TEXT);
+    lv_obj_align(l, LV_ALIGN_LEFT_MID, SHEET_TEXT_X, 0);
+
+    sw = ui_kit_switch(row, 0, 0, on, cb, user);
+    lv_obj_align(sw, LV_ALIGN_RIGHT_MID, -(UI_SCREEN_W - SHEET_LINE_X2), 0);
+    ui_sheet_fit(sheet);
+    return sw;
 }
 
 /* ---------------------------------------------------------------- buttons */
