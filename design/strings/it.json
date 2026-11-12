@@ -320,6 +320,7 @@
   {"id": "ACTION_RESUME", "text": "Riprendi"},
   {"id": "ACTION_CLEAR_FAULT", "text": "Cancella guasto"},
   {"id": "ACTION_CLEAR_ERRORS", "text": "Cancella errori"},
+  {"id": "ACTION_ABANDON", "text": "Abbandona"},
   {"id": "ACTION_DRY_START", "text": "Avvia asciugatura"},
   {"id": "ACTION_DRY_STOP", "text": "Ferma asciugatura"},
   {"id": "ACTION_ON", "text": "Sì"},

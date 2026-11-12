@@ -596,6 +596,24 @@ function dispatch(w: Writer, line: string, m: Model): Mapped {
   // unload from where it stopped, with the word the host advertises as
   // `commands.retry` (never one of ours) and always the lane, so it is never
   // ambiguous on a host with several.
+  // `fault abandon <toolhead id>`: forget the lane's failed load or unload
+  // that the panel started, with the word the host advertises as
+  // `commands.abandon`; the print's own is never abandoned from here.
+  if ((arg = rest(line, 'fault abandon')) !== null) {
+    const idx = toolheadFind(m, arg);
+    if (idx < 0) return NOT_MINE;
+    const t = m.toolheads[idx];
+    if (!m.cmdAbandon) return refuse(str('REASON_NOT_SUPPORTED'));
+    if (!t.tcFault || !t.tcPanel) return refuse(str('REASON_NOT_NOW'));
+    if (t.busy !== Busy.NONE
+        || (!t.tcPlanStale && sequenceRuns(t.busy, t.steps.length, t.stepCurrent, t.stepFailed))) {
+      return refuse(str('REASON_GROUP_BUSY'));
+    }
+    if (!laneIdOk(t.id)) return refuse(str('REASON_NOT_SUPPORTED'));
+    w.cmd(`${m.cmdAbandon} FPS=${t.id}`);
+    return { rc: 1, script: '' };
+  }
+
   if ((arg = rest(line, 'fault retry')) !== null) {
     const idx = toolheadFind(m, arg);
     if (idx < 0) return NOT_MINE;

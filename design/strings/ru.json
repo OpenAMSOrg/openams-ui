@@ -326,6 +326,7 @@
   {"id": "ACTION_RESUME", "text": "Продолжить"},
   {"id": "ACTION_CLEAR_FAULT", "text": "Сбросить неисправность"},
   {"id": "ACTION_CLEAR_ERRORS", "text": "Сбросить ошибки"},
+  {"id": "ACTION_ABANDON", "text": "Отменить"},
   {"id": "ACTION_DRY_START", "text": "Начать сушку"},
   {"id": "ACTION_DRY_STOP", "text": "Остановить сушку"},
   {"id": "ACTION_ON", "text": "Вкл."},

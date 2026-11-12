@@ -1588,8 +1588,10 @@ static bool fault_has_actions(const mmu_model_t *m, const mmu_toolhead_t *th)
     for(i = 0; i < (int)th->error_act_count; i++) {
         const char *tok = th->error_act[i];
 
-        if(strcmp(tok, "resume") == 0 || strcmp(tok, "clear_errors") == 0) return true;
-        if(strcmp(tok, "clear_fault") == 0 && th->error_unit >= 0) return true;
+        /* clear_fault is offered as Clear errors too (one clear, 2026-11-12) */
+        if(strcmp(tok, "resume") == 0 || strcmp(tok, "clear_errors") == 0 ||
+           strcmp(tok, "clear_fault") == 0)
+            return true;
         if(strcmp(tok, "retry_load") == 0 && !tc_retry_stands(m, th) &&
            ((th->current_group >= 0 && th->current_group < (int)m->group_count) ||
             (th->error_unit >= 0 && mmu_slot_group_in(m, th->error_unit, th->error_slot) >= 0)))
@@ -1773,7 +1775,7 @@ static bool toolhead_scope_clear(const mmu_model_t *m, int th_idx, const mmu_too
  * failed toolchange's own Retry while it has one (tc_retry_stands()). */
 static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_actions_t *out)
 {
-    view_action_t *a;
+    bool cleared = false;
     int i;
 
     memset(out, 0, sizeof(*out));
@@ -1797,17 +1799,14 @@ static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_a
         else if(strcmp(tok, "resume") == 0) {
             act_simple(out, m, "resume", VS_ACTION_RESUME, VIEW_STYLE_PRIMARY, "%s", "fault resume");
         }
-        else if(strcmp(tok, "clear_errors") == 0) {
-            act_simple(out, m, "clear_errors", VS_ACTION_CLEAR_ERRORS, VIEW_STYLE_DANGER, "%s",
-                       "fault clear_errors");
-        }
-        else if(strcmp(tok, "clear_fault") == 0 && th->error_unit >= 0 &&
-                th->error_unit < (int)m->unit_count) {
-            a = act_simple(out, m, "clear_fault", VS_ACTION_CLEAR_FAULT, VIEW_STYLE_DANGER,
-                           "fault clear_fault %s", m->units[th->error_unit].name);
-            if(a)
-                action_confirm(a, VS_CONFIRM_CLEAR_FAULT_TITLE, VS_CONFIRM_CLEAR_FAULT_TEXT,
-                               VS_CONFIRM_CLEAR_FAULT_OK);
+        else if(strcmp(tok, "clear_errors") == 0 || strcmp(tok, "clear_fault") == 0) {
+            /* One clear (2026-11-12): a unit's clear_fault (a klipper-mmu
+             * unit, an older host) is Clear errors too, the host's Reset,
+             * which clears every unit's latch and resyncs the lanes. */
+            if(!cleared)
+                act_simple(out, m, "clear_errors", VS_ACTION_CLEAR_ERRORS, VIEW_STYLE_DANGER, "%s",
+                           "fault clear_errors");
+            cleared = true;
         }
     }
 }
@@ -1890,7 +1889,15 @@ static void tc_fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_a
               : NULL;
     if(act && m->printing)
         action_confirm(act, VS_CONFIRM_UNLOAD_TITLE, VS_CONFIRM_UNLOAD_TEXT, VS_CONFIRM_UNLOAD_OK);
-    alert_act(a, m, "clear_errors", VS_ACTION_CLEAR_ERRORS, VIEW_STYLE_DANGER, "%s", "fault clear_errors");
+    /* Clear errors keeps this fault for Retry, so it is not offered here.
+     * Abandon (the host's `commands.abandon`) forgets one the panel started;
+     * the print's own stays for RESUME, Retry or Unload. An older host that
+     * advertises no abandon keeps Clear errors, as before. */
+    if(!m->cmd_abandon[0])
+        alert_act(a, m, "clear_errors", VS_ACTION_CLEAR_ERRORS, VIEW_STYLE_DANGER, "%s",
+                  "fault clear_errors");
+    else if(th->tc_panel && mmu_lane_id_ok(th->id))
+        alert_act(a, m, "abandon", VS_ACTION_ABANDON, VIEW_STYLE_DANGER, "fault abandon %s", th->id);
 }
 
 bool view_toolhead_alerts(const mmu_model_t *m, int toolhead_idx, view_alerts_t *out)

@@ -813,6 +813,35 @@ static int dispatch(wr_t *w, const char *line, const mmu_model_t *m, const char 
      * unload from where it stopped, with the word the host advertises as
      * `commands.retry` (never one of ours) and always the lane, so it is never
      * ambiguous on a host with several. */
+    /* `fault abandon <toolhead id>`: forget the lane's failed load or unload
+     * that the panel started, with the word the host advertises as
+     * `commands.abandon`; the print's own is never abandoned from here. */
+    arg = rest(line, "fault abandon");
+    if(arg) {
+        const mmu_toolhead_t *lane;
+
+        n = toolhead_find(m, arg);
+        if(n < 0) return 0;
+        lane = &m->toolheads[n];
+        if(!m->cmd_abandon[0]) {
+            *why = view_str(VS_REASON_NOT_SUPPORTED);
+            return -1;
+        }
+        if(!lane->tc_fault || !lane->tc_panel) {
+            *why = view_str(VS_REASON_NOT_NOW);
+            return -1;
+        }
+        if(lane->busy != MMU_BUSY_NONE ||
+           (!lane->tc_plan_stale &&
+            sequence_runs(lane->busy, lane->step_count, lane->step_current, lane->step_failed))) {
+            *why = view_str(VS_REASON_GROUP_BUSY);
+            return -1;
+        }
+        if(!lane_sendable(lane->id, why)) return -1;
+        wr_cmd(w, "%s FPS=%s", m->cmd_abandon, lane->id);
+        return 1;
+    }
+
     arg = rest(line, "fault retry");
     if(arg) {
         const mmu_toolhead_t *lane;

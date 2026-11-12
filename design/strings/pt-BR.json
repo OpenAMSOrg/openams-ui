@@ -320,6 +320,7 @@
   {"id": "ACTION_RESUME", "text": "Continuar"},
   {"id": "ACTION_CLEAR_FAULT", "text": "Limpar a falha"},
   {"id": "ACTION_CLEAR_ERRORS", "text": "Limpar os erros"},
+  {"id": "ACTION_ABANDON", "text": "Descartar"},
   {"id": "ACTION_DRY_START", "text": "Iniciar secagem"},
   {"id": "ACTION_DRY_STOP", "text": "Parar secagem"},
   {"id": "ACTION_ON", "text": "Ligado"},

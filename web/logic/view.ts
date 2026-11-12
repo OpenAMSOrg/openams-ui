@@ -60,7 +60,7 @@ const TAG_READ_TEXT = 256;    // VIEW_TAG_READ_TEXT_LEN: "This tag is also in sl
 const TAG_MATERIAL = 16;      // VIEW_TAG_MATERIAL_LEN (MMU_TAG_MATERIAL_LEN)
 
 const MAX_ACTIONS = 12;   // VIEW_ACTIONS_MAX in src/view/view.h
-const MAX_ACTIONS_PER_ALERT = 3;   // a failed toolchange: retry, unload, clear errors
+const MAX_ACTIONS_PER_ALERT = 3;   // a failed toolchange: retry, unload, abandon (or clear errors)
 const MAX_ALERTS_PER_GROUP = 6;
 const MAX_OPTIONS = 160;  // every select of one action list shares the pool, as in C
 const MAX_ALERTS = 8;
@@ -1093,7 +1093,12 @@ function tcFaultItem(m: Model, th: Toolhead): ViewAlert {
     ? simple(list, m, 'unload', str('ACTION_UNLOAD'), 'normal', `unload ${th.id}`)
     : null;
   if (unload && m.printing) confirm(unload, str('CONFIRM_UNLOAD_TITLE'), str('CONFIRM_UNLOAD_TEXT'), str('CONFIRM_UNLOAD_OK'));
-  simple(list, m, 'clear_errors', str('ACTION_CLEAR_ERRORS'), 'danger', 'fault clear_errors');
+  // Clear errors keeps this fault for Retry, so it is not offered here.
+  // Abandon (the host's `commands.abandon`) forgets one the panel started; the
+  // print's own stays for RESUME, Retry or Unload. An older host that
+  // advertises no abandon keeps Clear errors, as before.
+  if (!m.cmdAbandon) simple(list, m, 'clear_errors', str('ACTION_CLEAR_ERRORS'), 'danger', 'fault clear_errors');
+  else if (th.tcPanel && laneIdOk(th.id)) simple(list, m, 'abandon', str('ACTION_ABANDON'), 'danger', `fault abandon ${th.id}`);
   return {
     severity: SEVERITY[Sev.PAUSE],
     code: '',
@@ -1110,8 +1115,8 @@ function tcFaultItem(m: Model, th: Toolhead): ViewAlert {
 /** Whether the lane fault has any action to offer (without building them). */
 function faultHasActions(m: Model, th: Toolhead): boolean {
   return th.errorAct.some((tok) => {
-    if (tok === 'resume' || tok === 'clear_errors') return true;
-    if (tok === 'clear_fault') return th.errorUnit >= 0;
+    // clear_fault is offered as Clear errors too (one clear, 2026-11-12)
+    if (tok === 'resume' || tok === 'clear_errors' || tok === 'clear_fault') return true;
     if (tok === 'retry_load') {
       if (tcRetryStands(m, th)) return false;
       return (th.currentGroup >= 0 && th.currentGroup < m.groups.length)
@@ -1127,6 +1132,7 @@ function faultHasActions(m: Model, th: Toolhead): boolean {
  *  failed toolchange's own Retry while it has one (tcRetryStands()). */
 function faultActions(m: Model, th: Toolhead): ViewAction[] {
   const list = new ActionList();
+  let cleared = false;
   for (const tok of th.errorAct) {
     if (tok === 'retry_load') {
       if (tcRetryStands(m, th)) continue;    // the toolchange's own Retry stands for it
@@ -1140,11 +1146,11 @@ function faultActions(m: Model, th: Toolhead): ViewAction[] {
       simple(list, m, 'retry_load', str('ACTION_RETRY_LOAD'), 'primary', `fault retry_load ${group}`);
     } else if (tok === 'resume') {
       simple(list, m, 'resume', str('ACTION_RESUME'), 'primary', 'fault resume');
-    } else if (tok === 'clear_errors') {
-      simple(list, m, 'clear_errors', str('ACTION_CLEAR_ERRORS'), 'danger', 'fault clear_errors');
-    } else if (tok === 'clear_fault' && th.errorUnit >= 0 && th.errorUnit < m.units.length) {
-      const a = simple(list, m, 'clear_fault', str('ACTION_CLEAR_FAULT'), 'danger', `fault clear_fault ${m.units[th.errorUnit].name}`);
-      if (a) confirm(a, str('CONFIRM_CLEAR_FAULT_TITLE'), str('CONFIRM_CLEAR_FAULT_TEXT'), str('CONFIRM_CLEAR_FAULT_OK'));
+    } else if (tok === 'clear_errors' || tok === 'clear_fault') {
+      // One clear (2026-11-12): a unit's clear_fault (a klipper-mmu unit, an
+      // older host) is Clear errors too, the host's Reset.
+      if (!cleared) simple(list, m, 'clear_errors', str('ACTION_CLEAR_ERRORS'), 'danger', 'fault clear_errors');
+      cleared = true;
     }
   }
   return list.items;

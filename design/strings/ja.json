@@ -320,6 +320,7 @@
   {"id": "ACTION_RESUME", "text": "再開"},
   {"id": "ACTION_CLEAR_FAULT", "text": "異常を解除"},
   {"id": "ACTION_CLEAR_ERRORS", "text": "エラーを消去"},
+  {"id": "ACTION_ABANDON", "text": "取り消し"},
   {"id": "ACTION_DRY_START", "text": "乾燥を開始"},
   {"id": "ACTION_DRY_STOP", "text": "乾燥を停止"},
   {"id": "ACTION_ON", "text": "オン"},

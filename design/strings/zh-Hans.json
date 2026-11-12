@@ -320,6 +320,7 @@
   {"id": "ACTION_RESUME", "text": "继续"},
   {"id": "ACTION_CLEAR_FAULT", "text": "清除故障"},
   {"id": "ACTION_CLEAR_ERRORS", "text": "清除错误"},
+  {"id": "ACTION_ABANDON", "text": "取消"},
   {"id": "ACTION_DRY_START", "text": "开始烘干"},
   {"id": "ACTION_DRY_STOP", "text": "停止烘干"},
   {"id": "ACTION_ON", "text": "开"},

@@ -1068,6 +1068,7 @@ static void map_toolchange_fault(mmu_toolhead_t *th, const cJSON *fault, const c
 
     th->tc_fault = cJSON_IsObject(fault);
     th->tc_unload = false;
+    th->tc_panel = false;
     th->tc_since = -1.0;
     th->tc_group[0] = '\0';
     th->tc_step[0] = '\0';
@@ -1102,6 +1103,7 @@ static void map_toolchange_fault(mmu_toolhead_t *th, const cJSON *fault, const c
 
     kind = jstring(fault, "kind");
     th->tc_unload = kind && strcmp(kind, "unload") == 0;
+    th->tc_panel = cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(fault, "panel"));
     mmu_copy_text(th->tc_group, sizeof(th->tc_group), jstring(fault, "group"));
     mmu_copy_text(th->tc_reason, sizeof(th->tc_reason), jstring(fault, "reason"));
 
@@ -1422,12 +1424,16 @@ static bool gcode_word(const char *s, size_t cap)
 
 void status_map_apply_commands(mmu_model_t *m, const cJSON *commands)
 {
-    const char *retry;
+    const char *retry, *abandon;
 
     if(!m) return;
     retry = cJSON_IsObject(commands) ? jstring(commands, "retry") : NULL;
     if(gcode_word(retry, sizeof(m->cmd_retry))) mmu_copy_text(m->cmd_retry, sizeof(m->cmd_retry), retry);
     else m->cmd_retry[0] = '\0';
+    abandon = cJSON_IsObject(commands) ? jstring(commands, "abandon") : NULL;
+    if(gcode_word(abandon, sizeof(m->cmd_abandon)))
+        mmu_copy_text(m->cmd_abandon, sizeof(m->cmd_abandon), abandon);
+    else m->cmd_abandon[0] = '\0';
 }
 
 bool status_map_apply_fixture_event(mmu_model_t *m, const cJSON *event)

@@ -320,6 +320,7 @@
   {"id": "ACTION_RESUME", "text": "재개"},
   {"id": "ACTION_CLEAR_FAULT", "text": "고장 해제"},
   {"id": "ACTION_CLEAR_ERRORS", "text": "오류 지우기"},
+  {"id": "ACTION_ABANDON", "text": "취소"},
   {"id": "ACTION_DRY_START", "text": "건조 시작"},
   {"id": "ACTION_DRY_STOP", "text": "건조 정지"},
   {"id": "ACTION_ON", "text": "켬"},

@@ -1425,12 +1425,14 @@ static void test_alert_levels_and_targets(void)
     assert(strcmp(t.tag_code, "feeder_stall") == 0);   /* the host's code, its own field */
     assert(view_tile_actions(&s_local, 0, 1, &acts));
     assert(find_action(&acts, "resume") && find_action(&acts, "resume")->target == VIEW_TARGET_TAG);
-    assert(find_action(&acts, "clear_fault") && find_action(&acts, "clear_fault")->target == VIEW_TARGET_TAG);
+    /* a unit's clear_fault is offered as Clear errors (one clear, 2026-11-12) */
+    assert(!find_action(&acts, "clear_fault"));
+    assert(find_action(&acts, "clear_errors") && find_action(&acts, "clear_errors")->target == VIEW_TARGET_TAG);
     for(i = 0; i < (int)acts.count; i++) {
         const char *id = acts.items[i].id;
 
         if(strcmp(id, "load") == 0 || strcmp(id, "unload") == 0) assert(acts.items[i].target == VIEW_TARGET_TILE);
-        else if(strcmp(id, "resume") != 0 && strcmp(id, "clear_fault") != 0) assert(acts.items[i].target == VIEW_TARGET_RING);
+        else if(strcmp(id, "resume") != 0 && strcmp(id, "clear_errors") != 0) assert(acts.items[i].target == VIEW_TARGET_RING);
     }
 
     /* one that names a unit but no bay stays in the unit's badge, with its actions */
@@ -1438,7 +1440,7 @@ static void test_alert_levels_and_targets(void)
     assert(view_unit(&s_local, 0, &u) && u.alert.present && u.alert.count == 2);
     assert(view_unit_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 2);
     assert(strcmp(g.items[0].code, "feeder_stall") == 0);
-    assert(strcmp(g.items[0].actions[1].id, "clear_fault") == 0);
+    assert(strcmp(g.items[0].actions[1].id, "clear_errors") == 0);
     s_local.toolheads[0].error_slot = 1;
 
     /* the dryer's own fault */
@@ -1539,6 +1541,23 @@ static void test_toolchange_fault(void)
     assert(g.items[0].actions[0].enabled && g.items[0].actions[0].style == VIEW_STYLE_PRIMARY);
     assert(strcmp(g.items[0].actions[1].id, "unload") == 0);
     assert(strcmp(g.items[0].actions[2].id, "clear_errors") == 0);
+
+    /* a host that advertises abandon (2026-11-12): Clear errors would keep
+     * this fault, so it is not offered; a panel fault gets Abandon, the
+     * print's own nothing more than Retry and Unload */
+    snprintf(s_local.cmd_abandon, sizeof(s_local.cmd_abandon), "OAMSM_ABANDON");
+    t->tc_panel = false;
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 2);
+    assert(strcmp(g.items[0].actions[0].id, "retry") == 0);
+    assert(strcmp(g.items[0].actions[1].id, "unload") == 0);
+    t->tc_panel = true;
+    assert(view_toolhead_alerts(&s_local, 0, &g) && g.count == 1 && g.items[0].action_count == 3);
+    assert(strcmp(g.items[0].actions[2].id, "abandon") == 0);
+    assert(strcmp(g.items[0].actions[2].label, "Abandon") == 0);
+    assert(strcmp(g.items[0].actions[2].line, "fault abandon fps1") == 0);
+    assert(g.items[0].actions[2].enabled && g.items[0].actions[2].style == VIEW_STYLE_DANGER);
+    s_local.cmd_abandon[0] = '\0';
+    t->tc_panel = false;
 
     /* a lane fault offering retry_load gives way to it: one Retry */
     snprintf(s_local.groups[0].name, sizeof(s_local.groups[0].name), "T1");

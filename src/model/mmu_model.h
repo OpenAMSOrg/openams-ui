@@ -291,6 +291,7 @@ typedef struct {
      * panel's Retry continues. An older host never sends it. */
     bool tc_fault;
     bool tc_unload;                         /**< the failed operation is an unload, else a load */
+    bool tc_panel;                          /**< the panel started it (not the print): Abandon may forget it */
     /** The panel sent Retry for this very fault (this lane, this tc_since) and
      *  the host has neither answered it nor changed the fault: Retry is not
      *  offered again. Cleared when the fault changes or clears, when the host
@@ -411,6 +412,9 @@ typedef struct {
      *  (UI API), "" when it advertises none (an older host): the panel's Retry
      *  sends this word, never one of its own. */
     char cmd_retry[MMU_COMMAND_LEN];
+    /** `oams_manager.commands.abandon` the same way: the word that forgets a
+     *  failed load or unload the panel started, "" on an older host. */
+    char cmd_abandon[MMU_COMMAND_LEN];
     /** The outcome of the last spool edit, for the display to say once:
      *  edit_seq changes with every answer, and edit_refusal is the host's own
      *  words when it refused ("Spoolman is offline"), "" when it took the edit. */

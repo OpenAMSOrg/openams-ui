@@ -336,6 +336,7 @@
   {"id": "ACTION_RESUME", "text": "Resume"},
   {"id": "ACTION_CLEAR_FAULT", "text": "Clear fault"},
   {"id": "ACTION_CLEAR_ERRORS", "text": "Clear errors"},
+  {"id": "ACTION_ABANDON", "text": "Abandon"},
   {"id": "ACTION_DRY_START", "text": "Start drying"},
   {"id": "ACTION_DRY_STOP", "text": "Stop drying"},
   {"id": "ACTION_ON", "text": "On"},

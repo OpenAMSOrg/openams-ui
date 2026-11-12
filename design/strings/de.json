@@ -321,6 +321,7 @@
   {"id": "ACTION_RESUME", "text": "Fortsetzen"},
   {"id": "ACTION_CLEAR_FAULT", "text": "Störung löschen"},
   {"id": "ACTION_CLEAR_ERRORS", "text": "Fehler löschen"},
+  {"id": "ACTION_ABANDON", "text": "Verwerfen"},
   {"id": "ACTION_DRY_START", "text": "Trocknen starten"},
   {"id": "ACTION_DRY_STOP", "text": "Trocknen stoppen"},
   {"id": "ACTION_ON", "text": "Ein"},

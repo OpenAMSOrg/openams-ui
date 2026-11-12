@@ -524,6 +524,42 @@ static void test_fault_retry(void)
     build("loaded");
 }
 
+/* `fault abandon <lane>` (2026-11-12): forgets a failed load or unload the
+ * panel started, with the host's own word; never the print's own. */
+static void test_fault_abandon(void)
+{
+    build("loaded");
+
+    /* the recorded host advertises no abandon command */
+    expect_unaddressable("fault abandon fps1", "Not supported on this unit yet");
+    expect_local("fault abandon fps9");
+
+    /* advertised, but nothing failed on the lane */
+    apply_manager("{\"commands\": {\"abandon\": \"OAMSM_ABANDON\"}}");
+    expect_unaddressable("fault abandon fps1", "Not available right now");
+
+    /* the print's own failed toolchange is not abandoned from the panel */
+    apply_manager("{\"commands\": {\"abandon\": \"OAMSM_ABANDON\"}, \"lanes_by_fps\": {\"fps1\": "
+                  "{\"toolchange_fault\": {\"kind\": \"load\", \"group\": \"T1\", \"slot\": null, "
+                  "\"temp\": null, \"step\": \"feed\", \"reason\": \"No progress\", \"panel\": false, "
+                  "\"fed\": false, \"since\": 1.0}}}}");
+    expect_unaddressable("fault abandon fps1", "Not available right now");
+
+    /* a failed panel load is, by its lane and with the host's word */
+    apply_manager("{\"commands\": {\"abandon\": \"OAMSM_ABANDON\"}, \"lanes_by_fps\": {\"fps1\": "
+                  "{\"toolchange_fault\": {\"kind\": \"load\", \"group\": \"T1\", \"slot\": \"1\", "
+                  "\"temp\": null, \"step\": \"feed\", \"reason\": \"No progress\", \"panel\": true, "
+                  "\"fed\": true, \"since\": 2.0}}}}");
+    expect("fault abandon fps1", "OAMSM_ABANDON FPS=fps1");
+
+    /* not while the lane runs something */
+    g_mmu.toolheads[0].busy = MMU_BUSY_LOAD;
+    expect_unaddressable("fault abandon fps1", "The toolhead is busy");
+    g_mmu.toolheads[0].busy = MMU_BUSY_NONE;
+
+    build("loaded");
+}
+
 /* The 2026-11-09 review: Retry is sent once per fault, until the fault changes
  * or clears or the host answers that retry; a plan already on the lane when
  * the fault appeared is no retry running; and a lane id that cannot go into a
@@ -1285,6 +1321,7 @@ int main(void)
     test_change_group();
     test_faults();
     test_fault_retry();
+    test_fault_abandon();
     test_fault_retry_once_and_lane_ids();
     test_local_vocabulary();
     test_unknown_and_unresolvable();

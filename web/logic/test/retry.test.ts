@@ -221,3 +221,32 @@ test('every language says the same in both cores', async () => {
   const p = await bothCores();
   setLanguageBoth(p, 'en');
 });
+
+// 2026-11-12: one clear, and Abandon for a failed panel load.
+test('a host that advertises abandon: the panel fault offers Retry, Unload and Abandon, not Clear errors', async () => {
+  const p = await setup({ tc: LOAD, commands: { ...RETRY, abandon: 'OAMSM_ABANDON' } });
+  for (const core of [p.c, p.ts]) {
+    const [item] = items(core);
+    assert.deepEqual(ids(item), ['retry', 'unload', 'abandon']);
+    const abandon = item.actions[2];
+    assert.equal(abandon.label, 'Abandon');
+    assert.equal(abandon.line, 'fault abandon fps1');
+    assert.equal(abandon.enabled, true);
+    assert.deepEqual(core.action(abandon.line), { kind: 'gcode', script: 'OAMSM_ABANDON FPS=fps1' });
+  }
+  bothAgree(p, 'abandon advertised');
+});
+
+test('a unit fault offering clear_fault is cleared with Clear errors, once', async () => {
+  const p = await setup({
+    commands: RETRY,
+    fault: { code: 'motion_stalled', text: 'motion_stalled', sev: 'pause', unit: 'oams1', bay: null, act: ['clear_fault', 'clear_errors'] },
+  });
+  for (const core of [p.c, p.ts]) {
+    const unitItems = core.view().toolheads[0].units[0].alert?.items ?? [];
+    const acts = unitItems.flatMap((i) => i.actions.map((a) => a.id));
+    assert.deepEqual(acts.filter((id) => id === 'clear_errors'), ['clear_errors']);
+    assert.equal(acts.includes('clear_fault'), false);
+  }
+  bothAgree(p, 'clear_fault as Clear errors');
+});
