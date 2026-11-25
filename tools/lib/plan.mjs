@@ -66,7 +66,9 @@ const aliases = (host) => ({ '@logic': `${host.panel}/logic/index` })
 
 const fileOf = (dir) => (p) => p.slice(dir.length + 1)
 
-/** Every file under `dir`, as paths relative to the repo root, sorted. */
+/** Every file under `dir`, as paths relative to the repo root, sorted. An
+ *  installed `node_modules` (web/logic and web/vue each have a package.json for
+ *  their own checks) is no source: its `.d.ts` files would land in the fork. */
 function walk(root, dir) {
   if (!existsSync(posix.join(root, dir))) return []
   const out = []
@@ -75,7 +77,9 @@ function walk(root, dir) {
       a.name < b.name ? -1 : a.name > b.name ? 1 : 0
     )) {
       const child = rel ? `${rel}/${entry.name}` : entry.name
-      if (entry.isDirectory()) rec(child)
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules') rec(child)
+      }
       else if (entry.isFile()) out.push(child)
     }
   }

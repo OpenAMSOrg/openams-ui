@@ -228,6 +228,13 @@ test('--list names the hosts, and one host names its files', () => {
   assert.ok(listed('mainsail').includes('src/components/panels/OpenamsPanel.vue'))
   assert.ok(listed('fluidd').includes(`${FD_PANEL}/OpenamsCard.vue`))
 
+  // An installed node_modules beside the sources is not one of them.
+  put(root, 'web/logic/node_modules/typescript/lib/lib.dom.d.ts', 'interface X {}\n')
+  put(root, 'web/vue/node_modules/vue/index.d.ts', 'export {}\n')
+  for (const host of ['mainsail', 'fluidd']) {
+    assert.ok(!listed(host).some((f) => f.includes('node_modules')), `${host} lists no node_modules`)
+  }
+
   // The shim CI calls is the same generator with the Mainsail host.
   assert.equal(runMainsail(root, '--list').out, run(root, '--host', 'mainsail', '--list').out)
 
