@@ -1,6 +1,5 @@
 build/
-build-win/
-build-web/
+build-*/
 dist/
 out/
 hw/*.bin
