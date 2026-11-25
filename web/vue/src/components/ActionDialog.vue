@@ -10,7 +10,8 @@
             <h4 :id="headId" class="dlg-head">{{ heading }}</h4>
             <p v-if="dialog.mode === 'confirm'" class="dlg-text">{{ text }}</p>
             <template v-else>
-                <div v-for="field in fields" :key="field.id" class="dlg-field">
+                <div v-for="field in shownFields" :key="field.id" class="dlg-entry" :data-entry="field.id">
+                <div class="dlg-field">
                 <label :id="labelId(field)" :for="fieldId(field)">{{ field.label }}<span v-if="field.unit" class="dlg-unit">{{ field.unit }}</span></label>
                 <input
                     v-if="field.kind === 'toggle'"
@@ -29,6 +30,19 @@
                     :swatches="field.id === 'color'"
                     @input="onSelect(field, $event)" />
                 <input
+                    v-else-if="field.kind === 'text'"
+                    :id="fieldId(field)"
+                    type="text"
+                    class="dlg-text-input"
+                    :data-field="field.id"
+                    :maxlength="field.max_len"
+                    :aria-describedby="field.note ? noteId(field) : undefined"
+                    autocomplete="off"
+                    autocapitalize="characters"
+                    spellcheck="false"
+                    :value="value(field)"
+                    @input="onText(field, $event)" />
+                <input
                     v-else
                     :id="fieldId(field)"
                     type="number"
@@ -36,8 +50,12 @@
                     :min="field.min"
                     :max="field.max"
                     :step="field.step"
-                    :value="value(field)"
+                    :placeholder="field.optional ? '\u2014' : undefined"
+                    :aria-describedby="field.note ? noteId(field) : undefined"
+                    :value="numberValue(field)"
                     @input="onNumber(field, $event)" />
+                </div>
+                <p v-if="field.note" :id="noteId(field)" class="dlg-note" :data-note="field.id">{{ field.note }}</p>
                 </div>
             </template>
             <div class="dlg-actions">
@@ -52,7 +70,7 @@
 <script lang="ts">
 import { Component, Inject, Prop, Vue, Watch } from 'vue-property-decorator';
 import type { ViewField, ViewLabels } from '@logic';
-import { INTERACT, changed, formExtras, type Interactivity } from '../interact';
+import { INTERACT, changed, formExtras, shown, type Interactivity } from '../interact';
 import SelectField from './SelectField.vue';
 
 let seq = 0;
@@ -74,6 +92,16 @@ export default class ActionDialog extends Vue {
 
     get fields(): ViewField[] {
         return this.dialog?.action.form?.fields ?? [];
+    }
+
+    /** The fields that show with the values as they stand (show_when): the
+     *  spool editor's typed material on "Other…", its temperatures on "Other…"
+     *  or a material the host gives no temperature. */
+    get shownFields(): ViewField[] {
+        const d = this.dialog;
+        const form = d?.action.form;
+        if (!d || !form) return [];
+        return form.fields.filter((f) => shown(form, f, d.values));
     }
 
     /** A confirm is shown exactly as the core wrote it. */
@@ -110,7 +138,8 @@ export default class ActionDialog extends Vue {
         const form = d?.mode === 'form' ? d.action.form : null;
         if (!form) return false;
         if (formExtras(form).require_change && !changed(form, d!.values)) return true;
-        return form.fields.some((f) => f.required && Number(d!.values[f.id]) < 0);
+        return form.fields.some((f) => f.required && shown(form, f, d!.values)
+            && (f.kind === 'text' ? String(d!.values[f.id] ?? '').length === 0 : Number(d!.values[f.id]) < 0));
     }
 
     get cancelLabel(): string {
@@ -125,6 +154,16 @@ export default class ActionDialog extends Vue {
      *  the same label, so a reader hears "Color" on both. */
     labelId(field: ViewField): string {
         return `${this.fieldId(field)}-label`;
+    }
+
+    noteId(field: ViewField): string {
+        return `${this.fieldId(field)}-note`;
+    }
+
+    /** A number as the input wants it; an optional one left at 0 is empty. */
+    numberValue(field: ViewField): string | number {
+        const v = this.value(field);
+        return field.optional && Number(v) === 0 ? '' : v;
     }
 
     /** A number or a select's option value, as the input wants it. */
@@ -151,7 +190,19 @@ export default class ActionDialog extends Vue {
     }
 
     onNumber(field: ViewField, event: Event): void {
-        this.set(field, Number((event.target as HTMLInputElement).value));
+        const text = (event.target as HTMLInputElement).value;
+        // an optional number emptied again is "not given"
+        this.set(field, field.optional && text.trim() === '' ? 0 : Number(text));
+    }
+
+    /** A typed material as the edit takes it: capitals, digits and "-+._/"
+     *  only, at most max_len; anything else is dropped as it is typed, so what
+     *  the field shows is what is sent. */
+    onText(field: ViewField, event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const clean = input.value.toUpperCase().replace(/[^A-Z0-9\-+._/]/g, '').slice(0, field.max_len ?? 64);
+        if (clean !== input.value) input.value = clean;
+        this.set(field, clean);
     }
 
     @Watch('dialog')
@@ -217,6 +268,19 @@ export default class ActionDialog extends Vue {
     line-height: 1.45;
 }
 
+.dlg-entry {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dlg-note {
+    margin: 0;
+    font-size: var(--oams-fs-meta);
+    line-height: 1.35;
+    color: var(--oams-text-muted);
+}
+
 .dlg-field {
     display: flex;
     align-items: center;
@@ -230,7 +294,8 @@ export default class ActionDialog extends Vue {
         gap: 6px;
     }
 
-    input[type='number'] {
+    input[type='number'],
+    input[type='text'] {
         width: 128px;
         min-height: 32px;
         padding: 4px 8px;

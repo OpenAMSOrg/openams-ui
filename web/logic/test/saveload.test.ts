@@ -45,8 +45,8 @@ const tiles = (core: Core) => {
   return (v.toolheads[0]?.units ?? v.unassigned_units)[0].bays;
 };
 const loadOf = (core: Core, bay: number): ViewAction => tiles(core)[bay].actions.find((a) => a.id === 'load')!;
-const FORM_LINE = 'spool edit oams12 material={material} color={color} vendor={vendor} remaining={remaining} '
-  + 'initial={initial} pa={pa} then load';
+const FORM_LINE = 'spool edit oams12 material={material} custom={custom} color={color} vendor={vendor} '
+  + 'remaining={remaining} initial={initial} pa={pa} then load';
 
 test('an unknown bay is what this is about', async () => {
   const p = await setup();
@@ -67,13 +67,14 @@ test("an unknown bay's Load carries the spool form, in both cores", async () => 
     assert.equal(a.enabled, true);
     assert.equal(a.reason, '');
     assert.equal(a.form!.submit_label, 'Save and load');
-    assert.deepEqual(a.form!.fields.map((f) => f.id), ['material', 'color', 'vendor', 'remaining', 'initial', 'pa']);
+    assert.deepEqual(a.form!.fields.map((f) => f.id), ['material', 'custom', 'color', 'vendor', 'remaining', 'initial', 'pa']);
     const m = a.form!.fields[0];
     assert.equal(m.required, true);
     assert.equal(m.value, -1);
     assert.deepEqual(m.options![0], { value: -1, label: 'Choose a material' });
-    assert.equal(m.options!.length, 11);
-    assert.deepEqual(a.form!.fields.slice(1).map((f) => f.required), [false, false, false, false, false]);
+    assert.equal(m.options!.length, 12);
+    // only the typed material is required besides it, and only while it shows
+    assert.deepEqual(a.form!.fields.slice(1).map((f) => f.required), [true, false, false, false, false, false]);
   }
   const d = firstDiff(p.c.view(), p.ts.view());
   assert.equal(d, null, d ?? '');
@@ -98,11 +99,13 @@ test("a known bay's Load is unchanged, in both cores", async () => {
     const a = loadOf(core, 0);
     assert.equal(a.line, 'load oams11');
     assert.equal(a.form, null);
-    // nothing a known bay offers is required, and Edit spool never is
+    // nothing a known bay offers is required, and Edit spool never is (but for
+    // the typed material, which is required only while "Other…" shows it)
     for (const t of tiles(core)) {
       for (const act of t.actions) for (const f of act.form?.fields ?? []) {
         if (t.state === 'unknown' && act.id === 'load' && f.id === 'material') continue;
-        assert.equal(f.required, false, `${act.id}.${f.id}`);
+        assert.equal(f.required, f.id === 'custom', `${act.id}.${f.id}`);
+        if (f.id === 'custom') assert.deepEqual(f.show_when, { field: 'material', is: 'other' });
       }
     }
   }

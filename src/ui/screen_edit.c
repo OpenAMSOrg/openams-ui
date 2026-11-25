@@ -56,11 +56,13 @@
 
 /* ------------------------------------------------------------------ tables */
 
-/* The materials and vendors are the model's (mmu_material_name(),
- * mmu_edit_vendor_name()): Spoolman's own vendor list, and the same indices
- * the web panel's form sends, so the one `spool edit` line means the same to
- * the host from either. A bay's own material or vendor, when it is on neither
- * list, is one more choice at the end (s_other_*). */
+/* The materials and vendors are the model's (mmu_edit_material_name(),
+ * mmu_edit_vendor_name()): the common materials and the ones Spoolman holds,
+ * Spoolman's own vendor list, and the same indices the web panel's form
+ * sends, so the one `spool edit` line means the same to the host from either.
+ * A bay's own material or vendor, when it is on neither list, is one more
+ * choice at the end (s_other_*). A type nobody has used yet is typed on the
+ * web panel ("Other…"): this screen has no keyboard, and offers the list. */
 
 /* --------------------------------------------------------------- layout */
 
@@ -95,19 +97,21 @@ enum { F_VENDOR, F_MATERIAL, F_PA, F_REMAINING, F_INITIAL, F_COUNT };
 
 /* Pending edit values.
  *
- * The material is an index of the model's own fixed table, which nothing can
- * move. The vendor is a NAME, because the vendor list is not ours: Spoolman
- * answers `vendor list` some time after this screen opens (and again after
- * every edit that may have added one), and an index taken when the screen was
- * built names a different vendor once the answer arrives - so editing the
- * material would silently change the vendor. The action line carries an index,
- * so the name is resolved against the list at Save time instead (vendor_index()).
+ * The vendor and the material are NAMES, because neither list is ours:
+ * Spoolman answers `vendor list` and `material list` some time after this
+ * screen opens (and again after every edit that may have added one), and an
+ * index taken when the screen was built names a different entry once the
+ * answer arrives - so editing one field would silently change another. The
+ * action line carries indices, so the names are resolved against the lists at
+ * Save time instead (vendor_index(), material_index()). material_unset is an
+ * unidentified bay's "Choose a material", which no save may carry.
  *
  * color is 0xRRGGBB, or -1 while nobody told us. The slicer owns the nozzle
  * temperature range - this screen never shows or edits it. */
 typedef struct {
     char vendor[MMU_VENDOR_LEN];
-    int material;
+    char material[MMU_TEXT_LEN];
+    bool material_unset;
     int32_t color;
     int remaining_g;
     int initial_g;
@@ -123,7 +127,6 @@ static int s_slot;
 static bool s_blocked;
 static bool s_readonly;     /* info read from a tag (demo only): fields shown, disabled */
 static const char *s_host_why; /* against a live host: why it cannot take an edit, else NULL */
-static int s_material_n;
 static bool s_create;       /* the host has no record of this spool: Save adds it */
 static bool s_editable;
 static bool s_dirty;
@@ -242,12 +245,53 @@ static int vendor_index(void)
     return (i >= 0) ? i : mmu_edit_vendor_count(&g_mmu);
 }
 
+/** The index of material @p name in the model's list right now, or -1. */
+static int material_find(const char *name)
+{
+    int n = mmu_edit_material_count(&g_mmu);
+    int i;
+
+    for(i = 0; i < n; i++) {
+        if(mmu_text_ci_equal(name, mmu_edit_material_name(&g_mmu, i))) return i;
+    }
+    return -1;
+}
+
+/** How many choices the material stepper walks: the model's list, plus the
+ *  bay's own material when it is on neither (the one past the list, as the
+ *  vendor's). */
+static int material_count(void)
+{
+    int n = mmu_edit_material_count(&g_mmu);
+
+    if(s_other_material[0] && material_find(s_other_material) < 0) n++;
+    return n;
+}
+
+/** The @p i'th choice of the material stepper: the model's list, then the
+ *  bay's own material. */
+static const char *material_at(int i)
+{
+    int n = mmu_edit_material_count(&g_mmu);
+
+    if(i < 0 || i >= material_count()) return "";
+    return (i < n) ? mmu_edit_material_name(&g_mmu, i) : s_other_material;
+}
+
+/** The material's index for the action line, against the list as it stands
+ *  now: its place on the list, or the one past it (the bay's own) when the
+ *  list does not hold it. */
+static int material_index(void)
+{
+    int i = material_find(s_e.material);
+
+    return (i >= 0) ? i : mmu_edit_material_count(&g_mmu);
+}
+
 static const char *material_name(void)
 {
-    /* Below 0 is the one choice that is not a material: an unidentified bay's
-     * "Choose a material", which no save may carry. */
-    if(s_e.material < 0) return view_str(VS_MATERIAL_CHOOSE);
-    return (s_e.material >= MMU_MATERIAL_COUNT) ? s_other_material : mmu_material_name(s_e.material);
+    if(s_e.material_unset) return view_str(VS_MATERIAL_CHOOSE);
+    return s_e.material;
 }
 
 /** The color's name, or "Not set" while nobody told us. */
@@ -318,21 +362,23 @@ static bool edit_prepare(void)
     mmu_copy_text(s_e.vendor, sizeof s_e.vendor,
                   (d.vendor < mmu_edit_vendor_count(&g_mmu)) ? mmu_edit_vendor_name(&g_mmu, d.vendor)
                                                            : sp->brand);
-    s_e.material = d.material;
+    mmu_copy_text(s_e.material, sizeof s_e.material,
+                  (d.material < mmu_edit_material_count(&g_mmu))
+                      ? mmu_edit_material_name(&g_mmu, d.material) : sp->material);
+    s_e.material_unset = false;
     s_e.color = d.color;
     s_e.remaining_g = d.remaining_g;
     s_e.initial_g = d.initial_g;
     s_e.pa_x1000 = d.pa_x1000;
 
     snprintf(s_other_material, sizeof s_other_material, "%s", sp->material);
-    s_material_n = MMU_MATERIAL_COUNT + (d.material >= MMU_MATERIAL_COUNT ? 1 : 0);
 
     /* Save and load: nobody has said what this bay holds, so the material
      * starts on the one choice that is not one and the button waits for an
      * answer (the same first option and the same rule as the panel's form). */
     if(s_load_after) {
-        s_e.material = -1;
-        s_material_n++;
+        s_e.material_unset = true;
+        s_e.material[0] = '\0';
     }
 
     s_saved = s_e;
@@ -358,7 +404,8 @@ static void update_dirty(void)
     bool d = false;
 
     if(!vendor_same(s_e.vendor, s_saved.vendor)) d = true;
-    if(s_e.material != s_saved.material) d = true;
+    if(s_e.material_unset != s_saved.material_unset || strcmp(s_e.material, s_saved.material) != 0)
+        d = true;
     if(s_e.color != s_saved.color) d = true;
     if(s_e.pa_x1000 != s_saved.pa_x1000) d = true;
     if(s_e.remaining_g != s_saved.remaining_g) d = true;
@@ -402,7 +449,8 @@ static void edit_refresh(void)
         val_color(s_val[F_VENDOR], !vendor_same(s_e.vendor, s_saved.vendor));
 
         lv_label_set_text(s_val[F_MATERIAL], material_name());
-        val_color(s_val[F_MATERIAL], s_e.material != s_saved.material);
+        val_color(s_val[F_MATERIAL], s_e.material_unset != s_saved.material_unset ||
+                                     strcmp(s_e.material, s_saved.material) != 0);
 
         snprintf(buf, sizeof buf, "%d.%03d", s_e.pa_x1000 / 1000, s_e.pa_x1000 % 1000);
         lv_label_set_text(s_val[F_PA], buf);
@@ -450,12 +498,18 @@ static void step_field(int field, int dir, bool hold)
                       vendor_at(wrap_idx(vendor_index() + dir, vendor_count())));
         actions_log("edit %s vendor %s", id, vendor_name());
         break;
-    case F_MATERIAL:
-        /* save and load counts the unset choice (-1) as the list's first stop */
-        s_e.material = wrap_idx(s_e.material + (s_load_after ? 1 : 0) + dir, s_material_n)
-                       - (s_load_after ? 1 : 0);
+    case F_MATERIAL: {
+        /* one step along the list as it stands now, by name, as the vendor;
+         * save and load counts the unset choice as the list's first stop */
+        int lead = s_load_after ? 1 : 0;
+        int at = s_e.material_unset ? -1 : material_index();
+        int next = wrap_idx(at + lead + dir, material_count() + lead) - lead;
+
+        s_e.material_unset = next < 0;
+        mmu_copy_text(s_e.material, sizeof s_e.material, next < 0 ? "" : material_at(next));
         actions_log("edit %s material %s", id, material_name());
         break;
+    }
     case F_PA:
         s_e.pa_x1000 = clamp_int(s_e.pa_x1000 + dir * (hold ? ED_PA_HOLD : ED_PA_TAP), 0, ED_PA_MAX);
         actions_log("edit %s pa %d.%03d", id, s_e.pa_x1000 / 1000, s_e.pa_x1000 % 1000);
@@ -633,8 +687,8 @@ static void on_save(lv_event_t *e)
     slot_id_str(id, sizeof id);
     /* the action line, not text (lit-ok) */
     snprintf(line, sizeof line, "spool edit %s material=%d color=%d vendor=%d remaining=%d initial=%d pa=%d.%03d", /* lit-ok */
-             id, s_e.material, (int)s_e.color, vendor_index(), s_e.remaining_g, s_e.initial_g,
-             s_e.pa_x1000 / 1000, s_e.pa_x1000 % 1000);
+             id, s_e.material_unset ? -1 : material_index(), (int)s_e.color, vendor_index(),
+             s_e.remaining_g, s_e.initial_g, s_e.pa_x1000 / 1000, s_e.pa_x1000 % 1000);
     /* The one job that finishes: what this save is for is a load, so the line
      * says so, and the mapper hands the load back to be sent once Spoolman
      * has taken the spool. */
@@ -876,7 +930,7 @@ static void build_buttons(void)
     if(!s_editable)          reset_why = save_why = why_locked();
     else {
         if(!reset_enabled()) reset_why = view_str(VS_EDIT_NOTHING_CLEAR);
-        if(s_load_after && s_e.material < 0) save_why = view_str(VS_MATERIAL_CHOOSE);
+        if(s_load_after && s_e.material_unset) save_why = view_str(VS_MATERIAL_CHOOSE);
         else if(!s_dirty && !s_create)      save_why = view_str(VS_EDIT_NO_CHANGES);
     }
     ui_kit_button_r(s_btns, view_str(VS_BTN_RESET), UI_KIT_BTN_NORMAL, UI_HOME_HEADER_PAD, 0, half, UI_PX(40),

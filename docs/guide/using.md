@@ -141,6 +141,12 @@ vendor, material, color, pressure advance, and remaining and initial weight.
 Save sends one action to the host (`server.openams_spoolman.edit`), which
 writes to Spoolman. The web panel's form sends the same call.
 
+The material steps through the common types (PLA, PETG, ABS, ASA, TPU, PA, PC,
+PLA-CF, PETG-CF, PVA), then every material your Spoolman already holds, so a
+type added once (`PET-CF17`) is one tap away from then on. The display has no
+keyboard: to add a type nobody has used yet, use the web panel's **Other…**
+(Mainsail or Fluidd), and it is on the display's list after that.
+
 Fields are dimmed, with the reason on tap, when:
 
 - the bay's info was read from a tag ("Filament info was read from the tag");

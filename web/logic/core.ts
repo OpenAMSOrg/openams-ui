@@ -15,7 +15,7 @@ import { coreAction } from './actions.ts';
 import { cut, jsonEqual } from './cstr.ts';
 import {
   actionResult, ActionKind, applyCommands, applyComponentStatus, applyLanes, applyMetadata, applyOpenamsUi,
-  applyPrintStats, applySettings, applySpoolList, applyVendorList, drain, MAX_UNITS, newModel, refreshThis,
+  applyMaterialList, applyPrintStats, applySettings, applySpoolList, applyVendorList, drain, MAX_UNITS, newModel, refreshThis,
   retryLaneOf, retrySent,
 } from './model.ts';
 import type { Model } from './model.ts';
@@ -119,17 +119,25 @@ export class OpenamsLogic implements Core {
       return true;
     }
 
-    // component_status, spool_list, vendor_list and metadata arrive whole, never
-    // as diffs: each is mapped as it is, and the copy kept is only what the next
-    // one is compared with (the C core keeps just a hash; the 4 inch board's heap).
-    if (kind === 'component_status' || kind === 'spool_list' || kind === 'vendor_list' || kind === 'metadata') {
-      if (kind === 'metadata' || kind === 'component_status' ? !isObject(obj) : !Array.isArray(obj)) return false;
+    // component_status, spool_list, vendor_list, material_list and metadata
+    // arrive whole, never as diffs: each is mapped as it is, and the copy kept is
+    // only what the next one is compared with (the C core keeps just a hash; the
+    // 4 inch board's heap). The material list is the host's object or
+    // Spoolman's own array (C4 §9.3).
+    if (kind === 'component_status' || kind === 'spool_list' || kind === 'vendor_list'
+        || kind === 'material_list' || kind === 'metadata') {
+      if (kind === 'material_list') {
+        if (!isObject(obj) && !Array.isArray(obj)) return false;
+      } else if (kind === 'metadata' || kind === 'component_status' ? !isObject(obj) : !Array.isArray(obj)) {
+        return false;
+      }
       const e = this.entry(kind, name);
       if (!e) return false;
       const changed = !(e.copy !== null && jsonEqual(e.copy, obj));
       e.copy = obj;
       if (kind === 'spool_list') applySpoolList(m, obj);
       else if (kind === 'vendor_list') applyVendorList(m, obj);
+      else if (kind === 'material_list') applyMaterialList(m, obj);
       else if (kind === 'component_status') applyComponentStatus(m, obj);
       else applyMetadata(m, obj);
       refreshThis(m);

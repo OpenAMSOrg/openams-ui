@@ -91,6 +91,7 @@ static const char *field_kind_str(view_field_kind_t k)
     switch(k) {
     case VIEW_FIELD_SELECT: return "select";
     case VIEW_FIELD_TOGGLE: return "toggle";
+    case VIEW_FIELD_TEXT:   return "text";
     case VIEW_FIELD_NUMBER:
     default:                return "number";
     }
@@ -153,6 +154,18 @@ static cJSON *json_field(const view_field_t *f, const view_option_t *pool)
     cJSON_AddNumberToObject(o, "step", (double)f->step);
     cJSON_AddStringToObject(o, "unit", text_of(f->unit));
     cJSON_AddBoolToObject(o, "required", f->required);
+    /* The spool editor's own (C4 §9.3): each key only on a field that has
+     * it, so every other field's JSON is as it was. */
+    if(f->kind == VIEW_FIELD_TEXT) cJSON_AddNumberToObject(o, "max_len", (double)f->max_len);
+    if(f->note && f->note[0]) cJSON_AddStringToObject(o, "note", f->note);
+    if(f->optional) cJSON_AddTrueToObject(o, "optional");
+    if(f->show_when != VIEW_SHOW_ALWAYS) {
+        cJSON *w = cJSON_CreateObject();
+
+        cJSON_AddStringToObject(w, "field", "material");
+        cJSON_AddStringToObject(w, "is", f->show_when == VIEW_SHOW_OTHER ? "other" : "no_temp");
+        cJSON_AddItemToObject(o, "show_when", w);
+    }
     if(f->kind == VIEW_FIELD_SELECT) {
         cJSON *opts = cJSON_CreateArray();
         int i;
@@ -165,6 +178,7 @@ static cJSON *json_field(const view_field_t *f, const view_option_t *pool)
             cJSON_AddStringToObject(e, "label", op->label);
             if(op->has_color_field)
                 cJSON_AddItemToObject(e, "color", op->color_known ? hex_json(op->color) : cJSON_CreateNull());
+            if(op->no_temp) cJSON_AddTrueToObject(e, "no_temp");
             cJSON_AddItemToArray(opts, e);
         }
         cJSON_AddItemToObject(o, "options", opts);
@@ -220,7 +234,7 @@ static cJSON *json_actions(const view_actions_t *acts)
 
 /* Each on-demand action list gets a function (a stack frame) of its own, so
  * the multi-KB view_actions_t is gone before the caller recurses. */
-static cJSON *json_tile_actions(const mmu_model_t *m, int unit_idx, int bay)
+static VIEW_OWN_FRAME cJSON *json_tile_actions(const mmu_model_t *m, int unit_idx, int bay)
 {
     view_actions_t acts;
 
@@ -228,7 +242,7 @@ static cJSON *json_tile_actions(const mmu_model_t *m, int unit_idx, int bay)
     return json_actions(&acts);
 }
 
-static cJSON *json_unit_actions(const mmu_model_t *m, int unit_idx)
+static VIEW_OWN_FRAME cJSON *json_unit_actions(const mmu_model_t *m, int unit_idx)
 {
     view_actions_t acts;
 
@@ -236,7 +250,7 @@ static cJSON *json_unit_actions(const mmu_model_t *m, int unit_idx)
     return json_actions(&acts);
 }
 
-static cJSON *json_toolhead_actions(const mmu_model_t *m, int th_idx)
+static VIEW_OWN_FRAME cJSON *json_toolhead_actions(const mmu_model_t *m, int th_idx)
 {
     view_actions_t acts;
 
@@ -354,7 +368,7 @@ static cJSON *json_tile(const mmu_model_t *m, int unit_idx, const view_tile_t *t
 
 /* Each on-demand action list gets a function (a stack frame) of its own, so
  * the multi-KB view_actions_t is gone before the caller recurses. */
-static cJSON *json_group_actions(const mmu_model_t *m, int unit_idx, int index)
+static VIEW_OWN_FRAME cJSON *json_group_actions(const mmu_model_t *m, int unit_idx, int index)
 {
     view_actions_t acts;
 
@@ -596,7 +610,7 @@ static cJSON *json_alert_item(const view_alert_t *va)
     return o;
 }
 
-static cJSON *json_alert(const mmu_model_t *m, int idx)
+static VIEW_OWN_FRAME cJSON *json_alert(const mmu_model_t *m, int idx)
 {
     view_alert_t va;
 
@@ -607,8 +621,8 @@ static cJSON *json_alert(const mmu_model_t *m, int idx)
 /* {severity, count, items} for a unit's (unit_idx >= 0) or a toolhead's alert
  * group; null when it has none. The items are built here, in a frame of their
  * own (their actions are large). */
-static cJSON *json_alert_group(bool present, int severity, int count, const mmu_model_t *m,
-                               int unit_idx, int th_idx)
+static VIEW_OWN_FRAME cJSON *json_alert_group(bool present, int severity, int count,
+                                              const mmu_model_t *m, int unit_idx, int th_idx)
 {
     view_alerts_t g;
     cJSON *o, *items;

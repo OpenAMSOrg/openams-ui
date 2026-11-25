@@ -14,7 +14,7 @@
  * Pure C: no LVGL, no platform headers. The owned copies are heap cJSON, not
  * static storage, so a core adds nothing to the static-DRAM gate. Only the
  * kinds that arrive as diffs keep one; the kinds that arrive whole
- * (component_status, spool_list, vendor_list, metadata) keep only a hash, as
+ * (component_status, spool_list, vendor_list, material_list, metadata) keep only a hash, as
  * the 4 inch board's heap cannot spare a copy of each.
  */
 
@@ -60,7 +60,7 @@ void core_drop_copies(core_t *core);
  * @p name): each key already in the copy is replaced, each new key is added
  * (the rule moonraker_client's own merge used to apply, now owned here so a
  * future web host can feed the same raw diffs from its store).
- * `component_status`, `spool_list`, `vendor_list` and `metadata` arrive
+ * `component_status`, `spool_list`, `vendor_list`, `material_list` and `metadata` arrive
  * whole rather than as diffs: they are mapped straight from @p obj, and no
  * copy of them is kept, only a hash to tell whether the next one differs.
  *
@@ -80,6 +80,7 @@ void core_drop_copies(core_t *core);
  *                                            consumer yet)
  *   - "spool_list"                       -> status_map_apply_spool_list()
  *   - "vendor_list"                      -> status_map_apply_vendor_list()
+ *   - "material_list"                    -> status_map_apply_material_list()
  *   - "metadata"                         -> status_map_apply_metadata()
  *   - "action_result"                    -> the host's answer to an action
  *                                            the display sent ({kind, ok,
@@ -97,7 +98,8 @@ void core_drop_copies(core_t *core);
  * functions of it, so an unchanged one cannot have mapped to a different
  * model). An
  * unrecognized @p kind, or @p obj of the wrong JSON type for @p kind
- * (an object for every kind but "spool_list" and "vendor_list", which are arrays), returns
+ * (an object for every kind but "spool_list" and "vendor_list", which are arrays, and
+ * "material_list", which is either), returns
  * false without touching anything.
  */
 bool core_apply(core_t *core, const char *kind, const char *name, const cJSON *obj);

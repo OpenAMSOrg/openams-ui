@@ -87,7 +87,7 @@
 #define VIEW_SETTING_KEY_LEN    32
 
 #define VIEW_ACTION_ID_LEN      20
-#define VIEW_ACTION_LINE_LEN   168   /* "spool edit {slot} material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load" is 125, and a slot id is up to VIEW_ID_LEN - 1 */
+#define VIEW_ACTION_LINE_LEN   208   /* "spool edit {slot} material={material} custom={custom} nozzle={nozzle} bed={bed} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load" is 161 without its slot, and a slot id is up to VIEW_ID_LEN - 1 */
 #define VIEW_FIELD_ID_LEN       12
 #define VIEW_OPTION_LABEL_LEN   72   /* "{vendor} {material} \xc2\xb7 {g} g" in the pseudo-locale */
 #define VIEW_TAG_READ_TEXT_LEN 256   /* "This tag is also in slot {slot}. Load this spool or
@@ -104,9 +104,9 @@
 #define VIEW_ACTIONS_PER_ALERT    3   /* a failed toolchange: retry, unload, clear errors; a lane fault: its two tokens */
 #define VIEW_ALERTS_PER_GROUP     6   /* a unit: its lane fault, the dryer fault, the adapter, low filament */
 #define VIEW_ACTIONS_MAX          12  /* view_actions_t's own capacity: >= every per-widget cap above */
-#define VIEW_MAX_FORM_FIELDS      6   /* one form's own fields: the spool editor's */
-#define VIEW_MAX_FIELDS          15   /* every form's fields of one view_actions_t, pooled: the spool editor's six, twice over on a bay that offers it twice (an unidentified one: "Load" asks for the spool first), the assign form's one, the group form's one and the confirmation's one */
-#define VIEW_MAX_OPTIONS        160   /* every select's choices of one view_actions_t, pooled: two editors' materials (11 each), colors (20 each) and vendors (MMU_MAX_VENDORS + 2), the spool list, or the group list */
+#define VIEW_MAX_FORM_FIELDS      9   /* one form's own fields: the spool editor's (material, the typed one, two temperatures, color, vendor, two weights, PA) */
+#define VIEW_MAX_FIELDS          21   /* every form's fields of one view_actions_t, pooled: the spool editor's nine, twice over on a bay that offers it twice (an unidentified one: "Load" asks for the spool first), the assign form's one, the group form's one and the confirmation's one */
+#define VIEW_MAX_OPTIONS        160   /* every select's choices of one view_actions_t, pooled: an editor's materials (MMU_MATERIAL_COUNT + MMU_MAX_MATERIALS + 3), colors (21) and vendors (MMU_MAX_VENDORS + 2) are 116 at most, so the first editor always fits whole; a second one (an unidentified bay) or the spool or group list takes what is left */
 #define VIEW_MAX_ALERTS           MMU_MAX_ALERTS
 #define VIEW_MAX_SETTINGS         6   /* the host's five, plus the language row */
 #define VIEW_MAX_LANGS           12   /* the language row's choices: English, the ten
@@ -160,7 +160,27 @@ typedef enum {
 
 typedef enum {
     VIEW_FIELD_NUMBER, VIEW_FIELD_SELECT, VIEW_FIELD_TOGGLE,
+    VIEW_FIELD_TEXT,    /* a short typed value (the spool editor's new material): only a
+                         * renderer with text entry shows it; its value is a string */
 } view_field_kind_t;
+
+/* A builder that holds a view_actions_t (or a group of alerts) keeps it in a
+ * frame of its own: inlined into its caller, several would share one frame,
+ * past the device's LVGL task stack and the wasm core's C stack
+ * (platform/core-wasm/CMakeLists.txt). */
+#if defined(__GNUC__) || defined(__clang__)
+#define VIEW_OWN_FRAME __attribute__((noinline))
+#else
+#define VIEW_OWN_FRAME
+#endif
+
+/* When a field shows: always, or only while the form's material field is on
+ * "Other…" (MMU_MATERIAL_OTHER), or while it is on "Other…" or on a material
+ * the host gives no temperature (an option's no_temp). A renderer that hides
+ * a field sends its empty value: "" for text, 0 for a number. */
+typedef enum {
+    VIEW_SHOW_ALWAYS, VIEW_SHOW_OTHER, VIEW_SHOW_NO_TEMP,
+} view_show_t;
 
 /* ------------------------------------------------------------------ group */
 
@@ -214,6 +234,10 @@ typedef struct {
      * option has no "color" key. */
     bool has_color_field;
     bool color_known;
+    /* A material the host gives no temperature (C4 §9.3): the form's
+     * temperature fields show while it is chosen. JSON "no_temp": true only
+     * when set. (Beside the two flags above, in what was their padding.) */
+    bool no_temp;
     uint32_t color;
 } view_option_t;
 
@@ -231,8 +255,15 @@ typedef struct {
     uint8_t option_count;
     /* The field asks something only the person knows, so a submit button
      * stays dead until it holds an answer: a required select is one whose
-     * "choose this" choice is below 0. */
+     * "choose this" choice is below 0, a required text field one that is
+     * empty while it shows. */
     bool required;
+    /* A number that may be left empty: 0 is "not given" and a renderer may
+     * show it as an empty input. */
+    bool optional;
+    uint8_t max_len;                            /* text only: the longest value, in characters */
+    uint8_t show_when;                          /* a view_show_t: VIEW_SHOW_ALWAYS for all but the editor's own */
+    const char *note;                           /* a line under the field, or NULL */
 } view_field_t;
 
 /* A form's fields live once per view_actions_t, like the options, so an action

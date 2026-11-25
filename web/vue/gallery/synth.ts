@@ -132,8 +132,16 @@ export function build(core: Core, sc: Scenario): View {
       });
     }
   }
-  core.apply('component_status', null, { spoolman_online: true, edit: true, stop: sc.stop === true, bays: status });
+  // A host new enough to list Spoolman's materials and take a filament's
+  // temperatures (C4 §9, §9.3): PCTG has no temperature in its table, so the
+  // editor asks for one; PET-CF17 takes PET-CF's.
+  core.apply('component_status', null, {
+    spoolman_online: true, edit: true, edit_temps: true, materials: true, stop: sc.stop === true, bays: status,
+  });
   core.apply('vendor_list', null, [{ id: 1, name: 'Polymaker' }, { id: 2, name: 'Bambu Lab' }, { id: 3, name: 'Prusament' }]);
+  core.apply('material_list', null, {
+    materials: [{ name: 'PCTG', extruder_temp: null }, { name: 'PET-CF17', extruder_temp: 270 }],
+  });
   if (sc.job) core.apply('metadata', null, { filename: 'job.gcode', filament_weights: sc.job });
   return core.view();
 }

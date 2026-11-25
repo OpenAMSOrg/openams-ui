@@ -297,6 +297,15 @@
       }
     },
     {
+      "line": "material list",
+      "kind": "rpc",
+      "method": "server.spoolman.proxy",
+      "params": {
+        "request_method": "GET",
+        "path": "/v1/material"
+      }
+    },
+    {
       "line": "spool edit oams11 color=255",
       "kind": "error",
       "reason": "Spoolman is not set up"

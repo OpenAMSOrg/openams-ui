@@ -40,7 +40,7 @@ int actions_map(const char *line, const mmu_model_t *m, char *out, size_t out_le
  * cJSON object the caller owns) when @p line is an RPC action.  Returns 0 when
  * @p line is not an RPC action (method and params are then unchanged).
  *
- * RPC actions: "spool list", "vendor list", "spool confirm <slot> <grams>",
+ * RPC actions: "spool list", "vendor list", "material list", "spool confirm <slot> <grams>",
  * "job metadata <file>" and "spool edit <slot> key=value ..." (see
  * actions_rpc_why()). A line actions_rpc_why() refuses is not an RPC action
  * here: 0.
@@ -54,13 +54,16 @@ int actions_rpc(const char *line, const mmu_model_t *m,
  * right now, with @p why (when not NULL) pointing at the reason: a fixed
  * string from the view's table.
  *
- * `spool edit <slot> [material=<n>] [color=<rgb>] [vendor=<n>] [remaining=<g>]
- * [initial=<g>] [pa=<x>] [then load]` becomes
- * server.openams_spoolman.edit. The values are the edit form's own: material
- * and vendor are indices into the lists it offers (mmu_material_name(),
- * mmu_edit_vendor_name(); an index one past the list is the bay's own), color
- * is 0xRRGGBB in decimal or -1, the weights are grams, and pa is the pressure
- * advance. Only what differs from mmu_edit_defaults() is sent (a spool with no
+ * `spool edit <slot> [material=<n>] [custom=<type>] [nozzle=<C>] [bed=<C>]
+ * [color=<rgb>] [vendor=<n>] [remaining=<g>] [initial=<g>] [pa=<x>]
+ * [then load]` becomes server.openams_spoolman.edit. The values are the edit
+ * form's own: material and vendor are indices into the lists it offers
+ * (mmu_edit_material_name(), mmu_edit_vendor_name(); an index one past the
+ * list is the bay's own; a material of MMU_MATERIAL_OTHER is the type typed
+ * into `custom`, "-" when empty), color is 0xRRGGBB in decimal or -1, the
+ * weights are grams, pa is the pressure advance, and nozzle and bed are the
+ * filament's temperatures in °C (0: not given), sent only to a host that
+ * takes them (`edit_temps`, C4 §9). Only what differs from mmu_edit_defaults() is sent (a spool with no
  * host record is always sent with its material: the host adds it). Refused
  * while the host has no edit endpoint, Spoolman is offline, or the bay is
  * empty; with nothing changed ("No changes to save"); and for a value out of
@@ -92,6 +95,7 @@ enum {
     ACTIONS_RPC_METADATA = 2,      /**< `job metadata`: a file's metadata */
     ACTIONS_RPC_VENDOR_LIST = 3,   /**< `vendor list`: an array of vendors */
     ACTIONS_RPC_EDIT = 4,          /**< `spool edit`: the host took it, or refused it in words */
+    ACTIONS_RPC_MATERIAL_LIST = 5, /**< `material list`: the host's list (an object) or Spoolman's (an array of names), C4 §9.3 */
 };
 
 /** The tag of the call @p method with @p params (as actions_rpc() made them). */

@@ -30,6 +30,11 @@
                                       *  is 30 of them */
 #define MMU_REFUSAL_LEN         192 /**< a host refusal, whole: "Heat the extruder before an OpenAMS toolchange. ..." runs about 100 bytes */
 #define MMU_VENDOR_LEN          32  /**< a vendor's name, whole: a longer one is not offered, never cut */
+#define MMU_MAX_MATERIALS       16  /**< the materials Spoolman holds that the edit form offers
+                                         beside its common ones (C4 §9.3), sorted */
+#define MMU_MATERIAL_NAME_LEN   17  /**< such a material with its NUL: 16 characters, what the
+                                         host keeps of a bay's material (C4 §7.4); a longer one
+                                         is not offered, never cut */
 #define MMU_MAX_TOOLS           24  /**< Maximum number of slicer tools (T0..T23). */
 #define MMU_MAX_TOOLHEADS       4   /**< FPS lanes a display's model can hold at once. */
 #define MMU_UNIT_NAME_LEN       32  /**< a unit's name with its NUL: 31 characters. The host sets no limit, so a longer one is cut at a character boundary by every writer AND every lookup (cut the key first, then compare), which keeps a long name one unit instead of a new one per update. */
@@ -441,6 +446,13 @@ typedef struct {
                                                       *  curated brands (see
                                                       *  status_map.c) */
     uint8_t vendor_count;
+    bool spoolman_edit_temps;               /**< the edit takes a filament's temperatures (`edit_temps` in the component's status, C4 §9) */
+    bool spoolman_materials;                /**< the host lists Spoolman's materials (`materials`, C4 §9.3) */
+    char materials[MMU_MAX_MATERIALS][MMU_MATERIAL_NAME_LEN]; /**< the materials Spoolman
+                                                      *  holds beyond the common ones,
+                                                      *  sorted (see status_map.c) */
+    uint16_t material_no_temp;              /**< bit i: the host gives materials[i] no temperature (C4 §9.3), so the form asks for one */
+    uint8_t material_count;
     mmu_settings_t settings;                /**< the host's five settings (C2 4.9) */
 
     mmu_unit_t units[MMU_MAX_UNITS];
@@ -569,9 +581,32 @@ void mmu_settings_defaults(mmu_settings_t *s);
 
 #define MMU_MATERIAL_COUNT 10
 /** The common materials the edit form offers, in order ("PLA", "PETG", ...);
- *  "" out of range. A spool's own material, when it is none of these, is one
- *  more choice the form adds (index MMU_MATERIAL_COUNT). */
+ *  "" out of range. */
 const char *mmu_material_name(int i);
+
+/** How many materials the edit form offers: the common ones, then the ones
+ *  Spoolman holds beyond them (m->materials). A bay's own material, when it is
+ *  none of these, is one more choice the form adds (index
+ *  mmu_edit_material_count()). */
+int mmu_edit_material_count(const mmu_model_t *m);
+/** Material @p i of the form, or "" out of range. */
+const char *mmu_edit_material_name(const mmu_model_t *m, int i);
+/** Whether the host gives material @p i of the form no temperature (C4 §9.3):
+ *  the form then asks for one. A common material always has one. */
+bool mmu_edit_material_needs_temp(const mmu_model_t *m, int i);
+
+/** The material choice "Other…": a type the person types into the form's own
+ *  text field (`custom`), which only a renderer with text entry offers. */
+#define MMU_MATERIAL_OTHER (-2)
+/** The longest type that can be typed: what the host keeps (C4 §7.4). */
+#define MMU_MATERIAL_TEXT_MAX (MMU_MATERIAL_NAME_LEN - 1)
+/** A typed type as the edit sends it: 1 to MMU_MATERIAL_TEXT_MAX ASCII
+ *  letters, digits and "-+._/", trimmed, upper-cased into @p out (at least
+ *  MMU_MATERIAL_NAME_LEN bytes). False, and @p out "", for anything else. */
+bool mmu_material_text(const char *text, char *out, size_t n);
+/** ASCII case-insensitive equality: Spoolman keeps a material or a vendor as
+ *  typed, so "pla" and "PLA" are one. */
+bool mmu_text_ci_equal(const char *a, const char *b);
 
 /** The vendor the edit form falls back to, and what Spoolman calls it. */
 #define MMU_VENDOR_GENERIC "Generic"
@@ -588,7 +623,7 @@ const char *mmu_edit_vendor_name(const mmu_model_t *m, int i);
  *  has them, else a default. One function for both cores' views and action
  *  mappers, so "unchanged" means the same thing to both. */
 typedef struct {
-    int material;       /**< index of mmu_material_name(), or MMU_MATERIAL_COUNT: the bay's own */
+    int material;       /**< index of mmu_edit_material_name(), or mmu_edit_material_count(): the bay's own */
     int32_t color;      /**< 0xRRGGBB, -1 = no known color (nothing to send) */
     int vendor;         /**< index of mmu_edit_vendor_name(), or mmu_edit_vendor_count(): the bay's own */
     int remaining_g;

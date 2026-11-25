@@ -145,7 +145,7 @@ export default class OpenamsCard extends Mixins(StateMixin) {
         if (result.method === 'server.openams_spoolman.edit') {
           // The spool edit is waited on: the printer can refuse it in words of
           // its own ("Spoolman is offline"), which go back to the panel with
-          // `done`; the vendor list is read again after it (the host may have
+          // `done`; the vendor and material lists are read again after it (the host may have
           // added one).
           this.rawSocket().emit(result.method, { params: result.params }).then(
             () => {
@@ -189,9 +189,10 @@ export default class OpenamsCard extends Mixins(StateMixin) {
     }
   }
 
-  /** The names the spool editor offers as vendors: Spoolman's own list, read
-   *  through the proxy. A host whose component can edit has Spoolman, so this
-   *  only runs then. */
+  /** The names the spool editor offers as vendors and materials: Spoolman's
+   *  own lists, read through the proxy, the materials through the host's own
+   *  list when it serves one (C4 §9.3). A host whose component can edit has
+   *  Spoolman, so this only runs then. */
   async requestVendors () {
     try {
       this.adapter.applyVendorList(
@@ -199,6 +200,13 @@ export default class OpenamsCard extends Mixins(StateMixin) {
       )
     } catch (e) {
       consola.warn('[OpenAMS]: the Spoolman vendor list failed', e)
+    }
+    const materials = this.adapter.materialRequest()
+    if (!materials) return
+    try {
+      this.adapter.applyMaterialList(await this.rawSocket().emit(materials.method, { params: materials.params }))
+    } catch (e) {
+      consola.warn('[OpenAMS]: the Spoolman material list failed', e)
     }
   }
 

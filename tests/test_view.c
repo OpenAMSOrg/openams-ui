@@ -307,6 +307,138 @@ static const view_field_t *edit_field(const view_actions_t *acts, const view_act
     return NULL;
 }
 
+/* The first object in @p node's tree whose "id" is @p id, or NULL. */
+static const cJSON *json_find_id(const cJSON *node, const char *id)
+{
+    const cJSON *c, *hit;
+
+    if(!node) return NULL;
+    if(cJSON_IsObject(node)) {
+        const cJSON *v = cJSON_GetObjectItemCaseSensitive(node, "id");
+
+        if(cJSON_IsString(v) && strcmp(v->valuestring, id) == 0) return node;
+    }
+    cJSON_ArrayForEach(c, node) {
+        if((hit = json_find_id(c, id)) != NULL) return hit;
+    }
+    return NULL;
+}
+
+/* The materials Spoolman holds (C4 §9.3) join the editor's list, marked
+ * no_temp where the host gives them no temperature; "Other…" ends it and its
+ * typed type shows below it; a host that takes temperatures gets the two
+ * optional temperature fields, which show on "Other…" or a no_temp material. */
+static void test_edit_materials_and_temps(void)
+{
+    static view_actions_t acts;
+    const view_action_t *a;
+    const view_field_t *f;
+    mmu_slot_t *s;
+    cJSON *res, *root;
+    const cJSON *field, *opts, *w;
+    int i, n;
+
+    status_map_reset(&g_mmu);
+    add_unit("oams1", 2);
+    s = &g_mmu.units[0].slots[0];
+    s->state = MMU_SLOT_READY;
+    s->info_source = MMU_INFO_MANUAL;
+    s->spool_id = 12;
+    snprintf(s->material, sizeof s->material, "pet-cf17");
+    g_mmu.spoolman_edit = g_mmu.spoolman_online = true;
+
+    /* the host's list: a common material and a repeat are left out, a name
+     * longer than 16 too, the rest sorted with their temperature flags */
+    res = cJSON_Parse("{\"materials\":[{\"name\":\"Unobtanium\",\"extruder_temp\":null},"
+                      "{\"name\":\"pla\",\"extruder_temp\":210},"
+                      "{\"name\":\"PET-CF17\",\"extruder_temp\":270},"
+                      "{\"name\":\"unobtanium\",\"extruder_temp\":null},"
+                      "{\"name\":\"ABCDEFGHIJKLMNOPQ\",\"extruder_temp\":null},"
+                      "{\"name\":\"Alpha\",\"extruder_temp\":null}]}");
+    assert(res && status_map_apply_material_list(&g_mmu, res));
+    cJSON_Delete(res);
+    assert(g_mmu.material_count == 3);
+    assert(strcmp(g_mmu.materials[0], "Alpha") == 0);
+    assert(strcmp(g_mmu.materials[1], "PET-CF17") == 0);
+    assert(strcmp(g_mmu.materials[2], "Unobtanium") == 0);
+    assert(g_mmu.material_no_temp == ((1u << 0) | (1u << 2)));
+    n = mmu_edit_material_count(&g_mmu);
+    assert(n == MMU_MATERIAL_COUNT + 3);
+    assert(strcmp(mmu_edit_material_name(&g_mmu, MMU_MATERIAL_COUNT + 1), "PET-CF17") == 0);
+    assert(!mmu_edit_material_needs_temp(&g_mmu, 0));
+    assert(mmu_edit_material_needs_temp(&g_mmu, MMU_MATERIAL_COUNT + 2));
+
+    /* the bay's own material is on the list now (any case): no extra choice */
+    assert(view_tile_actions(&g_mmu, 0, 0, &acts));
+    a = find_action(&acts, "edit_spool");
+    assert(a && a->enabled);
+    f = edit_field(&acts, a, "material");
+    assert(f->option_count == n + 1);                     /* the list, then Other… */
+    assert((int)f->value == MMU_MATERIAL_COUNT + 1);
+    for(i = 0; i < n; i++)
+        assert(acts.options[f->option_first + i].no_temp == mmu_edit_material_needs_temp(&g_mmu, i));
+    assert(acts.options[f->option_first + n].value == MMU_MATERIAL_OTHER);
+    assert(!edit_field(&acts, a, "nozzle"));               /* the host takes none */
+
+    /* Spoolman's own list through the proxy, from an older host: names only,
+     * so nothing asks for a temperature */
+    res = cJSON_Parse("[\"Unobtanium\",\"PLA\",\"Beta\"]");
+    assert(res && status_map_apply_material_list(&g_mmu, res));
+    cJSON_Delete(res);
+    assert(g_mmu.material_count == 2 && g_mmu.material_no_temp == 0);
+    assert(strcmp(g_mmu.materials[0], "Beta") == 0);
+
+    /* a host that takes temperatures: two optional fields after the typed one */
+    res = cJSON_Parse("{\"materials\":[{\"name\":\"Unobtanium\",\"extruder_temp\":null}]}");
+    assert(res && status_map_apply_material_list(&g_mmu, res));
+    cJSON_Delete(res);
+    g_mmu.spoolman_edit_temps = true;
+    assert(view_tile_actions(&g_mmu, 0, 0, &acts));
+    a = find_action(&acts, "edit_spool");
+    assert(strcmp(a->line, "spool edit oams11 material={material} custom={custom} nozzle={nozzle} "
+                           "bed={bed} color={color} vendor={vendor} remaining={remaining} "
+                           "initial={initial} pa={pa}") == 0);
+    assert(a->form.field_count == 9);
+    assert(strcmp(acts.fields[a->form.field_first + 1].id, "custom") == 0);
+    f = edit_field(&acts, a, "nozzle");
+    assert(f && f->kind == VIEW_FIELD_NUMBER && f->optional && (int)f->value == 0);
+    assert(f->min == 150.0 && f->max == 400.0 && f->show_when == VIEW_SHOW_NO_TEMP);
+    assert(f->note == view_str(VS_FIELD_TEMP_NOTE) && strcmp(f->unit, "C") == 0);
+    f = edit_field(&acts, a, "bed");
+    assert(f && f->optional && f->max == 150.0 && f->show_when == VIEW_SHOW_NO_TEMP);
+    assert(a->enabled);                     /* the dry run with custom=- and 0s is a valid line */
+
+    /* the JSON carries the editor's own keys, and only on its own fields */
+    root = view_json_build(&g_mmu);
+    a = NULL;
+    field = json_find_id(json_find_id(root, "edit_spool"), "custom");
+    assert(field && strcmp(cJSON_GetObjectItemCaseSensitive(field, "kind")->valuestring, "text") == 0);
+    assert(cJSON_GetObjectItemCaseSensitive(field, "max_len")->valueint == MMU_MATERIAL_TEXT_MAX);
+    w = cJSON_GetObjectItemCaseSensitive(field, "show_when");
+    assert(strcmp(cJSON_GetObjectItemCaseSensitive(w, "field")->valuestring, "material") == 0);
+    assert(strcmp(cJSON_GetObjectItemCaseSensitive(w, "is")->valuestring, "other") == 0);
+    field = json_find_id(json_find_id(root, "edit_spool"), "nozzle");
+    assert(cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(field, "optional")));
+    w = cJSON_GetObjectItemCaseSensitive(field, "show_when");
+    assert(strcmp(cJSON_GetObjectItemCaseSensitive(w, "is")->valuestring, "no_temp") == 0);
+    field = json_find_id(json_find_id(root, "edit_spool"), "material");
+    assert(!cJSON_GetObjectItemCaseSensitive(field, "show_when"));
+    assert(!cJSON_GetObjectItemCaseSensitive(field, "max_len"));
+    opts = cJSON_GetObjectItemCaseSensitive(field, "options");
+    n = cJSON_GetArraySize(opts);
+    for(i = 0; i < n; i++) {
+        const cJSON *o = cJSON_GetArrayItem(opts, i);
+        const cJSON *label = cJSON_GetObjectItemCaseSensitive(o, "label");
+
+        assert(cJSON_IsTrue(cJSON_GetObjectItemCaseSensitive(o, "no_temp")) ==
+               (strcmp(label->valuestring, "Unobtanium") == 0));
+    }
+    field = json_find_id(json_find_id(root, "edit_spool"), "pa");
+    assert(!cJSON_GetObjectItemCaseSensitive(field, "optional") &&
+           !cJSON_GetObjectItemCaseSensitive(field, "note"));
+    cJSON_Delete(root);
+}
+
 /* The ring's "Edit spool": after load and unload, dimmed with a reason while the
  * host cannot take it, and a form that starts from the bay's own facts. */
 static void test_edit_action(void)
@@ -355,15 +487,23 @@ static void test_edit_action(void)
     assert(view_tile_actions(&g_mmu, 0, 0, &acts));
     a = find_action(&acts, "edit_spool");
     assert(a->enabled && a->reason[0] == '\0');
-    assert(strcmp(a->line, "spool edit oams11 material={material} color={color} vendor={vendor} "
-                           "remaining={remaining} initial={initial} pa={pa}") == 0);
-    assert(a->form.present && a->form.field_count == 6);
+    assert(strcmp(a->line, "spool edit oams11 material={material} custom={custom} color={color} "
+                           "vendor={vendor} remaining={remaining} initial={initial} pa={pa}") == 0);
+    /* a host that takes no temperatures: no temperature fields */
+    assert(a->form.present && a->form.field_count == 7);
+    assert(!edit_field(&acts, a, "nozzle") && !edit_field(&acts, a, "bed"));
 
-    /* the bay's own material, color and vendor are each one more choice */
+    /* the bay's own material, color and vendor are each one more choice; the
+     * materials end with "Other…", whose type is typed below them */
     f = edit_field(&acts, a, "material");
-    assert(f && f->kind == VIEW_FIELD_SELECT && f->option_count == MMU_MATERIAL_COUNT + 1);
+    assert(f && f->kind == VIEW_FIELD_SELECT && f->option_count == MMU_MATERIAL_COUNT + 2);
     assert((int)f->value == MMU_MATERIAL_COUNT);
     assert(strcmp(acts.options[f->option_first + MMU_MATERIAL_COUNT].label, "Nylon X") == 0);
+    assert(acts.options[f->option_first + MMU_MATERIAL_COUNT + 1].value == MMU_MATERIAL_OTHER);
+    assert(strcmp(acts.options[f->option_first + MMU_MATERIAL_COUNT + 1].label, "Other\xe2\x80\xa6") == 0);
+    f = edit_field(&acts, a, "custom");
+    assert(f && f->kind == VIEW_FIELD_TEXT && f->max_len == MMU_MATERIAL_TEXT_MAX && f->required);
+    assert(f->show_when == VIEW_SHOW_OTHER && f->note == view_str(VS_FIELD_MATERIAL_TEXT_NOTE));
     f = edit_field(&acts, a, "color");
     assert(f && f->option_count == (uint8_t)(view_palette_count() + 1));
     assert((int)f->value == 0x123456);
@@ -462,7 +602,9 @@ static void test_save_and_load_action(void)
     a = find_action(&acts, "load");
     assert(a && a->enabled && !a->form.present);
     assert(strcmp(a->line, "load oams11") == 0);
-    for(i = 0; i < (int)acts.field_count; i++) assert(!acts.fields[i].required);
+    /* (only Edit spool's typed material is, and only while it shows) */
+    for(i = 0; i < (int)acts.field_count; i++)
+        assert(acts.fields[i].required == (strcmp(acts.fields[i].id, "custom") == 0));
 
     /* unknown: same id and place, the form, "Save and load", the line */
     assert(view_tile_actions(&g_mmu, 0, 1, &acts));
@@ -471,21 +613,22 @@ static void test_save_and_load_action(void)
     a = find_action(&acts, "load");
     assert(a->enabled && a->reason[0] == '\0');
     assert(a->label == view_str(VS_ACTION_LOAD));
-    assert(strcmp(a->line, "spool edit oams12 material={material} color={color} vendor={vendor} "
-                           "remaining={remaining} initial={initial} pa={pa} then load") == 0);
-    assert(a->form.present && a->form.field_count == 6);
+    assert(strcmp(a->line, "spool edit oams12 material={material} custom={custom} color={color} "
+                           "vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load") == 0);
+    assert(a->form.present && a->form.field_count == 7);
     assert(a->form.submit_label == view_str(VS_SAVE_AND_LOAD));
     assert(strcmp(a->form.submit_label, "Save and load") == 0);
 
     f = edit_field(&acts, a, "material");
     assert(f && f->kind == VIEW_FIELD_SELECT && f->required && (int)f->value == -1);
-    assert(f->option_count == MMU_MATERIAL_COUNT + 1);
+    assert(f->option_count == MMU_MATERIAL_COUNT + 2);
     assert(acts.options[f->option_first].value == -1);
     assert(strcmp(acts.options[f->option_first].label, "Choose a material") == 0);
-    /* the other fields are the editor's own, none of them required */
+    /* the other fields are the editor's own, none of them required but the
+     * typed material (which shows only on "Other…") */
     for(i = 0; i < (int)a->form.field_count; i++) {
         f = &acts.fields[a->form.field_first + i];
-        assert(f->required == (strcmp(f->id, "material") == 0));
+        assert(f->required == (strcmp(f->id, "material") == 0 || strcmp(f->id, "custom") == 0));
     }
     /* and Edit spool beside it is the editor it always was */
     a = find_action(&acts, "edit_spool");
@@ -1125,8 +1268,11 @@ static void test_confirm_action(void)
     assert(view_tile_actions(&s_local, 0, 1, &acts));
     a = find_action(&acts, "confirm_spool");
     assert(a && a->form.present && a->form.field_count == 1);
-    assert(find_action(&acts, "load")->form.field_count == 6);
-    assert(acts.field_count == 15);
+    assert(find_action(&acts, "load")->form.field_count == 7);
+    /* the two editors' seven (nine on a host that takes temperatures), the
+     * assign form's, the group form's and the confirmation's one: within
+     * VIEW_MAX_FIELDS either way */
+    assert(acts.field_count == 17 && 9 + 9 + 3 <= VIEW_MAX_FIELDS);
 }
 
 /* --- fix 6: "Change group..." and the groups list ------------------------ */
@@ -3060,6 +3206,7 @@ int main(void)
     test_ink();
     test_color_known();
     test_edit_action();
+    test_edit_materials_and_temps();
     test_save_and_load_action();
     test_low_and_pct_text();
     test_label_and_spare();

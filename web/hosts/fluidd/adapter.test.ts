@@ -196,6 +196,32 @@ describe('the spool editor', () => {
     expect(labels).toContain('Prusament')
     expect(new Set(labels).size).toBe(labels.length)
   })
+
+  it('reads the materials from the host when it lists them, else from Spoolman, and offers them', () => {
+    const adapter = new OpenamsAdapter()
+
+    adapter.feedStore(store)
+    adapter.applyComponentStatus({ spoolman_online: true, edit: true, bays: {} })
+    // an older host: Spoolman's own names through the proxy
+    expect(adapter.materialRequest()).toEqual({
+      method: 'server.spoolman.proxy',
+      params: { request_method: 'GET', path: '/v1/material' }
+    })
+    adapter.applyComponentStatus({ spoolman_online: true, edit: true, edit_temps: true, materials: true, bays: {} })
+    expect(adapter.materialRequest()).toEqual({ method: 'server.openams_spoolman.materials', params: {} })
+    adapter.applyMaterialList({
+      materials: [{ name: 'PET-CF17', extruder_temp: 270 }, { name: 'PCTG', extruder_temp: null }]
+    })
+
+    const fields = editOf(adapter.view())?.form?.fields ?? []
+    const material = fields.find((field) => field.id === 'material')
+    const labels = material?.options?.map((option) => option.label) ?? []
+    expect(labels.slice(-3)).toEqual(['PCTG', 'PET-CF17', 'Other\u2026'])
+    expect(material?.options?.find((option) => option.label === 'PCTG')?.no_temp).toBe(true)
+    expect(fields.map((field) => field.id)).toEqual(
+      ['material', 'custom', 'nozzle', 'bed', 'color', 'vendor', 'remaining', 'initial', 'pa']
+    )
+  })
 })
 
 // The card inside Fluidd speaks the page's language, not its own default: a

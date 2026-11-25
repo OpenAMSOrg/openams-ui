@@ -160,6 +160,11 @@ static bool ci_equal(const char *a, const char *b)
     return *a == *b;
 }
 
+bool mmu_text_ci_equal(const char *a, const char *b)
+{
+    return a && b && ci_equal(a, b);
+}
+
 static bool vendor_listed(const mmu_model_t *m, const char *name)
 {
     int i;
@@ -168,6 +173,51 @@ static bool vendor_listed(const mmu_model_t *m, const char *name)
         if(ci_equal(m->vendors[i], name)) return true;
     }
     return false;
+}
+
+int mmu_edit_material_count(const mmu_model_t *m)
+{
+    return MMU_MATERIAL_COUNT + (m ? (int)m->material_count : 0);
+}
+
+const char *mmu_edit_material_name(const mmu_model_t *m, int i)
+{
+    if(i >= 0 && i < MMU_MATERIAL_COUNT) return k_materials[i];
+    if(!m || i < MMU_MATERIAL_COUNT || i >= mmu_edit_material_count(m)) return "";
+    return m->materials[i - MMU_MATERIAL_COUNT];
+}
+
+bool mmu_edit_material_needs_temp(const mmu_model_t *m, int i)
+{
+    if(!m || i < MMU_MATERIAL_COUNT || i >= mmu_edit_material_count(m)) return false;
+    return (m->material_no_temp >> (i - MMU_MATERIAL_COUNT)) & 1u;
+}
+
+bool mmu_material_text(const char *text, char *out, size_t n)
+{
+    const char *a, *b;
+    size_t len, i;
+
+    if(!out || n == 0) return false;
+    out[0] = '\0';
+    if(!text) return false;
+    for(a = text; *a == ' '; a++) {}
+    for(b = a + strlen(a); b > a && b[-1] == ' '; b--) {}
+    len = (size_t)(b - a);
+    if(len == 0 || len > MMU_MATERIAL_TEXT_MAX || len + 1 > n) return false;
+    for(i = 0; i < len; i++) {
+        char c = a[i];
+
+        if(c >= 'a' && c <= 'z') c = (char)(c - 'a' + 'A');
+        if(!((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '+' ||
+             c == '.' || c == '_' || c == '/')) {
+            out[0] = '\0';
+            return false;
+        }
+        out[i] = c;
+    }
+    out[len] = '\0';
+    return true;
 }
 
 int mmu_edit_vendor_count(const mmu_model_t *m)
@@ -198,9 +248,10 @@ void mmu_edit_defaults(const mmu_model_t *m, int unit_idx, int slot_idx, mmu_edi
 
     /* material: the bay's own if the list has it, else the bay's own as one
      * more choice, else the first */
-    out->material = s->material[0] ? MMU_MATERIAL_COUNT : 0;
-    for(i = 0; i < MMU_MATERIAL_COUNT; i++) {
-        if(ci_equal(s->material, k_materials[i])) {
+    n = mmu_edit_material_count(m);
+    out->material = s->material[0] ? n : 0;
+    for(i = 0; i < n; i++) {
+        if(ci_equal(s->material, mmu_edit_material_name(m, i))) {
             out->material = i;
             break;
         }

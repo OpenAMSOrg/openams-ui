@@ -108,6 +108,19 @@ bool status_map_apply_spool_list(mmu_model_t *m, const cJSON *arr);
 bool status_map_apply_vendor_list(mmu_model_t *m, const cJSON *arr);
 
 /**
+ * Parse the materials Spoolman holds into @p m->materials[] (C4 §9.3): either
+ * the host's list (`server.openams_spoolman.materials`: an object whose
+ * `materials` array holds `{name, extruder_temp}`) or Spoolman's own (the
+ * `result` of `server.spoolman.proxy` GET /v1/material: an array of names).
+ * The names that fit whole in MMU_MATERIAL_NAME_LEN and are none of the
+ * common materials, without repeats (ASCII case ignored), at most
+ * MMU_MAX_MATERIALS of them, sorted case-insensitively; a host entry whose
+ * `extruder_temp` is null sets that material's bit in material_no_temp.
+ * Returns false for any other shape.
+ */
+bool status_map_apply_material_list(mmu_model_t *m, const cJSON *res);
+
+/**
  * Parse a `print_stats` object (from the subscribe result or a diff) and
  * store the `filename` field in @p m->print_filename.
  *

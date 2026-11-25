@@ -26,12 +26,26 @@ export interface ViewFieldOption {
   /** Only on a Spoolman spool option: its filament color as "#rrggbb", or null
    *  when the filament has none. Every other option has no `color` key. */
   color?: string | null;
+  /** Only on a material the host gives no temperature (C4 §9.3): the form's
+   *  temperature fields show while it is chosen. */
+  no_temp?: true;
+}
+
+/** When a field shows (view_show_t): only while the form's material field is
+ *  on "Other…" (`other`, MATERIAL_OTHER), or on "Other…" or a `no_temp`
+ *  material (`no_temp`). A field without one always shows. A renderer that
+ *  hides a field sends its empty value: '' for text, 0 for a number. */
+export interface ViewShowWhen {
+  field: 'material';
+  is: 'other' | 'no_temp';
 }
 
 export interface ViewField {
   id: string;
   label: string;
-  kind: 'number' | 'select' | 'toggle';
+  /** `text`: a short typed value (the spool editor's new material), which
+   *  only a renderer with text entry shows; its value is a string. */
+  kind: 'number' | 'select' | 'toggle' | 'text';
   value: number;
   min: number;
   max: number;
@@ -41,8 +55,16 @@ export interface ViewField {
   options?: ViewFieldOption[];
   /** The field asks something only the person knows (an unidentified bay's
    *  "Choose a material"), so a form that carries one has nothing to send
-   *  until it holds an answer. */
+   *  until it holds an answer (a text field: until it is not empty, while it
+   *  shows). */
   required: boolean;
+  /** Only on a `text` field: the longest value, in characters. */
+  max_len?: number;
+  /** A line under the field. */
+  note?: string;
+  /** A number that may be left empty: 0 is "not given". */
+  optional?: true;
+  show_when?: ViewShowWhen;
 }
 
 export interface ViewForm {
@@ -352,6 +374,7 @@ export type ObjectKind =
   | 'toolhead'
   | 'spool_list'         // a whole result (an array), not a diff
   | 'vendor_list'        // a whole result (an array), not a diff
+  | 'material_list'      // a whole result: the host's object or Spoolman's array (C4 §9.3)
   | 'metadata'           // a whole result, not a diff
   | 'action_result';     // not a status: the host's answer to an action the
                          // display sent ({kind, ok, message}), which goes

@@ -154,12 +154,12 @@ static void host_field(const char *line, const char *key, char *out, size_t n)
     host_rpc_string(line, rpc_key, out, n);
     if(out[0]) return;
     if(strcmp(key, "material") == 0) {
-        /* the RPC sends the name, the line the index into the model's table */
+        /* the RPC sends the name, the line the index into the model's list */
         int i = 0;
         char idx[16] = "";
 
         if(field_of(line, key, idx, sizeof idx)) i = atoi(idx);
-        if(i < MMU_MATERIAL_COUNT) snprintf(out, n, "%s", mmu_material_name(i));
+        if(i < mmu_edit_material_count(&g_mmu)) snprintf(out, n, "%s", mmu_edit_material_name(&g_mmu, i));
         return;
     }
     field_of(line, key, out, n);
@@ -411,6 +411,52 @@ static void test_material_keeps_the_vendor(void)
     expect_vendor(line, vendor);
     expect_host_field(line, "material", "PVA");
     expect_host_vendor(line, vendor);
+}
+
+/** Feed the host's materials list (C4 §9.3) to the model, as the core does
+ *  when the host answers `material list`. */
+static void materials_arrive(const char *json)
+{
+    cJSON *res = cJSON_Parse(json);
+
+    status_map_apply_material_list(&g_mmu, res);
+    cJSON_Delete(res);
+}
+
+/** Spoolman's materials follow the common ones on the stepper, and a list
+ *  that lands while the editor is open moves nothing: the material is kept by
+ *  name, as the vendor is. The device has no keyboard, so there is no
+ *  "Other…": the stepper wraps from the last material to the first. */
+static void test_spoolman_materials_on_the_stepper(void)
+{
+    static const char list[] = "{\"materials\":[{\"name\":\"PCTG\",\"extruder_temp\":null},"
+                               "{\"name\":\"Alpha\",\"extruder_temp\":250}]}";
+    const char *line;
+
+    /* 1. the list lands after the editor opened: one tap from PETG-CF is PVA */
+    check(open_edit(BAY), "the editor opens on A2");
+    materials_arrive(list);
+    line = step_and_save(view_str(VS_EDIT_MATERIAL), true, 1);
+    report_line(line);
+    check(line != NULL, "a material tap saves after the material list arrives");
+    expect_field(line, "material", "9");
+    expect_host_field(line, "material", "PVA");
+
+    /* 2. past PVA come Spoolman's, sorted: Alpha, then PCTG */
+    check(open_edit(BAY), "the editor opens again on A2");
+    materials_arrive(list);
+    line = step_and_save(view_str(VS_EDIT_MATERIAL), true, 3);
+    report_line(line);
+    expect_field(line, "material", "11");
+    expect_host_field(line, "material", "PCTG");
+
+    /* 3. one more is the first again: no "Other…" on this screen */
+    check(open_edit(BAY), "the editor opens a third time on A2");
+    materials_arrive(list);
+    line = step_and_save(view_str(VS_EDIT_MATERIAL), true, 4);
+    report_line(line);
+    expect_field(line, "material", "0");
+    expect_host_field(line, "material", "PLA");
 }
 
 /** The vendor stepper moves the vendor and nothing else. */
@@ -913,6 +959,7 @@ int main(void)
 
     mmu_model_init();
     test_material_keeps_the_vendor();
+    test_spoolman_materials_on_the_stepper();
     test_vendor_step_keeps_the_material();
     test_color_keeps_the_other_fields();
     test_reset_clears_only_this_bay();

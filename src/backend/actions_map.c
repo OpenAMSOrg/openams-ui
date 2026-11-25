@@ -989,12 +989,16 @@ static bool edit_milli(const char *text, long *out)
     return true;
 }
 
-/* `spool edit <slot> [material=<n>] [color=<rgb>] [vendor=<n>] [remaining=<g>]
- * [initial=<g>] [pa=<x>] [then load]` -> server.openams_spoolman.edit. The
- * selects' values are the form's own: material and vendor are indices into the
- * lists the edit form offers (mmu_material_name, mmu_edit_vendor_name; the
- * count itself is "the bay's own"), color is 0xRRGGBB as a decimal number or
- * -1 for "none", the weights are grams and pa is the pressure advance itself. A
+/* `spool edit <slot> [material=<n>] [custom=<type>] [nozzle=<C>] [bed=<C>]
+ * [color=<rgb>] [vendor=<n>] [remaining=<g>] [initial=<g>] [pa=<x>]
+ * [then load]` -> server.openams_spoolman.edit. The selects' values are the
+ * form's own: material and vendor are indices into the lists the edit form
+ * offers (mmu_edit_material_name, mmu_edit_vendor_name; the count itself is
+ * "the bay's own"), color is 0xRRGGBB as a decimal number or -1 for "none",
+ * the weights are grams and pa is the pressure advance itself. A material of
+ * MMU_MATERIAL_OTHER is the one typed into `custom` (mmu_material_text; "-" is
+ * an empty field), and nozzle and bed are the filament's temperatures, sent
+ * only to a host that takes them (C4 §9 `edit_temps`), 0 for "not given". A
  * key left out is a field left as it is, and so is one equal to what the form
  * starts from (mmu_edit_defaults): only a change is sent. A names-with-spaces
  * vendor never appears in the line, only its index, so the line has one shape
@@ -1009,15 +1013,18 @@ static bool edit_milli(const char *text, long *out)
 static int spool_edit(const char *args, const mmu_model_t *m, cJSON **params,
                       char *then_line, size_t tlen, const char **why)
 {
-    char id[MMU_SLOT_ID_LEN], key[16], val[24];
+    char id[MMU_SLOT_ID_LEN], key[16], val[24], custom[24] = "";
+    char typed[MMU_MATERIAL_NAME_LEN] = "";
     mmu_edit_defaults_t d;
     const mmu_slot_t *s;
     const char *p = args;
     size_t n = 0;
-    int unit, slot;
+    int unit, slot, materials;
     bool has[6] = { false };
+    bool has_custom = false, has_nozzle = false, has_bed = false;
     bool then_load = false;
     long material = 0, color = 0, vendor = 0, remaining = 0, initial = 0;
+    long nozzle = 0, bed = 0;
     long pa_milli = 0;
     long eff_remaining, eff_initial;
     int pa_x1000;
@@ -1041,6 +1048,13 @@ static int spool_edit(const char *args, const mmu_model_t *m, cJSON **params,
         else if(strcmp(key, "remaining") == 0) { ok = edit_int(val, &remaining); has[3] = ok; }
         else if(strcmp(key, "initial") == 0)   { ok = edit_int(val, &initial);   has[4] = ok; }
         else if(strcmp(key, "pa") == 0)        { ok = edit_milli(val, &pa_milli); has[5] = ok; }
+        else if(strcmp(key, "custom") == 0) {
+            ok = true;
+            has_custom = strcmp(val, "-") != 0;
+            snprintf(custom, sizeof custom, "%s", has_custom ? val : "");
+        }
+        else if(strcmp(key, "nozzle") == 0)    { ok = edit_int(val, &nozzle);    has_nozzle = ok; }
+        else if(strcmp(key, "bed") == 0)       { ok = edit_int(val, &bed);       has_bed = ok; }
         else return 0;
         if(!ok) return 0;
     }
@@ -1067,6 +1081,21 @@ static int spool_edit(const char *args, const mmu_model_t *m, cJSON **params,
 
     mmu_edit_defaults(m, unit, slot, &d);
     create = s->spool_id < 0;
+    materials = mmu_edit_material_count(m);
+
+    /* "Other…" is the type typed into its own field, which must be one */
+    if(has[0] && material == MMU_MATERIAL_OTHER && !mmu_material_text(custom, typed, sizeof typed)) {
+        *why = view_str(VS_REASON_MATERIAL_TYPE);
+        return -1;
+    }
+    /* a temperature is given or it is 0, and a host that takes none is sent
+     * none (the form does not ask it for any) */
+    if(!m->spoolman_edit_temps) has_nozzle = has_bed = false;
+    if((has_nozzle && nozzle != 0 && (nozzle < 150 || nozzle > 400)) ||
+       (has_bed && (bed < 0 || bed > 150))) {
+        *why = view_str(VS_REASON_EDIT_TEMP);
+        return -1;
+    }
 
     eff_remaining = has[3] ? remaining : d.remaining_g;
     eff_initial = has[4] ? initial : d.initial_g;
@@ -1084,8 +1113,8 @@ static int spool_edit(const char *args, const mmu_model_t *m, cJSON **params,
 
     /* an index one past the list is the bay's own, which is no change (and a
      * bay with none of its own has no such choice) */
-    if((has[0] && (material < 0 || material > MMU_MATERIAL_COUNT ||
-                   (material == MMU_MATERIAL_COUNT && !s->material[0]))) ||
+    if((has[0] && material != MMU_MATERIAL_OTHER &&
+        (material < 0 || material > materials || (material == materials && !s->material[0]))) ||
        (has[2] && (vendor < 0 || vendor > mmu_edit_vendor_count(m) ||
                    (vendor == mmu_edit_vendor_count(m) && !s->brand[0])))) {
         cJSON_Delete(o);
@@ -1093,13 +1122,20 @@ static int spool_edit(const char *args, const mmu_model_t *m, cJSON **params,
         return -1;
     }
 
-    /* a new spool needs its material, so it is always sent with one */
-    if(create || (has[0] && material != MMU_MATERIAL_COUNT && material != d.material)) {
+    /* a new spool needs its material, so it is always sent with one; a typed
+     * type is a change unless it is the bay's own */
+    if(has[0] && material == MMU_MATERIAL_OTHER) {
+        if(create || !mmu_text_ci_equal(typed, s->material))
+            cJSON_AddStringToObject(o, "material", typed);
+    }
+    else if(create || (has[0] && material != materials && material != d.material)) {
         long k = has[0] ? material : d.material;
-        const char *name = (k == MMU_MATERIAL_COUNT) ? s->material : mmu_material_name((int)k);
+        const char *name = (k == materials) ? s->material : mmu_edit_material_name(m, (int)k);
 
         cJSON_AddStringToObject(o, "material", name);
     }
+    if(has_nozzle && nozzle > 0) cJSON_AddNumberToObject(o, "extruder_temp", (double)nozzle);
+    if(has_bed && bed > 0) cJSON_AddNumberToObject(o, "bed_temp", (double)bed);
     if(has[1] && color >= 0 && color != d.color) {
         char hex[8];
 
@@ -1195,6 +1231,24 @@ int actions_rpc_then(const char *line, const mmu_model_t *m,
         return 1;
     }
 
+    /* `material list` → the materials Spoolman holds, for the spool editor
+     * (C4 §9.3): the host's list with its temperatures when it serves one,
+     * else Spoolman's own names (server.spoolman.proxy GET /v1/material) */
+    if(strcmp(line, "material list") == 0) {
+        cJSON *p = cJSON_CreateObject();
+        if(!p) return 0;
+        if(m->spoolman_materials) {
+            snprintf(method, mlen, "server.openams_spoolman.materials");
+        }
+        else {
+            cJSON_AddStringToObject(p, "request_method", "GET");
+            cJSON_AddStringToObject(p, "path", "/v1/material");
+            snprintf(method, mlen, "server.spoolman.proxy");
+        }
+        *params = p;
+        return 1;
+    }
+
     /* `spool edit <slot> ...` → server.openams_spoolman.edit */
     arg = rest(line, "spool edit");
     if(arg) {
@@ -1247,12 +1301,15 @@ int actions_rpc_tag(const char *method, const cJSON *params)
 {
     if(!method) return ACTIONS_RPC_NONE;
     if(strcmp(method, "server.openams_spoolman.edit") == 0) return ACTIONS_RPC_EDIT;
+    if(strcmp(method, "server.openams_spoolman.materials") == 0) return ACTIONS_RPC_MATERIAL_LIST;
     if(strcmp(method, "server.files.metadata") == 0) return ACTIONS_RPC_METADATA;
     if(strcmp(method, "server.spoolman.proxy") == 0) {
         const cJSON *path = cJSON_GetObjectItemCaseSensitive(params, "path");
 
         if(cJSON_IsString(path) && strcmp(path->valuestring, "/v1/vendor") == 0)
             return ACTIONS_RPC_VENDOR_LIST;
+        if(cJSON_IsString(path) && strcmp(path->valuestring, "/v1/material") == 0)
+            return ACTIONS_RPC_MATERIAL_LIST;
         return ACTIONS_RPC_SPOOL_LIST;
     }
     return ACTIONS_RPC_NONE;

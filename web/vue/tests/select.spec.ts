@@ -134,13 +134,15 @@ test.describe('a select field', () => {
         await expect(activeOption(list)).toHaveAttribute('data-index', '3');
         await page.keyboard.press('ArrowDown');
         await expect(activeOption(list)).toHaveAttribute('data-index', '4');
+        // The last is "Other…", after the ten common materials and the gallery
+        // host's two from Spoolman.
         await page.keyboard.press('End');
-        await expect(activeOption(list)).toHaveAttribute('data-index', '9');
+        await expect(activeOption(list)).toHaveAttribute('data-index', '12');
         await page.keyboard.press('Home');
         await expect(activeOption(list)).toHaveAttribute('data-index', '0');
         // And wraps, as the control it replaces does.
         await page.keyboard.press('ArrowUp');
-        await expect(activeOption(list)).toHaveAttribute('data-index', '9');
+        await expect(activeOption(list)).toHaveAttribute('data-index', '12');
     });
 
     test('Enter and Space choose, and the field says what it now holds', async ({ page }) => {

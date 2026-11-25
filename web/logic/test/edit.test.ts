@@ -93,9 +93,12 @@ test("the form starts from the bay's own facts, in both cores", async () => {
   const p = await setup();
   for (const core of [p.c, p.ts]) {
     const f = Object.fromEntries(editOf(core, 0).form!.fields.map((x) => [x.id, x]));
-    assert.deepEqual(Object.keys(f), ['material', 'color', 'vendor', 'remaining', 'initial', 'pa']);
-    // PETG is index 1 of the ten
-    assert.equal(f.material.options!.length, 10);
+    // a host that takes no temperatures: the typed material (for "Other…") and
+    // no temperature fields
+    assert.deepEqual(Object.keys(f), ['material', 'custom', 'color', 'vendor', 'remaining', 'initial', 'pa']);
+    // PETG is index 1 of the ten, and "Other…" ends the list
+    assert.equal(f.material.options!.length, 11);
+    assert.deepEqual(f.material.options![10], { value: -2, label: 'Other…' });
     assert.equal(f.material.value, 1);
     // 0A2989 is the palette's blue, so no color of its own is added
     assert.equal(f.color.value, 0x0a2989);
@@ -122,8 +125,9 @@ test("a material, vendor or color that is not on the list is one more choice, in
   const p = await setup();
   for (const core of [p.c, p.ts]) {
     const f = Object.fromEntries(editOf(core, 3).form!.fields.map((x) => [x.id, x]));
-    assert.equal(f.material.options!.length, 11);
+    assert.equal(f.material.options!.length, 12);
     assert.equal(f.material.options![10].label, 'Nylon X');
+    assert.equal(f.material.options![11].label, 'Other…');
     assert.equal(f.material.value, 10);
     assert.equal(f.color.options!.length, 19);
     assert.deepEqual(f.color.options![18], { value: 0x123456, label: '#123456' });
@@ -295,7 +299,7 @@ test('the vendor list is applied whole, sorted, without repeats or names that do
       { id: 1, name: 'zeta' }, { id: 2, name: 'Alpha' }, { id: 3, name: 'alpha' }, { id: 4, name: 'x'.repeat(32) },
       { id: 5 }, { id: 6, name: 'y'.repeat(31) }, { id: 7, name: '' }, 'nope',
     ]);
-    const names = editOf(core, 0).form!.fields[2].options!.map((o) => o.label);
+    const names = editOf(core, 0).form!.fields.find((f) => f.id === 'vendor')!.options!.map((o) => o.label);
     // the host's three, sorted, then the curated brands it does not already
     // name, with "Generic" moved to the front
     assert.deepEqual(names, [

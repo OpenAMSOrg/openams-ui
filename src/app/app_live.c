@@ -123,8 +123,9 @@ static void poll_metadata(void)
     actions_log("job metadata %s", g_mmu.print_filename);
 }
 
-/* The spool editor's vendor choice is Spoolman's own list: ask for it once the
- * host says it can edit (and again after a reconnect, which forgets both). */
+/* The spool editor's vendor and material choices are Spoolman's own lists
+ * (C4 §9.3 for the materials): ask for them once the host says it can edit
+ * (and again after a reconnect, which forgets both). */
 static void poll_vendors(void)
 {
     if(!g_mmu.spoolman_edit) {
@@ -134,11 +135,13 @@ static void poll_vendors(void)
     if(s_vendors_asked) return;
     s_vendors_asked = true;
     actions_log("vendor list");
+    actions_log("material list");
 }
 
 /* The host's answer to a spool edit: a refusal is said once, in its own words
- * after the display's lead; a taken edit asks for the vendors again, since the
- * host may have added one (Generic, on the first spool of a bay). */
+ * after the display's lead; a taken edit asks for the vendors and materials
+ * again, since the host may have added one (Generic, on the first spool of a
+ * bay; a type typed on the web panel). */
 static void poll_edit_result(void)
 {
     char text[320];

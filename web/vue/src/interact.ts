@@ -6,7 +6,7 @@
 // A renderer decides nothing here: the runner it is given is the panel's, which
 // asks the logic and emits the result.
 import Vue from 'vue';
-import type { ActionResult, Tone, View, ViewAction, ViewForm } from '@logic';
+import type { ActionResult, Tone, View, ViewAction, ViewField, ViewForm } from '@logic';
 
 /** The form values `logic.action(line, form)` takes, by field id. */
 export type FormValues = Record<string, string | number | boolean>;
@@ -46,11 +46,41 @@ export type Refusal = 'edit' | 'action';
 
 /** A form's opening values, taken from the core's own defaults. A value keeps
  *  the kind its field declares, so a select's value is still a number when it
- *  goes back to the logic. */
+ *  goes back to the logic; a text field opens empty. */
 export function defaults(form: ViewForm): FormValues {
     const values: FormValues = {};
-    for (const field of form.fields) values[field.id] = field.kind === 'toggle' ? !!field.value : field.value;
+    for (const field of form.fields) {
+        values[field.id] = field.kind === 'toggle' ? !!field.value : field.kind === 'text' ? '' : field.value;
+    }
     return values;
+}
+
+/** The material choice "Other…" (MATERIAL_OTHER in the logic). */
+const MATERIAL_OTHER = -2;
+
+/** Whether a field shows with the form's values as they stand (show_when, the
+ *  core's own rule): the spool editor's typed material while its material is
+ *  on "Other…", its temperatures while it is on "Other…" or on a material the
+ *  host gives no temperature. Every other field always shows. */
+export function shown(form: ViewForm, field: ViewField, values: FormValues): boolean {
+    const when = field.show_when;
+    if (!when) return true;
+    const value = Number(values[when.field]);
+    if (value === MATERIAL_OTHER) return true;
+    if (when.is !== 'no_temp') return false;
+    const select = form.fields.find((f) => f.id === when.field);
+    return !!select?.options?.some((o) => o.value === value && o.no_temp);
+}
+
+/** The values a form sends: a field that does not show is sent empty ('' for
+ *  text, 0 for a number), as the core expects of a hidden field. */
+export function sent(form: ViewForm, values: FormValues): FormValues {
+    const out: FormValues = { ...values };
+    for (const field of form.fields) {
+        if (shown(form, field, values)) continue;
+        out[field.id] = field.kind === 'text' ? '' : field.kind === 'toggle' ? false : 0;
+    }
+    return out;
 }
 
 /** What a form's own submit button says, and whether it stays dead until a
@@ -68,10 +98,13 @@ export function formExtras(form: ViewForm | null | undefined): FormExtras {
     return (form ?? {}) as ViewForm & FormExtras;
 }
 
-/** True once a field holds something other than what it opened with. */
+/** True once a field holds something other than what it opened with. A field
+ *  that does not show counts as empty: switching back off "Other…" undoes
+ *  what was typed there. */
 export function changed(form: ViewForm, values: FormValues): boolean {
     const start = defaults(form);
-    return Object.keys(start).some((id) => values[id] !== start[id]);
+    const now = sent(form, values);
+    return Object.keys(start).some((id) => now[id] !== start[id]);
 }
 
 /** Resolves an action line; the panel's own, so the logic stays the only
@@ -176,7 +209,8 @@ export class Interactivity {
         const dialog = this.state.dialog;
         if (!dialog) return;
         this.state.dialog = null;
-        this.run(dialog.action, dialog.mode === 'form' ? dialog.values : null);
+        const form = dialog.action.form;
+        this.run(dialog.action, dialog.mode === 'form' && form ? sent(form, dialog.values) : null);
     }
 
     /** Cancel, or Escape: nothing is sent. */

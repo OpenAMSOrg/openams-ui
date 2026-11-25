@@ -29,6 +29,11 @@ export const GROUP_CHOICE_NEW = -2;
 export const MAX_SPOOLS = 16;
 export const MAX_VENDORS = 64;   // MMU_MAX_VENDORS: Spoolman's own plus the curated brands
 const VENDOR_LEN = 32;
+/** The materials Spoolman holds that the edit form offers beside its common
+ *  ones (MMU_MAX_MATERIALS, C4 §9.3), each whole in MATERIAL_NAME_LEN - 1
+ *  bytes: 16 characters, what the host keeps of a bay's material. */
+export const MAX_MATERIALS = 16;
+const MATERIAL_NAME_LEN = 17;
 export const MAX_TOOLS = 24;    // MMU_MAX_TOOLS: T0..T23
 export const MAX_TOOLHEADS = 4;
 /** The alert queue between a mapping call and the history (one apply). */
@@ -354,6 +359,14 @@ export interface Model {
   cmdAbandon: string;
   /** Spoolman's vendor names, as listed (sorted), each whole. */
   vendors: string[];
+  /** The edit takes a filament's temperatures (`edit_temps` in the component's status, C4 §9). */
+  spoolmanEditTemps: boolean;
+  /** The host lists Spoolman's materials (`materials`, C4 §9.3). */
+  spoolmanMaterials: boolean;
+  /** The materials Spoolman holds beyond the common ones, sorted, each whole. */
+  materials: string[];
+  /** materialNoTemp[i]: the host gives materials[i] no temperature, so the form asks for one. */
+  materialNoTemp: boolean[];
 
   /** The display's own unit: the C mirrors this unit's toolhead into legacy
    *  globals (loaded, busy, busyUnit) that the bare `stop` line still reads. */
@@ -420,7 +433,8 @@ function settingsDefaults(): Settings {
 export function newModel(): Model {
   return {
     units: [], toolheads: [], groups: [], spools: [], settings: settingsDefaults(),
-    spoolmanOnline: false, spoolmanEdit: false, spoolmanStop: false, cmdRetry: '', cmdAbandon: '', vendors: [], thisUnit: 0, loaded: false,
+    spoolmanOnline: false, spoolmanEdit: false, spoolmanStop: false, cmdRetry: '', cmdAbandon: '', vendors: [],
+    spoolmanEditTemps: false, spoolmanMaterials: false, materials: [], materialNoTemp: [], thisUnit: 0, loaded: false,
     editRefusal: '', editSeq: 0,
     actionRefusal: '', actionRefusalKind: ActionKind.OTHER, actionSeq: 0,
     actionPendingKind: ActionKind.OTHER, actionPendingSeq: 0, actionStartedKind: ActionKind.OTHER,
@@ -1327,6 +1341,10 @@ export function applyComponentStatus(m: Model, obj: unknown): boolean {
   m.spoolmanEdit = obj.edit === true;
   // likewise a component with no sequence stop sends no `stop`: the display keeps the cancel G-code
   m.spoolmanStop = obj.stop === true;
+  // the filament temperatures and the materials list (C4 §9, §9.3): a component
+  // that predates them sends neither
+  m.spoolmanEditTemps = obj.edit_temps === true;
+  m.spoolmanMaterials = obj.materials === true;
 
   for (const [key, bay] of Object.entries(bays)) {
     if (!isObject(bay)) continue;
@@ -1638,9 +1656,75 @@ export function applyVendorList(m: Model, arr: unknown): boolean {
 const ciEqual = (a: string, b: string): boolean =>
   a.replace(/[A-Z]/g, (c) => c.toLowerCase()) === b.replace(/[A-Z]/g, (c) => c.toLowerCase());
 
-/** The common materials the edit form offers, in order. A spool's own
- *  material, when it is none of these, is one more choice (index MATERIALS.length). */
+/** The common materials the edit form offers, in order (mmu_material_name). */
 export const MATERIALS = ['PLA', 'PETG', 'ABS', 'ASA', 'TPU', 'PA', 'PC', 'PLA-CF', 'PETG-CF', 'PVA'];
+
+/** The materials the edit form offers: the common ones, then the ones Spoolman
+ *  holds beyond them (Model.materials). A bay's own material, when it is none
+ *  of these, is one more choice (index editMaterialCount). */
+export const editMaterialCount = (m: Model): number => MATERIALS.length + m.materials.length;
+
+export const editMaterialName = (m: Model, i: number): string =>
+  i >= 0 && i < MATERIALS.length ? MATERIALS[i]
+    : i >= MATERIALS.length && i < editMaterialCount(m) ? m.materials[i - MATERIALS.length] : '';
+
+/** The host gives material i of the form no temperature (C4 §9.3): the form
+ *  asks for one. A common material always has one. */
+export const editMaterialNeedsTemp = (m: Model, i: number): boolean =>
+  i >= MATERIALS.length && i < editMaterialCount(m) && m.materialNoTemp[i - MATERIALS.length] === true;
+
+/** The material choice "Other…" (MMU_MATERIAL_OTHER): a type typed into the
+ *  form's own text field (`custom`), which only a renderer with text entry offers. */
+export const MATERIAL_OTHER = -2;
+/** The longest type that can be typed (MMU_MATERIAL_TEXT_MAX). */
+export const MATERIAL_TEXT_MAX = MATERIAL_NAME_LEN - 1;
+
+/** A typed type as the edit sends it (mmu_material_text): 1 to
+ *  MATERIAL_TEXT_MAX ASCII letters, digits and "-+._/", trimmed of spaces,
+ *  upper-cased; null for anything else. */
+export function materialText(text: string): string | null {
+  const t = text.replace(/^ +| +$/g, '');
+  if (t.length === 0 || t.length > MATERIAL_TEXT_MAX) return null;
+  if (!/^[A-Za-z0-9\-+._/]+$/.test(t)) return null;
+  return t.replace(/[a-z]/g, (c) => c.toUpperCase());
+}
+
+/** ASCII case-insensitive equality (mmu_text_ci_equal). */
+export const textCiEqual = (a: string, b: string): boolean => ciEqual(a, b);
+
+/** The materials Spoolman holds (C4 §9.3), a whole result: the host's
+ *  `{materials: [{name, extruder_temp}]}` or Spoolman's own array of names
+ *  (server.spoolman.proxy GET /v1/material). The names that fit whole and are
+ *  none of the common materials, without repeats (ASCII case ignored), at most
+ *  MAX_MATERIALS of them, sorted case-insensitively; a host entry whose
+ *  `extruder_temp` is null needs a temperature from the form
+ *  (status_map_apply_material_list). */
+export function applyMaterialList(m: Model, res: unknown): boolean {
+  const arr = isObject(res) ? res.materials : res;
+  if (!Array.isArray(arr)) return false;
+  const list: { name: string; noTemp: boolean }[] = [];
+  for (const e of arr) {
+    let name: string | null = null;
+    let noTemp = false;
+    if (typeof e === 'string') name = e;
+    else if (isObject(e)) {
+      name = jstring(e, 'name');
+      noTemp = e.extruder_temp === null;
+    }
+    if (name === null || name.length === 0 || new TextEncoder().encode(name).length >= MATERIAL_NAME_LEN) continue;
+    const fit = name;
+    if (MATERIALS.some((c) => vendorCmp(c, fit) === 0)) continue;
+    if (list.some((x) => vendorCmp(x.name, fit) === 0)) continue;
+    if (list.length >= MAX_MATERIALS) break;
+    list.push({ name: fit, noTemp });
+  }
+  // stable, as the C's insertion sort
+  list.sort((a, b) => vendorCmp(a.name, b.name));
+  m.materials = list.map((x) => x.name);
+  m.materialNoTemp = list.map((x) => x.noTemp);
+  refreshThis(m);
+  return true;
+}
 
 /** How many vendors the edit form offers: Spoolman's list, plus "Generic" when
  *  it does not hold it. A bay's own vendor, when it is none of these, is one
@@ -1654,7 +1738,7 @@ export const editVendorName = (m: Model, i: number): string =>
 /** What the edit form starts from for a bay (mmu_edit_defaults in C): its own
  *  facts where the model has them, else a default. */
 export interface EditDefaults {
-  material: number;   // index of MATERIALS, or MATERIALS.length: the bay's own
+  material: number;   // index of editMaterialName, or editMaterialCount: the bay's own
   color: number;      // 0xRRGGBB, -1 = no known color
   vendor: number;     // index of editVendorName, or editVendorCount: the bay's own
   remainingG: number;
@@ -1667,9 +1751,10 @@ export function editDefaults(m: Model, unitIdx: number, slotIdx: number): EditDe
   const s = m.units[unitIdx]?.slots[slotIdx];
   if (!s) return d;
 
-  d.material = s.material ? MATERIALS.length : 0;
-  for (let i = 0; i < MATERIALS.length; i++) {
-    if (ciEqual(s.material, MATERIALS[i])) {
+  const nm = editMaterialCount(m);
+  d.material = s.material ? nm : 0;
+  for (let i = 0; i < nm; i++) {
+    if (ciEqual(s.material, editMaterialName(m, i))) {
       d.material = i;
       break;
     }

@@ -245,7 +245,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit full11 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit full11 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	true,
 									"reason":	"",
 									"style":	"normal",
@@ -292,7 +292,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -523,7 +542,7 @@
 							"actions":	[{
 									"id":	"load",
 									"label":	"Load",
-									"line":	"spool edit full12 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
+									"line":	"spool edit full12 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load",
 									"enabled":	true,
 									"reason":	"",
 									"style":	"normal",
@@ -573,7 +592,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -703,7 +741,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit full12 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit full12 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	true,
 									"reason":	"",
 									"style":	"normal",
@@ -750,7 +788,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -1003,7 +1060,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit full13 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit full13 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"No spool is inserted",
 									"style":	"normal",
@@ -1050,7 +1107,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -1303,7 +1379,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit full14 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit full14 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"No spool is inserted",
 									"style":	"normal",
@@ -1350,7 +1426,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",

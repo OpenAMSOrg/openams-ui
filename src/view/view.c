@@ -226,6 +226,7 @@ static view_field_t *form_field(view_actions_t *o, view_action_t *a)
 }
 
 static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_actions_t *out);
+static void fault_actions_add(const mmu_model_t *m, const mmu_toolhead_t *th, view_actions_t *out);
 static const char *stage_label(const char *name);
 
 /* ------------------------------------------------------- failed toolchanges */
@@ -718,6 +719,7 @@ static bool add_option(view_actions_t *o, view_field_t *f, int32_t value, const 
     op->has_color_field = false;
     op->color_known = false;
     op->color = 0;
+    op->no_temp = false;
     f->option_count++;
     return true;
 }
@@ -732,6 +734,21 @@ static view_field_t *select_field(view_actions_t *o, view_action_t *a, const cha
     f->label = view_str(label);
     f->kind = VIEW_FIELD_SELECT;
     f->option_first = o->option_count;
+    return f;
+}
+
+/* A short typed value (the editor's new material): only a renderer with text
+ * entry shows it, and it starts empty. */
+static view_field_t *text_field(view_actions_t *o, view_action_t *a, const char *id,
+                                view_str_id_t label, int max_len)
+{
+    view_field_t *f = form_field(o, a);
+
+    if(!f) return NULL;
+    vs_copy(id, f->id, sizeof(f->id));
+    f->label = view_str(label);
+    f->kind = VIEW_FIELD_TEXT;
+    f->max_len = (uint8_t)max_len;
     return f;
 }
 
@@ -756,13 +773,29 @@ static view_field_t *number_field(view_actions_t *o, view_action_t *a, const cha
 /* The edit line with every field at what the form starts from: the predicate's
  * dry run of the action (it never reads as a change, see actions_check()).
  * @p choose_material starts the material on the "choose this" choice, which the
- * line spells -1 and the mapper refuses until it has been answered. */
-static void edit_resolved_line(char *out, size_t n, const char *slot_id,
+ * line spells -1 and the mapper refuses until it has been answered. The typed
+ * material is empty ("-"), and the temperatures, on a host that takes them,
+ * are not given (0). */
+static void edit_resolved_line(char *out, size_t n, const mmu_model_t *m, const char *slot_id,
                                const mmu_edit_defaults_t *d, bool choose_material)
 {
-    snprintf(out, n, "spool edit %s material=%d color=%d vendor=%d remaining=%d initial=%d pa=%d.%03d",
-             slot_id, choose_material ? -1 : d->material, (int)d->color, d->vendor,
+    snprintf(out, n, "spool edit %s material=%d custom=-%s color=%d vendor=%d remaining=%d initial=%d pa=%d.%03d",
+             slot_id, choose_material ? -1 : d->material,
+             m->spoolman_edit_temps ? " nozzle=0 bed=0" : "", (int)d->color, d->vendor,
              d->remaining_g, d->initial_g, d->pa_x1000 / 1000, d->pa_x1000 % 1000);
+}
+
+/* The edit line with its placeholders, for an action to carry: the
+ * temperatures only on a host that takes them (C4 §9 `edit_temps`), and
+ * " then load" after it for the unidentified bay's Load. */
+static void edit_line(char *out, size_t n, const mmu_model_t *m, const char *slot_id,
+                      bool then_load)
+{
+    snprintf(out, n,
+             "spool edit %s material={material} custom={custom}%s color={color} vendor={vendor} "
+             "remaining={remaining} initial={initial} pa={pa}%s",
+             slot_id, m->spoolman_edit_temps ? " nozzle={nozzle} bed={bed}" : "",
+             then_load ? " then load" : "");
 }
 
 /* The spool editor's fields: material, color, vendor, both weights and the
@@ -773,7 +806,14 @@ static void edit_resolved_line(char *out, size_t n, const char *slot_id,
  *
  * @p choose_material puts the one choice only the user can make at the head of
  * the material list: the line spells it -1, and the mapper refuses that until
- * the field has been answered. */
+ * the field has been answered.
+ *
+ * The materials are the common ones, then the ones Spoolman holds (C4 §9.3,
+ * each marked no_temp when the host gives it no temperature), then the bay's
+ * own, then "Other…": a type typed into the text field below it, which only a
+ * renderer with text entry shows (it leaves "Other…" out otherwise). On a host
+ * that takes them, the temperature fields show while "Other…" or a no_temp
+ * material is chosen; both may stay empty (0). */
 static void add_edit_fields(view_actions_t *out, view_action_t *a, const mmu_model_t *m,
                             const mmu_slot_t *s, const mmu_edit_defaults_t *d,
                             bool choose_material)
@@ -784,11 +824,40 @@ static void add_edit_fields(view_actions_t *out, view_action_t *a, const mmu_mod
 
     f = select_field(out, a, "material", VS_EDIT_MATERIAL);
     if(f) {
+        n = mmu_edit_material_count(m);
         if(choose_material) add_option(out, f, -1, view_str(VS_MATERIAL_CHOOSE));
-        for(i = 0; i < MMU_MATERIAL_COUNT; i++) add_option(out, f, i, mmu_material_name(i));
-        if(d->material == MMU_MATERIAL_COUNT) add_option(out, f, MMU_MATERIAL_COUNT, s->material);
+        for(i = 0; i < n; i++) {
+            if(add_option(out, f, i, mmu_edit_material_name(m, i)) &&
+               mmu_edit_material_needs_temp(m, i))
+                out->options[out->option_count - 1].no_temp = true;
+        }
+        if(d->material == n) add_option(out, f, n, s->material);
+        add_option(out, f, MMU_MATERIAL_OTHER, view_str(VS_MATERIAL_OTHER));
         f->value = choose_material ? -1.0 : (double)d->material;
         f->required = choose_material;
+    }
+
+    f = text_field(out, a, "custom", VS_FIELD_MATERIAL_TEXT_LABEL, MMU_MATERIAL_TEXT_MAX);
+    if(f) {
+        f->note = view_str(VS_FIELD_MATERIAL_TEXT_NOTE);
+        f->show_when = VIEW_SHOW_OTHER;
+        f->required = true;
+    }
+
+    if(m->spoolman_edit_temps) {
+        f = number_field(out, a, "nozzle", VS_FIELD_NOZZLE_TEMP_LABEL, 0.0, 150.0, 400.0, 1.0,
+                         view_str(VS_FIELD_TARGET_UNIT));
+        if(f) {
+            f->note = view_str(VS_FIELD_TEMP_NOTE);
+            f->show_when = VIEW_SHOW_NO_TEMP;
+            f->optional = true;
+        }
+        f = number_field(out, a, "bed", VS_FIELD_BED_TEMP_LABEL, 0.0, 0.0, 150.0, 1.0,
+                         view_str(VS_FIELD_TARGET_UNIT));
+        if(f) {
+            f->show_when = VIEW_SHOW_NO_TEMP;
+            f->optional = true;
+        }
     }
 
     f = select_field(out, a, "color", VS_EDIT_COLOR);
@@ -835,15 +904,13 @@ static void add_edit_action(view_actions_t *out, const mmu_model_t *m, int unit_
     view_action_t *a;
 
     mmu_edit_defaults(m, unit_idx, bay, &d);
-    snprintf(line, sizeof line,
-             "spool edit %s material={material} color={color} vendor={vendor} "
-             "remaining={remaining} initial={initial} pa={pa}", slot_id);
+    edit_line(line, sizeof line, m, slot_id, false);
     a = act_add(out, "edit_spool", VS_ACTION_EDIT_SPOOL, line, VIEW_STYLE_NORMAL);
     if(!a) return;
 
     add_edit_fields(out, a, m, s, &d, false);
 
-    edit_resolved_line(resolved, sizeof resolved, slot_id, &d, false);
+    edit_resolved_line(resolved, sizeof resolved, m, slot_id, &d, false);
     action_check(a, resolved, m);
     /* The one form with a submit button: the row that sends it says "Save
      * edit" (the action it is here for is "Edit spool"), and a submission
@@ -868,9 +935,7 @@ static void add_save_and_load_action(view_actions_t *out, const mmu_model_t *m, 
     size_t n;
 
     mmu_edit_defaults(m, unit_idx, bay, &d);
-    snprintf(line, sizeof line,
-             "spool edit %s material={material} color={color} vendor={vendor} "
-             "remaining={remaining} initial={initial} pa={pa} then load", slot_id);
+    edit_line(line, sizeof line, m, slot_id, true);
     a = act_add(out, "load", VS_ACTION_LOAD, line, VIEW_STYLE_NORMAL);
     if(!a) return;
 
@@ -882,7 +947,7 @@ static void add_save_and_load_action(view_actions_t *out, const mmu_model_t *m, 
      * and dimming the row for it would hide the dialog that asks. So the dry
      * run is the editor's, with a material that is an answer. */
     d.material = d.material == 0 ? 1 : 0;
-    edit_resolved_line(resolved, sizeof resolved, slot_id, &d, false);
+    edit_resolved_line(resolved, sizeof resolved, m, slot_id, &d, false);
     n = strlen(resolved);
     snprintf(resolved + n, sizeof resolved - n, " then load");
     action_check(a, resolved, m);
@@ -1023,7 +1088,7 @@ const char *view_tile_edit_reason(const mmu_model_t *m, int unit_idx, int bay)
     /* a bay nobody has identified is saved with a material of the user's
      * choosing, never "no changes" */
     if(bay_is_unknown(m, unit_idx, bay)) d.material = d.material == 0 ? 1 : 0;
-    edit_resolved_line(resolved, sizeof resolved, slot_id, &d, false);
+    edit_resolved_line(resolved, sizeof resolved, m, slot_id, &d, false);
     return actions_check(resolved, m, &why) ? NULL : why;
 }
 
@@ -1147,14 +1212,13 @@ bool view_tile_actions(const mmu_model_t *m, int unit_idx, int bay, view_actions
         const mmu_toolhead_t *th = &m->toolheads[u->toolhead];
 
         if(th->has_error && th->error_unit == unit_idx && th->error_slot == bay) {
-            view_actions_t fa;
-            int i;
+            /* appended straight into this list: a second view_actions_t in
+             * this frame would be most of the device's LVGL task stack, and
+             * most of the wasm core's */
+            int first = (int)out->count, i;
 
-            fault_actions(m, th, &fa);
-            for(i = 0; i < (int)fa.count && out->count < VIEW_ACTIONS_MAX; i++) {
-                out->items[out->count] = fa.items[i];
-                out->items[out->count++].target = VIEW_TARGET_TAG;
-            }
+            fault_actions_add(m, th, out);
+            for(i = first; i < (int)out->count; i++) out->items[i].target = VIEW_TARGET_TAG;
         }
     }
 
@@ -1775,10 +1839,16 @@ static bool toolhead_scope_clear(const mmu_model_t *m, int th_idx, const mmu_too
  * failed toolchange's own Retry while it has one (tc_retry_stands()). */
 static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_actions_t *out)
 {
+    memset(out, 0, sizeof(*out));
+    fault_actions_add(m, th, out);
+}
+
+/* fault_actions() after what @p out already holds (a tile's own list). */
+static void fault_actions_add(const mmu_model_t *m, const mmu_toolhead_t *th, view_actions_t *out)
+{
     bool cleared = false;
     int i;
 
-    memset(out, 0, sizeof(*out));
     for(i = 0; i < (int)th->error_act_count; i++) {
         const char *tok = th->error_act[i];
 
@@ -1811,8 +1881,9 @@ static void fault_actions(const mmu_model_t *m, const mmu_toolhead_t *th, view_a
     }
 }
 
-/* One lane fault as an alert item, with the actions its tokens offer. */
-static void fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_alert_t *a)
+/* One lane fault as an alert item, with the actions its tokens offer (in a
+ * frame of its own: its view_actions_t). */
+static VIEW_OWN_FRAME void fault_item(const mmu_model_t *m, const mmu_toolhead_t *th, view_alert_t *a)
 {
     view_actions_t acts;
     int i;

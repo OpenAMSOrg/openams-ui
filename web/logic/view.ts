@@ -10,7 +10,8 @@
 import { cjsonNumber, cut, f32, fmtFixed } from './cstr.ts';
 import { actionsCheck, dryReason, mayRotate } from './actions.ts';
 import {
-  Busy, DryState, InfoSource, CalState, SlotState, Sev, TagRead, TagReason, Variant, MAX_TOOLS, MATERIALS, editDefaults,
+  Busy, DryState, InfoSource, CalState, SlotState, Sev, TagRead, TagReason, Variant, MAX_TOOLS, editDefaults,
+  editMaterialCount, editMaterialName, editMaterialNeedsTemp, MATERIAL_OTHER, MATERIAL_TEXT_MAX,
   editVendorCount, editVendorName, GROUP_CHOICE_NEW, GROUP_CHOICE_NONE, groupEditReason, groupNextSpare,
   groupOnUnitLane, laneIdOk, slotGroup, slotId, toolShortfall, alertBadgeExpired,
 } from './model.ts';
@@ -54,7 +55,7 @@ const SPOOL_NAME = 64;        // the {spool} of a low-filament sentence
 const RUNOUT_TARGET = LABEL * 3;
 const SETTING_KEY = 32;
 const ACTION_ID = 20;
-const ACTION_LINE = 168;
+const ACTION_LINE = 208;      // VIEW_ACTION_LINE_LEN: the longest edit line and a slot id
 const OPTION_LABEL = 72;
 const TAG_READ_TEXT = 256;    // VIEW_TAG_READ_TEXT_LEN: "This tag is also in slot {slot}. Load this spool ..."
 const TAG_MATERIAL = 16;      // VIEW_TAG_MATERIAL_LEN (MMU_TAG_MATERIAL_LEN)
@@ -557,21 +558,30 @@ const fnum = (x: number): number => cjsonNumber(x);
  *
  *  `chooseMaterial` puts the one choice only the user can make at the head of
  *  the material list: the line spells it -1, the mapper refuses that until the
- *  field has been answered, and the field says so. */
+ *  field has been answered, and the field says so.
+ *
+ *  The materials are the common ones, then the ones Spoolman holds (C4 §9.3,
+ *  each marked no_temp when the host gives it no temperature), then the bay's
+ *  own, then "Other…": a type typed into the text field below it, which only a
+ *  renderer with text entry shows (it leaves "Other…" out otherwise). On a
+ *  host that takes them, the temperature fields show while "Other…" or a
+ *  no_temp material is chosen; both may stay empty (0). */
 function editFields(m: Model, unitIdx: number, bay: number, chooseMaterial: boolean): ViewField[] {
   const s = m.units[unitIdx].slots[bay];
   const d = editDefaults(m, unitIdx, bay);
   const fields: ViewField[] = [];
   const pool: number[] = [];   // the options taken so far: the shared pool's size
+  type Opt = { value: number; label: string; no_temp?: true };
   const select = (
     fid: string, label: string, value: number, required: boolean,
-    options: { value: number; label: string }[],
+    options: Opt[],
   ): void => {
-    const kept: { value: number; label: string }[] = [];
+    const kept: Opt[] = [];
     for (const o of options) {
       if (pool.length >= MAX_OPTIONS) break;
       pool.push(o.value);
-      kept.push({ value: o.value, label: cut(o.label, OPTION_LABEL) });
+      kept.push(o.no_temp ? { value: o.value, label: cut(o.label, OPTION_LABEL), no_temp: true }
+        : { value: o.value, label: cut(o.label, OPTION_LABEL) });
     }
     fields.push({
       id: fid, label, kind: 'select', value: fnum(value), min: 0, max: 0, step: 0, unit: '',
@@ -585,11 +595,34 @@ function editFields(m: Model, unitIdx: number, bay: number, chooseMaterial: bool
     });
   };
 
+  const nm = editMaterialCount(m);
   select('material', str('EDIT_MATERIAL'), chooseMaterial ? -1 : d.material, chooseMaterial, [
     ...(chooseMaterial ? [{ value: -1, label: str('MATERIAL_CHOOSE') }] : []),
-    ...MATERIALS.map((name, i) => ({ value: i, label: name })),
-    ...(d.material === MATERIALS.length ? [{ value: MATERIALS.length, label: s.material }] : []),
+    ...Array.from({ length: nm }, (_, i): Opt => (editMaterialNeedsTemp(m, i)
+      ? { value: i, label: editMaterialName(m, i), no_temp: true }
+      : { value: i, label: editMaterialName(m, i) })),
+    ...(d.material === nm ? [{ value: nm, label: s.material }] : []),
+    { value: MATERIAL_OTHER, label: str('MATERIAL_OTHER') },
   ]);
+
+  fields.push({
+    id: 'custom', label: str('FIELD_MATERIAL_TEXT_LABEL'), kind: 'text', value: 0, min: 0, max: 0, step: 0,
+    unit: '', required: true, max_len: MATERIAL_TEXT_MAX, note: str('FIELD_MATERIAL_TEXT_NOTE'),
+    show_when: { field: 'material', is: 'other' },
+  });
+
+  if (m.spoolmanEditTemps) {
+    fields.push({
+      id: 'nozzle', label: str('FIELD_NOZZLE_TEMP_LABEL'), kind: 'number', value: 0, min: 150, max: 400,
+      step: 1, unit: str('FIELD_TARGET_UNIT'), required: false, note: str('FIELD_TEMP_NOTE'), optional: true,
+      show_when: { field: 'material', is: 'no_temp' },
+    });
+    fields.push({
+      id: 'bed', label: str('FIELD_BED_TEMP_LABEL'), kind: 'number', value: 0, min: 0, max: 150,
+      step: 1, unit: str('FIELD_TARGET_UNIT'), required: false, optional: true,
+      show_when: { field: 'material', is: 'no_temp' },
+    });
+  }
 
   const colors = [
     ...(d.color < 0 ? [{ value: -1, label: str('EDIT_COLOR_UNSET') }] : []),
@@ -619,11 +652,21 @@ function editResolved(id: string, m: Model, unitIdx: number, bay: number,
   const pa = `${Math.trunc(d.paX1000 / 1000)}.${String(d.paX1000 % 1000).padStart(3, '0')}`;
 
   return cut(
-    `spool edit ${id} material=${material ?? d.material} color=${d.color} `
+    `spool edit ${id} material=${material ?? d.material} custom=-${m.spoolmanEditTemps ? ' nozzle=0 bed=0' : ''} color=${d.color} `
     + `vendor=${d.vendor} remaining=${d.remainingG} initial=${d.initialG} pa=${pa}`
     + (thenLoad ? ' then load' : ''),
     ACTION_LINE,
   );
+}
+
+/** The edit line with its placeholders (edit_line in C): the temperatures only
+ *  on a host that takes them (C4 §9 `edit_temps`), and " then load" after it
+ *  for the unidentified bay's Load. */
+function editLine(m: Model, id: string, thenLoad: boolean): string {
+  return `spool edit ${id} material={material} custom={custom}`
+    + (m.spoolmanEditTemps ? ' nozzle={nozzle} bed={bed}' : '')
+    + ' color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}'
+    + (thenLoad ? ' then load' : '');
 }
 
 /** "Edit spool": the editor's fields on the bay's own spool. The one line
@@ -633,7 +676,7 @@ function editResolved(id: string, m: Model, unitIdx: number, bay: number,
 function addEditAction(list: ActionList, m: Model, unitIdx: number, bay: number, id: string): void {
   const a = list.add(
     'edit_spool', str('ACTION_EDIT_SPOOL'),
-    `spool edit ${id} material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}`,
+    editLine(m, id, false),
     'normal',
   );
   if (!a) return;
@@ -653,8 +696,7 @@ function addEditAction(list: ActionList, m: Model, unitIdx: number, bay: number,
 function addSaveAndLoadAction(list: ActionList, m: Model, unitIdx: number, bay: number, id: string): void {
   const a = list.add(
     'load', str('ACTION_LOAD'),
-    'spool edit ' + id
-      + ' material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa} then load',
+    editLine(m, id, true),
     'normal',
   );
   if (!a) return;

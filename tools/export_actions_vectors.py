@@ -39,6 +39,10 @@ RPC_CASES = [
      {"bay": "oams1-0", "remaining_g": 750}),
     ("vendor list", "server.spoolman.proxy",
      {"request_method": "GET", "path": "/v1/vendor"}),
+    # The "loaded" fixture has no component status, so no host list (C4 §9.3):
+    # Spoolman's own names through the proxy.
+    ("material list", "server.spoolman.proxy",
+     {"request_method": "GET", "path": "/v1/material"}),
 ]
 # (line, reason): an RPC line the model refuses. The "loaded" fixture has no
 # component status, so the host has no edit endpoint as far as it can tell.

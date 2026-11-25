@@ -107,6 +107,22 @@ export class OpenamsAdapter {
         return this.apply('vendor_list', '', Array.isArray(vendors) ? vendors : [])
     }
 
+    /** The call that reads the materials Spoolman holds (C4 §9.3), as the core
+     *  maps `material list`: the host's own list when its status says it
+     *  serves one, else Spoolman's names through `server.spoolman.proxy`.
+     *  Call it after `applyComponentStatus`, which says which. */
+    materialRequest(): { method: string; params: Record<string, unknown> } | null {
+        const result = this.logic.action('material list', null)
+
+        return result.kind === 'rpc' ? { method: result.method, params: result.params } : null
+    }
+
+    /** The answer to `materialRequest()`, the materials the spool editor offers
+     *  beside its common ones: the host's object or Spoolman's array. */
+    applyMaterialList(result: unknown): boolean {
+        return this.apply('material_list', '', result)
+    }
+
     applySpoolList(spools: unknown): boolean {
         const list = Array.isArray(spools) ? spools.map(asSpool).filter((spool) => spool !== null) : []
 

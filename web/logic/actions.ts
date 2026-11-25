@@ -10,7 +10,8 @@
 import { cut } from './cstr.ts';
 import {
   BayAct, Busy, CalState, DryState, editDefaults, editVendorCount, editVendorName, GROUP_CHOICE_NEW, GROUP_CHOICE_NONE,
-  groupEditReason, groupNextName, laneIdOk, MATERIALS, Sev, SlotState, slotGroup, slotId, TagRead, UnitAct,
+  groupEditReason, groupNextName, laneIdOk, editMaterialCount, editMaterialName, MATERIAL_OTHER, materialText,
+  textCiEqual, Sev, SlotState, slotGroup, slotId, TagRead, UnitAct,
 } from './model.ts';
 import type { Model, Unit } from './model.ts';
 import { format, str } from './strings.ts';
@@ -704,16 +705,20 @@ function editMilli(text: string): number | null {
   return m[1] === '-' && v !== 0 ? -v : v;
 }
 
-/** `spool edit <slot> [material=<n>] [color=<rgb>] [vendor=<n>] [remaining=<g>]
- *  [initial=<g>] [pa=<x>] [then load]` -> server.openams_spoolman.edit
- *  (actions_map.c's spool_edit). The selects' values are the form's own:
- *  material and vendor are indices into the lists the edit form offers (an
- *  index one past the list is the bay's own), color is 0xRRGGBB as a decimal
- *  number or -1 for "none", the weights are grams and pa is the pressure
- *  advance itself. A key left out is a field left as it is, and so is one equal
- *  to what the form starts from (editDefaults): only a change is sent. The
- *  line never carries a vendor's name, only its index, so it has one shape for
- *  both renderers and needs no quoting.
+/** `spool edit <slot> [material=<n>] [custom=<type>] [nozzle=<C>] [bed=<C>]
+ *  [color=<rgb>] [vendor=<n>] [remaining=<g>] [initial=<g>] [pa=<x>]
+ *  [then load]` -> server.openams_spoolman.edit (actions_map.c's spool_edit).
+ *  The selects' values are the form's own: material and vendor are indices
+ *  into the lists the edit form offers (an index one past the list is the
+ *  bay's own), color is 0xRRGGBB as a decimal number or -1 for "none", the
+ *  weights are grams and pa is the pressure advance itself. A material of
+ *  MATERIAL_OTHER is the one typed into `custom` (materialText; "-" is an empty
+ *  field), and nozzle and bed are the filament's temperatures, sent only to a
+ *  host that takes them (C4 §9 `edit_temps`), 0 for "not given". A key left
+ *  out is a field left as it is, and so is one equal to what the form starts
+ *  from (editDefaults): only a change is sent. The line never carries a
+ *  vendor's name, only its index, so it has one shape for both renderers and
+ *  needs no quoting.
  *
  *  ` then load` is the one thing that may follow: the line a "Load" on an
  *  unidentified bay sends, which saves what the user chose and loads in one go.
@@ -738,13 +743,17 @@ function spoolEdit(args: string, m: Model): RpcMapped {
     thenLoad = true;
   }
   const given: Record<string, number> = {};
+  let custom = '';
   for (const [key, val] of tokens) {
     if (key === 'pa') {
       const milli = editMilli(val);
       if (milli === null) return { rc: 0 };
       given[key] = milli;
       continue;
-    } else if (['material', 'color', 'vendor', 'remaining', 'initial'].includes(key)) {
+    } else if (key === 'custom') {
+      custom = val === '-' ? '' : val;
+      continue;
+    } else if (['material', 'color', 'vendor', 'remaining', 'initial', 'nozzle', 'bed'].includes(key)) {
       if (!EDIT_INT.test(val)) return { rc: 0 };
     } else {
       return { rc: 0 };
@@ -775,7 +784,24 @@ function spoolEdit(args: string, m: Model): RpcMapped {
 
   const d = editDefaults(m, found.unit, found.slot);
   const create = s.spoolId < 0;
+  const materials = editMaterialCount(m);
   const range = { rc: -1, why: str('REASON_EDIT_RANGE') } as const;
+
+  // "Other…" is the type typed into its own field, which must be one
+  const typed = materialText(custom);
+  if (has('material') && given.material === MATERIAL_OTHER && typed === null) {
+    return { rc: -1, why: str('REASON_MATERIAL_TYPE') };
+  }
+  // a temperature is given or it is 0, and a host that takes none is sent none
+  // (the form does not ask it for any)
+  if (!m.spoolmanEditTemps) {
+    delete given.nozzle;
+    delete given.bed;
+  }
+  if ((has('nozzle') && given.nozzle !== 0 && (given.nozzle < 150 || given.nozzle > 400)) ||
+      (has('bed') && (given.bed < 0 || given.bed > 150))) {
+    return { rc: -1, why: str('REASON_EDIT_TEMP') };
+  }
 
   const effRemaining = has('remaining') ? given.remaining : d.remainingG;
   const effInitial = has('initial') ? given.initial : d.initialG;
@@ -790,17 +816,22 @@ function spoolEdit(args: string, m: Model): RpcMapped {
   // an index one past the list is the bay's own, which is no change (and a bay
   // with none of its own has no such choice)
   const vendorOwn = editVendorCount(m);
-  if ((has('material') && (given.material < 0 || given.material > MATERIALS.length ||
-        (given.material === MATERIALS.length && !s.material))) ||
+  if ((has('material') && given.material !== MATERIAL_OTHER &&
+        (given.material < 0 || given.material > materials || (given.material === materials && !s.material))) ||
       (has('vendor') && (given.vendor < 0 || given.vendor > vendorOwn || (given.vendor === vendorOwn && !s.brand)))) {
     return { rc: -1, why: str('REASON_EDIT_STALE') };
   }
 
-  // a new spool needs its material, so it is always sent with one
-  if (create || (has('material') && given.material !== MATERIALS.length && given.material !== d.material)) {
+  // a new spool needs its material, so it is always sent with one; a typed type
+  // is a change unless it is the bay's own
+  if (has('material') && given.material === MATERIAL_OTHER) {
+    if (create || !textCiEqual(typed ?? '', s.material)) params.material = typed;
+  } else if (create || (has('material') && given.material !== materials && given.material !== d.material)) {
     const k = has('material') ? given.material : d.material;
-    params.material = k === MATERIALS.length ? s.material : MATERIALS[k];
+    params.material = k === materials ? s.material : editMaterialName(m, k);
   }
+  if (has('nozzle') && given.nozzle > 0) params.extruder_temp = given.nozzle;
+  if (has('bed') && given.bed > 0) params.bed_temp = given.bed;
   if (has('color') && given.color >= 0 && given.color !== d.color) {
     params.color_hex = given.color.toString(16).toUpperCase().padStart(6, '0');
   }
@@ -840,6 +871,14 @@ export function actionsRpcMapped(line: string, m: Model): RpcMapped {
 
   if (line === 'vendor list') {
     return { rc: 1, method: 'server.spoolman.proxy', params: { request_method: 'GET', path: '/v1/vendor' } };
+  }
+
+  // the materials Spoolman holds, for the spool editor (C4 §9.3): the host's
+  // list with its temperatures when it serves one, else Spoolman's own names
+  if (line === 'material list') {
+    return m.spoolmanMaterials
+      ? { rc: 1, method: 'server.openams_spoolman.materials', params: {} }
+      : { rc: 1, method: 'server.spoolman.proxy', params: { request_method: 'GET', path: '/v1/material' } };
   }
 
   const edit = rest(line, 'spool edit');
@@ -915,7 +954,9 @@ function formatG(d: number): string {
 /** One form value as text: strings as they are, whole numbers without a
  *  decimal point, booleans as 1 and 0; null when it is none of those. */
 function formText(v: unknown): string | null {
-  if (typeof v === 'string') return v;
+  // a text field's value is one token of the line: an empty one is "-" (the
+  // mapper's "nothing typed")
+  if (typeof v === 'string') return v.length > 0 ? v : '-';
   if (typeof v === 'number') return Number.isInteger(v) ? String(v) : formatG(v);
   if (typeof v === 'boolean') return v ? '1' : '0';
   return null;
@@ -937,6 +978,9 @@ function fillLine(line: string, form: Record<string, unknown> | null): { line: s
     }
     const value = formText(form ? form[key] : undefined);
     if (value === null) return { reason: format('REASON_FORM_MISSING', { key }, 160) };
+    // one with a space would split the line (the one text field is the spool
+    // editor's typed material), so it is refused
+    if (value.includes(' ')) return { reason: str('REASON_MATERIAL_TYPE') };
     if (out.length + value.length >= LIMIT) return { reason: str('REASON_LINE_TOO_LONG') };
     out += value;
     p = end + 1;

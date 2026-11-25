@@ -220,22 +220,27 @@ void core_reset(core_t *core, bool keep_alerts)
 
 /* ------------------------------------------------------------------ apply */
 
-/* "component_status", "spool_list", "vendor_list" and "metadata" arrive
+/* "component_status", "spool_list", "vendor_list", "material_list" and "metadata" arrive
  * whole, never as diffs, so nothing has to be merged and no copy is kept:
  * each is mapped straight from @p obj, and only its hash is remembered. On
  * the 4 inch board (no PSRAM) a kept copy of the Spoolman status alone was
  * about 7 KB of heap with eight bays, a spool list far more, and the board
- * has about 10 KB to spare. @p want_array picks the list kinds' shape (an
- * array) over the others' (an object). Returns whether it differs from the
- * last one. */
+ * has about 10 KB to spare. @p shape picks the list kinds' shape (an
+ * array, WHOLE_ARRAY) over the others' (an object, WHOLE_OBJECT); the
+ * material list is either (WHOLE_EITHER: the host's object, or Spoolman's own
+ * array). Returns whether it differs from the last one. */
+enum { WHOLE_OBJECT, WHOLE_ARRAY, WHOLE_EITHER };
+
 static bool apply_whole(core_t *core, const char *kind, const char *name,
-                        const cJSON *obj, bool want_array)
+                        const cJSON *obj, int shape)
 {
     core_entry_t *e;
     uint32_t hash;
     bool changed;
 
-    if(want_array ? !cJSON_IsArray(obj) : !cJSON_IsObject(obj)) return false;
+    if(shape == WHOLE_ARRAY && !cJSON_IsArray(obj)) return false;
+    if(shape == WHOLE_OBJECT && !cJSON_IsObject(obj)) return false;
+    if(shape == WHOLE_EITHER && !cJSON_IsArray(obj) && !cJSON_IsObject(obj)) return false;
 
     e = entry_get_or_create(core, kind, name);
     if(!e) return false;
@@ -247,6 +252,7 @@ static bool apply_whole(core_t *core, const char *kind, const char *name,
 
     if(strcmp(kind, "spool_list") == 0) status_map_apply_spool_list(core->model, obj);
     else if(strcmp(kind, "vendor_list") == 0) status_map_apply_vendor_list(core->model, obj);
+    else if(strcmp(kind, "material_list") == 0) status_map_apply_material_list(core->model, obj);
     else if(strcmp(kind, "metadata") == 0) status_map_apply_metadata(core->model, obj);
     else if(strcmp(kind, "component_status") == 0) status_map_apply_component_status(core->model, obj);
 
@@ -326,10 +332,11 @@ bool core_apply(core_t *core, const char *kind, const char *name, const cJSON *o
     if(!core || !core->model || !kind || !obj) return false;
 
     if(strcmp(kind, "action_result") == 0) return apply_action_result(core, obj);
-    if(strcmp(kind, "spool_list") == 0) return apply_whole(core, kind, ename, obj, true);
-    if(strcmp(kind, "vendor_list") == 0) return apply_whole(core, kind, ename, obj, true);
-    if(strcmp(kind, "metadata") == 0) return apply_whole(core, kind, ename, obj, false);
-    if(strcmp(kind, "component_status") == 0) return apply_whole(core, kind, ename, obj, false);
+    if(strcmp(kind, "spool_list") == 0) return apply_whole(core, kind, ename, obj, WHOLE_ARRAY);
+    if(strcmp(kind, "vendor_list") == 0) return apply_whole(core, kind, ename, obj, WHOLE_ARRAY);
+    if(strcmp(kind, "material_list") == 0) return apply_whole(core, kind, ename, obj, WHOLE_EITHER);
+    if(strcmp(kind, "metadata") == 0) return apply_whole(core, kind, ename, obj, WHOLE_OBJECT);
+    if(strcmp(kind, "component_status") == 0) return apply_whole(core, kind, ename, obj, WHOLE_OBJECT);
 
     if(strcmp(kind, "openams_ui") != 0 && strcmp(kind, "oams_manager") != 0 &&
        strcmp(kind, "print_stats") != 0 && strcmp(kind, "toolhead") != 0)
@@ -368,6 +375,10 @@ bool core_rpc_result(core_t *core, int tag, const cJSON *result, const char *err
     case ACTIONS_RPC_VENDOR_LIST:
         if(!cJSON_IsArray(result)) return false;
         core_apply(core, tag == ACTIONS_RPC_SPOOL_LIST ? "spool_list" : "vendor_list", NULL, result);
+        return true;
+    case ACTIONS_RPC_MATERIAL_LIST:
+        if(!cJSON_IsArray(result) && !cJSON_IsObject(result)) return false;
+        core_apply(core, "material_list", NULL, result);
         return true;
     case ACTIONS_RPC_METADATA:
         if(!cJSON_IsObject(result)) return false;

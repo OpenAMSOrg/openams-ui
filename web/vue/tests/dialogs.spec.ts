@@ -200,6 +200,83 @@ test.describe('edit spool', () => {
         ]);
     });
 
+    // The materials (C4 §9.3): the gallery's host lists PCTG (no temperature in
+    // its table) and PET-CF17 (PET-CF's), and takes a filament's temperatures.
+    const pick = async (dlg: ReturnType<typeof dialog>, field: string, label: string) => {
+        const { list } = await openSelect(dlg, field);
+        await list.getByRole('option', { name: label, exact: true }).click();
+    };
+
+    test('Spoolman\'s materials follow the common ones, and Other… ends the list', async ({ page }) => {
+        await open(page, { state: 'sheet', width: 1200 });
+        const { dlg } = await openForm(page);
+        const { list } = await openSelect(dlg, 'material');
+        const labels = (await options(list).allInnerTexts()).map((n) => n.trim());
+        expect(labels.slice(-3)).toEqual(['PCTG', 'PET-CF17', 'Other…']);
+        expect(labels.slice(0, 2)).toEqual(['PLA', 'PETG']);
+    });
+
+    test('Other… asks for the new material, kept in capitals, and sends it', async ({ page }) => {
+        await open(page, { state: 'sheet', width: 1200 });
+        const { dlg } = await openForm(page);
+        const typed = dlg.locator('[data-field="custom"]');
+        await expect(typed).toHaveCount(0);
+        await pick(dlg, 'material', 'Other…');
+        await expect(typed).toBeVisible();
+        await expect(dlg.locator('[data-note="custom"]')).toContainText('An AMS unit keeps only the first 8');
+        // Nothing typed yet: there is nothing to save.
+        const save = dlg.locator('[data-action="edit_spool"]');
+        await expect(save).toBeDisabled();
+        // What cannot be part of a material never reaches the field.
+        await typed.pressSequentially('pet cf*17!');
+        await expect(typed).toHaveValue('PETCF17');
+        await typed.fill('');
+        await typed.pressSequentially('pet-cf17');
+        await expect(typed).toHaveValue('PET-CF17');
+        // A typed type may have no temperature of the printer's own: both are offered, both optional.
+        await expect(dlg.locator('[data-field="nozzle"]')).toHaveValue('');
+        await expect(dlg.locator('[data-field="bed"]')).toBeVisible();
+        await expect(save).toBeEnabled();
+        await save.click();
+        await expect(dlg).toBeHidden();
+        expect(await requests(page)).toEqual([
+            { kind: 'rpc', method: 'server.openams_spoolman.edit', params: { unit: 'oams1', bay: 0, material: 'PET-CF17' } },
+        ]);
+    });
+
+    test('a material the printer has no temperature for asks for one, and sends what is given', async ({ page }) => {
+        await open(page, { state: 'sheet', width: 1200 });
+        const { dlg } = await openForm(page);
+        const nozzle = dlg.locator('[data-field="nozzle"]');
+        await expect(nozzle).toHaveCount(0);
+        // PET-CF17 has the printer's own (PET-CF's): nothing to ask.
+        await pick(dlg, 'material', 'PET-CF17');
+        await expect(nozzle).toHaveCount(0);
+        await pick(dlg, 'material', 'PCTG');
+        await expect(nozzle).toBeVisible();
+        await expect(dlg.locator('[data-note="nozzle"]')).toContainText('Optional');
+        await nozzle.fill('250');
+        await dlg.locator('[data-action="edit_spool"]').click();
+        await expect(dlg).toBeHidden();
+        expect(await requests(page)).toEqual([
+            {
+                kind: 'rpc', method: 'server.openams_spoolman.edit',
+                params: { unit: 'oams1', bay: 0, material: 'PCTG', extruder_temp: 250 },
+            },
+        ]);
+    });
+
+    test('what was typed under Other… goes when another material is chosen', async ({ page }) => {
+        await open(page, { state: 'sheet', width: 1200 });
+        const { dlg } = await openForm(page);
+        await pick(dlg, 'material', 'Other…');
+        await dlg.locator('[data-field="custom"]').pressSequentially('xyz');
+        await pick(dlg, 'material', 'ASA');
+        await expect(dlg.locator('[data-field="custom"]')).toHaveCount(0);
+        // back where it opened: nothing to save
+        await expect(dlg.locator('[data-action="edit_spool"]')).toBeDisabled();
+    });
+
     test('a form left as it opened cannot be submitted, and sends nothing', async ({ page }) => {
         await open(page, { state: 'sheet', width: 1200 });
         const { dlg } = await openForm(page);

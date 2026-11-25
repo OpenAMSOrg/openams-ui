@@ -154,7 +154,15 @@ static bool fill_line(const char *line, const cJSON *form, char *out, size_t out
 
         v = form ? cJSON_GetObjectItemCaseSensitive(form, key) : NULL;
         if(cJSON_IsString(v) && v->valuestring) {
-            val = v->valuestring;
+            /* a text field's value is one token of the line: an empty one is
+             * "-" (the mapper's "nothing typed"), and one with a space would
+             * split the line, so it is refused (the one text field is the
+             * spool editor's typed material) */
+            val = v->valuestring[0] ? v->valuestring : "-";
+            if(strchr(val, ' ')) {
+                *why = view_str(VS_REASON_MATERIAL_TYPE);
+                return false;
+            }
         }
         else if(cJSON_IsNumber(v)) {
             double d = v->valuedouble;

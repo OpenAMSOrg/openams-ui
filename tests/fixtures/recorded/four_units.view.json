@@ -188,7 +188,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams2_left1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams2_left1 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -235,7 +235,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -473,7 +492,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams2_left2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams2_left2 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -520,7 +539,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -758,7 +796,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams2_left3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams2_left3 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -805,7 +843,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -1043,7 +1100,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams2_left4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams2_left4 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -1090,7 +1147,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -1413,7 +1489,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams1_rear1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams1_rear1 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -1460,7 +1536,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -1698,7 +1793,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams1_rear2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams1_rear2 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -1745,7 +1840,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -1983,7 +2097,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams1_rear3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams1_rear3 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -2030,7 +2144,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -2268,7 +2401,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams1_rear4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams1_rear4 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -2315,7 +2448,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -2695,7 +2847,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams2_right1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams2_right1 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -2742,7 +2894,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -2980,7 +3151,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams2_right2 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams2_right2 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -3027,7 +3198,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -3265,7 +3455,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams2_right3 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams2_right3 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -3312,7 +3502,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -3550,7 +3759,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ams2_right4 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ams2_right4 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -3597,7 +3806,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",
@@ -3884,7 +4112,7 @@
 								}, {
 									"id":	"edit_spool",
 									"label":	"Edit spool",
-									"line":	"spool edit bench_ht_front1 material={material} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
+									"line":	"spool edit bench_ht_front1 material={material} custom={custom} color={color} vendor={vendor} remaining={remaining} initial={initial} pa={pa}",
 									"enabled":	false,
 									"reason":	"Spoolman is not set up",
 									"style":	"normal",
@@ -3931,7 +4159,26 @@
 													}, {
 														"value":	9,
 														"label":	"PVA"
+													}, {
+														"value":	-2,
+														"label":	"Other…"
 													}]
+											}, {
+												"id":	"custom",
+												"label":	"New material",
+												"kind":	"text",
+												"value":	0,
+												"min":	0,
+												"max":	0,
+												"step":	0,
+												"unit":	"",
+												"required":	true,
+												"max_len":	16,
+												"note":	"Letters, digits and - + . _ /, up to 16. An AMS unit keeps only the first 8.",
+												"show_when":	{
+													"field":	"material",
+													"is":	"other"
+												}
 											}, {
 												"id":	"color",
 												"label":	"Color",

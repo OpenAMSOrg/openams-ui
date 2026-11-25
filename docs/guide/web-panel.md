@@ -114,6 +114,17 @@ Each bay is a tile. Its click targets (`docs/design/UNIFIED_UI.md`, section 4b):
   leaves the alert, and it comes back when the printer reports a new failure
   or refuses the retry and leaves the failure as it was. The alert shows the
   printer's reason whole.
+- **Edit spool** (the ring's menu): the material list holds the common types,
+  then every material your Spoolman already has, then **Other…**. Choose
+  **Other…** to type a new type under **New material**: letters, digits and
+  `- + . _ /`, up to 16 characters, kept in capitals (anything else is dropped
+  as you type). An AMS unit keeps only the first 8 characters. When the
+  printer has no default temperature for the chosen or typed type, the form
+  also shows **Nozzle temperature** and **Bed temperature**, both optional;
+  they are saved with the new filament in Spoolman. **Save edit** sends it.
+  The typed type is on every display's list after that. The temperatures need
+  an OpenAMS from 2026-11-25 or later on the printer; an older one shows the
+  list and Other… without them.
 - **Humidity reading:** click it for the drying and heating menu.
 - **A bay's tag note:** on a unit whose bays share a tag reader, the printer
   works out which bay a tag belongs to. Until it is sure, the ring's menu

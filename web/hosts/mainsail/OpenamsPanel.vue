@@ -101,8 +101,8 @@ export default class OpenamsPanel extends Mixins(BaseMixin) {
      *  The calls waited on are the spool edit, the spool confirmation, Stop and
      *  a G-code script: the printer can refuse each in words of its own
      *  ("Spoolman is offline", "Heat the extruder before unloading"), which go
-     *  back to the panel with `done`. After an edit the vendor list is read
-     *  again (the host may have added one). */
+     *  back to the panel with `done`. After an edit the vendor and material
+     *  lists are read again (the host may have added one). */
     onRequest(result: ActionResult, done?: (message?: string) => void) {
         const socket = this.$socket as unknown as {
             emit: (method: string, params?: unknown) => void
@@ -175,9 +175,11 @@ export default class OpenamsPanel extends Mixins(BaseMixin) {
         }
     }
 
-    /** The names the spool editor offers as vendors: Spoolman's own list, read
-     *  the way Mainsail reads its spools (through the proxy). A host whose
-     *  component can edit has Spoolman, so this only runs then. */
+    /** The names the spool editor offers as vendors and materials:
+     *  Spoolman's own lists, read the way Mainsail reads its spools (through
+     *  the proxy), the materials through the host's own list when it serves
+     *  one (C4 §9.3). A host whose component can edit has Spoolman, so this
+     *  only runs then. */
     async requestVendors() {
         const socket = this.$socket as unknown as {
             emitAndWait: (method: string, params?: unknown) => Promise<unknown>
@@ -189,6 +191,13 @@ export default class OpenamsPanel extends Mixins(BaseMixin) {
             )
         } catch (e) {
             window.console.warn('[OpenAMS]: the Spoolman vendor list failed', e)
+        }
+        const materials = this.adapter.materialRequest()
+        if (!materials) return
+        try {
+            this.adapter.applyMaterialList(await socket.emitAndWait(materials.method, materials.params))
+        } catch (e) {
+            window.console.warn('[OpenAMS]: the Spoolman material list failed', e)
         }
     }
 }

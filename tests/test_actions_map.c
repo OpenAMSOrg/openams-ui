@@ -764,6 +764,35 @@ static void test_rpc_vendor_list(void)
     cJSON_Delete(params);
 }
 
+/* `material list`: the host's own list with its temperatures when it serves
+ * one (C4 §9.3), else Spoolman's names through the proxy; both answers are
+ * tagged for the material list. */
+static void test_rpc_material_list(void)
+{
+    char method[64];
+    cJSON *params = NULL;
+    const cJSON *rm, *path;
+
+    g_mmu.spoolman_materials = false;
+    assert(actions_rpc("material list", &g_mmu, method, sizeof method, &params) == 1);
+    assert(strcmp(method, "server.spoolman.proxy") == 0);
+    rm   = cJSON_GetObjectItemCaseSensitive(params, "request_method");
+    path = cJSON_GetObjectItemCaseSensitive(params, "path");
+    assert(cJSON_IsString(rm)   && strcmp(rm->valuestring,   "GET")          == 0);
+    assert(cJSON_IsString(path) && strcmp(path->valuestring, "/v1/material") == 0);
+    assert(actions_rpc_tag(method, params) == ACTIONS_RPC_MATERIAL_LIST);
+    cJSON_Delete(params);
+
+    g_mmu.spoolman_materials = true;
+    params = NULL;
+    assert(actions_rpc("material list", &g_mmu, method, sizeof method, &params) == 1);
+    assert(strcmp(method, "server.openams_spoolman.materials") == 0);
+    assert(cJSON_IsObject(params) && cJSON_GetArraySize(params) == 0);
+    assert(actions_rpc_tag(method, params) == ACTIONS_RPC_MATERIAL_LIST);
+    cJSON_Delete(params);
+    g_mmu.spoolman_materials = false;
+}
+
 /* `spool edit`: the model the tests poke is oams1, bay 0 linked (Spoolman spool
  * 12: PETG, Polymaker, blue, 430 g of 43 %), bay 1 a spool with no record, bay 2
  * empty. */
@@ -891,6 +920,67 @@ static void test_rpc_spool_edit(void)
         assert(actions_check("spool edit oams11", &g_mmu, &why) == 0);
         assert(why == view_str(VS_REASON_EDIT_NO_SPOOLMAN));
     }
+}
+
+/* The editor's longer material list, "Other…" with its typed type, and the
+ * filament temperatures (C4 §9, §9.3). */
+static void test_rpc_spool_edit_materials(void)
+{
+    mmu_slot_t *s0, *s1;
+    cJSON *res;
+
+    build("loaded");
+    g_mmu.spoolman_online = true;
+    g_mmu.spoolman_edit = true;
+    res = cJSON_Parse("{\"materials\":[{\"name\":\"PCTG\",\"extruder_temp\":null},"
+                      "{\"name\":\"PET-CF17\",\"extruder_temp\":270}]}");
+    assert(res && status_map_apply_material_list(&g_mmu, res));
+    cJSON_Delete(res);
+
+    s0 = &g_mmu.units[0].slots[0];
+    s1 = &g_mmu.units[0].slots[1];
+    s0->state = MMU_SLOT_READY; s0->spool_id = 12;
+    snprintf(s0->material, sizeof s0->material, "PETG");
+    s0->remaining_g = 430; s0->remaining_pct = 43;
+    s1->state = MMU_SLOT_READY; s1->spool_id = -1;
+    s1->material[0] = '\0'; s1->brand[0] = '\0'; s1->remaining_g = -1; s1->remaining_pct = -1;
+
+    /* Spoolman's materials follow the ten common ones, sorted: PCTG is 10,
+     * PET-CF17 11 */
+    edit_ok("spool edit oams11 material=10", "{\"unit\":\"oams1\",\"bay\":0,\"material\":\"PCTG\"}");
+    edit_ok("spool edit oams11 material=11 custom=-", "{\"unit\":\"oams1\",\"bay\":0,\"material\":\"PET-CF17\"}");
+    edit_refused("spool edit oams11 material=13", VS_REASON_EDIT_STALE);  /* 12 would be the bay's own */
+
+    /* "Other…": the typed type, trimmed of nothing, upper-cased */
+    edit_ok("spool edit oams11 material=-2 custom=pet-cf17",
+            "{\"unit\":\"oams1\",\"bay\":0,\"material\":\"PET-CF17\"}");
+    edit_ok("spool edit oams12 material=-2 custom=XYZ-9",
+            "{\"unit\":\"oams1\",\"bay\":1,\"material\":\"XYZ-9\"}");
+    edit_refused("spool edit oams11 material=-2 custom=-", VS_REASON_MATERIAL_TYPE);
+    edit_refused("spool edit oams11 material=-2", VS_REASON_MATERIAL_TYPE);
+    edit_refused("spool edit oams11 material=-2 custom=PET*CF", VS_REASON_MATERIAL_TYPE);
+    edit_refused("spool edit oams11 material=-2 custom=ABCDEFGHIJKLMNOPQ", VS_REASON_MATERIAL_TYPE);
+    /* the bay's own, typed again in any case, is no change */
+    edit_refused("spool edit oams11 material=-2 custom=petg", VS_EDIT_NO_CHANGES);
+    /* a typed type without "Other…" is nothing */
+    edit_refused("spool edit oams11 custom=XYZ", VS_EDIT_NO_CHANGES);
+
+    /* a host that takes no temperatures is sent none */
+    edit_ok("spool edit oams11 material=-2 custom=XYZ nozzle=255 bed=80",
+            "{\"unit\":\"oams1\",\"bay\":0,\"material\":\"XYZ\"}");
+    /* ... one that takes them gets what was given, 0 being not given */
+    g_mmu.spoolman_edit_temps = true;
+    edit_ok("spool edit oams11 material=-2 custom=XYZ nozzle=255 bed=80",
+            "{\"unit\":\"oams1\",\"bay\":0,\"material\":\"XYZ\",\"extruder_temp\":255,\"bed_temp\":80}");
+    edit_ok("spool edit oams11 material=10 custom=- nozzle=250 bed=0",
+            "{\"unit\":\"oams1\",\"bay\":0,\"material\":\"PCTG\",\"extruder_temp\":250}");
+    edit_ok("spool edit oams11 nozzle=260", "{\"unit\":\"oams1\",\"bay\":0,\"extruder_temp\":260}");
+    edit_refused("spool edit oams11 nozzle=0 bed=0", VS_EDIT_NO_CHANGES);
+    edit_refused("spool edit oams11 material=10 nozzle=149", VS_REASON_EDIT_TEMP);
+    edit_refused("spool edit oams11 material=10 nozzle=401", VS_REASON_EDIT_TEMP);
+    edit_refused("spool edit oams11 material=10 bed=151", VS_REASON_EDIT_TEMP);
+    edit_refused("spool edit oams11 material=10 nozzle=-5", VS_REASON_EDIT_TEMP);
+    g_mmu.spoolman_edit_temps = false;
 }
 
 /* ------------------------------------------------------------- actions_check */
@@ -1331,7 +1421,9 @@ int main(void)
     test_rpc_unknown_slot();
     test_rpc_not_rpc();
     test_rpc_vendor_list();
+    test_rpc_material_list();
     test_rpc_spool_edit();
+    test_rpc_spool_edit_materials();
     test_actions_check();
     test_rpc_spool_edit_own_weight_and_pa();
     test_rpc_spool_edit_then_load();

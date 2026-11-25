@@ -1272,6 +1272,10 @@ bool status_map_apply_component_status(mmu_model_t *m, const cJSON *obj)
         /* likewise a component with no sequence stop sends no `stop`: the
          * display keeps the cancel G-code */
         m->spoolman_stop = cJSON_IsTrue(field(obj, "stop"));
+        /* the filament temperatures and the materials list (C4 §9, §9.3):
+         * a component that predates them sends neither */
+        m->spoolman_edit_temps = cJSON_IsTrue(field(obj, "edit_temps"));
+        m->spoolman_materials = cJSON_IsTrue(field(obj, "materials"));
     }
 
     cJSON_ArrayForEach(bay, bays) {
@@ -1632,6 +1636,74 @@ bool status_map_apply_vendor_list(mmu_model_t *m, const cJSON *arr)
     }
 
     m->vendor_count = (uint8_t)n;
+    mmu_model_refresh_this(m);
+    return true;
+}
+
+/* One material of the list: its name, whether the host gives it no
+ * temperature, or false when the entry is no material at all. */
+static bool material_entry(const cJSON *e, const char **name, bool *no_temp)
+{
+    *no_temp = false;
+    if(cJSON_IsString(e)) {
+        *name = e->valuestring;
+        return true;
+    }
+    if(!cJSON_IsObject(e)) return false;
+    *name = jstring(e, "name");
+    if(!*name) return false;
+    *no_temp = cJSON_IsNull(field(e, "extruder_temp"));
+    return true;
+}
+
+bool status_map_apply_material_list(mmu_model_t *m, const cJSON *res)
+{
+    const cJSON *arr = res, *e;
+    bool flags[MMU_MAX_MATERIALS];
+    int n = 0, i, j;
+
+    if(!m) return false;
+    if(cJSON_IsObject(res)) arr = field(res, "materials");
+    if(!cJSON_IsArray(arr)) return false;
+
+    memset(m->materials, 0, sizeof(m->materials));
+    cJSON_ArrayForEach(e, arr) {
+        const char *name;
+        bool no_temp, dup = false;
+
+        if(!material_entry(e, &name, &no_temp)) continue;
+        if(!name[0] || strlen(name) >= MMU_MATERIAL_NAME_LEN) continue;
+        for(i = 0; i < MMU_MATERIAL_COUNT; i++) {
+            if(vendor_cmp(mmu_material_name(i), name) == 0) dup = true;
+        }
+        for(i = 0; i < n; i++) {
+            if(vendor_cmp(m->materials[i], name) == 0) dup = true;
+        }
+        if(dup) continue;
+        if(n >= MMU_MAX_MATERIALS) break;
+        mmu_copy_text(m->materials[n], MMU_MATERIAL_NAME_LEN, name);
+        flags[n++] = no_temp;
+    }
+
+    /* insertion sort, stable, each flag moving with its name */
+    for(i = 1; i < n; i++) {
+        char key[MMU_MATERIAL_NAME_LEN];
+        bool flag = flags[i];
+
+        memcpy(key, m->materials[i], sizeof key);
+        for(j = i - 1; j >= 0 && vendor_cmp(m->materials[j], key) > 0; j--) {
+            memcpy(m->materials[j + 1], m->materials[j], sizeof key);
+            flags[j + 1] = flags[j];
+        }
+        memcpy(m->materials[j + 1], key, sizeof key);
+        flags[j + 1] = flag;
+    }
+
+    m->material_no_temp = 0;
+    for(i = 0; i < n; i++) {
+        if(flags[i]) m->material_no_temp |= (uint16_t)(1u << i);
+    }
+    m->material_count = (uint8_t)n;
     mmu_model_refresh_this(m);
     return true;
 }
