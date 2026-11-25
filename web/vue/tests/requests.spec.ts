@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { action, card, clickTile, dialog, expectRequests, message, open, openPopover, requests, target } from './panel';
+import { action, card, clickRing, clickTile, dialog, expectRequests, message, open, openPopover, requests, target } from './panel';
 
 // What an action asks the host for, and what happens while it waits
 // (UNIFIED_UI.md 8: the panel emits `request` and the host sends it;
@@ -134,9 +134,9 @@ test.describe('requests', () => {
     });
 
     test('a confirm is asked before the request, never after', async ({ page }) => {
-        const states = card(page, 'tile-states');
-        await target(states, 'oams23', 'tag').click();
-        await action(openPopover(page, 'tag'), 'clear_fault').click();
+        const idle = card(page, 'idle');
+        await clickRing(idle, 'oams11');
+        await action(openPopover(page, 'tile'), 'calibrate').click();
         await expect(dialog(page)).toBeVisible();
         expect(await requests(page)).toEqual([]);
         await dialog(page).locator('[data-role="cancel"]').click();

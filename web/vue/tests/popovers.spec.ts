@@ -52,8 +52,9 @@ test.describe('click targets', () => {
         await expect(tag.locator('.tag-detail')).toHaveText('The feeder stalled in Spool 3');
         await expect(tag.locator('.tag-code')).toHaveText('feeder_stall');
         await expect(tag.locator('.tag-code')).toHaveCSS('font-family', /mono|Menlo|Consolas|Courier/i);
-        // The fault's recovery, which the core marked for the tag.
-        expect(await listedActions(tag)).toEqual(['Retry', 'Clear fault']);
+        // The fault's recovery, which the core marked for the tag: a unit's
+        // clear_fault is offered as Clear errors (one clear, 2026-11-12).
+        expect(await listedActions(tag)).toEqual(['Retry', 'Clear errors']);
     });
 
     test('the rest of the tile opens the tile\'s menu, load and unload included', async ({ page }) => {

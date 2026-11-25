@@ -127,13 +127,16 @@ test.describe('dialogs', () => {
         await expect(openPopover(page, 'unit')).toBeHidden();
     });
 
-    test('a tag\'s confirm asks before a fault is cleared', async ({ page }) => {
+    test('a tag\'s Clear errors is the host\'s Reset, sent without a confirm', async ({ page }) => {
+        // One clear (2026-11-12): a unit's clear_fault is Clear errors, which
+        // asks nothing first (the old Clear fault confirm is gone with it).
         const states = card(page, 'tile-states');
         await target(states, 'oams23', 'tag').click();
         const tag = openPopover(page, 'tag');
         await expect(tag).toBeVisible();
-        await action(tag, 'clear_fault').click();
-        await expect(dialog(page).locator('.dlg-head')).toHaveText('Clear this fault?');
+        await action(tag, 'clear_errors').click();
+        await expect(dialog(page)).toBeHidden();
+        expect(await requests(page)).toEqual([{ kind: 'gcode', script: 'OAMSM_CLEAR_ERRORS' }]);
     });
 });
 

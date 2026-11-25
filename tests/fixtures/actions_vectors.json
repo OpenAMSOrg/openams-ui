@@ -137,6 +137,15 @@
       "kind": "local"
     },
     {
+      "line": "fault abandon fps1",
+      "kind": "error",
+      "reason": "Not supported on this unit yet"
+    },
+    {
+      "line": "fault abandon fps9",
+      "kind": "local"
+    },
+    {
       "line": "display home",
       "kind": "local"
     },
